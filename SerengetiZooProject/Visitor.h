@@ -1,23 +1,26 @@
 #ifndef Visitor_H
 #define Visitor_H
 #include <Windows.h>
+#include "Animals.h"
 
 enum VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
 
-typedef struct NodeEntry {
-    struct NodeEntry* Flink;
-    struct NodeEntry* Blink;
-} NodeEntry;
+typedef struct VisitorNodeEntry {
+    struct VisitorNodeEntry* Flink;
+    struct VisitorNodeEntry* Blink;
+} VisitorNodeEntry;
 
 typedef struct Visitor {
     LPTSTR UniqueName;
     LPTSTR CageLocation;
     DWORD HappinessLevel;
     enum VisitorStatus Status;
-    struct NodeEntry Links;
+    struct VisitorNodeEntry Links;
 } Visitor;
 
 
-Visitor* AddVisitor(NodeEntry* VisitorListHead, const char* Name);
+Visitor* AddVisitor(VisitorNodeEntry* VisitorListHead, const char* Name);
+DWORD WINAPI VisitorLoop(Visitor* Visitor, AnimalList* Animals);
+HANDLE InitVisitorsEvent();
 
 #endif

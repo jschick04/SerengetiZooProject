@@ -1,14 +1,28 @@
 #include <windows.h>
 #include <tchar.h>
+#include <time.h>
 #include "main.c"
 #include "ConsoleColors.h"
+#include "Animals.h"
 
-//Globals.
+
+//GLOBALS
+CRITICAL_SECTION VisitorListCS;
+HANDLE hVisitorEvent;
+DWORD dwThreadIds[999];
 
 
 //FUNCTIONS
 
-Visitor* AddVisitor(NodeEntry* VisitorListHead, const char* Name, HANDLE hVisitorEvent, HANDLE hVisitorThread)
+//Function is used to signify Zoo Open
+HANDLE InitVisitorsEvent()
+{
+    hVisitorEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    return hVisitorEvent;
+}
+
+//Adds a visitor to the linked list and kicks off a thread to start user loop.
+Visitor* AddVisitor(VisitorNodeEntry* VisitorListHead, const char* Name)
 {
     WaitForSingleObject(hVisitorEvent, INFINITE);
     EnterCriticalSection(&VisitorListCS);
@@ -51,10 +65,10 @@ Visitor* AddVisitor(NodeEntry* VisitorListHead, const char* Name, HANDLE hVisito
     }
 
     //links should be updated at this point, data should be set here.
-    char Location[] = "Entry";
-
+    char Entry[] = "Entry";
+   
     NewVisitor->UniqueName = Name;
-    NewVisitor->CageLocation = Location;
+    NewVisitor->CageLocation = Entry;
     NewVisitor->HappinessLevel = 8;
     NewVisitor->Status = Happy;
 
@@ -66,5 +80,29 @@ Visitor* AddVisitor(NodeEntry* VisitorListHead, const char* Name, HANDLE hVisito
     return NewVisitor;
 }
 
+//This loop is to iterate through each cage, and each animal end to end.
+DWORD WINAPI VisitorLoop(Visitor* Visitor, AnimalList* Animals)
+{
+    AnimalList* CurrentCage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(AnimalList));
+    CurrentCage = Animals;
 
+    //need to get the current zoo animal struct here implementation not currently present.
+    ZooAnimal* CurrentAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
 
+    srand(NULL);
+
+    //loop to go through the entire list of cages
+    while (CurrentCage->LinkedList.Flink != NULL)
+    {
+        //Move from Entry to first cage after a sleep timer. This should be a random number between 1 and 3 minutes or so
+        sleep(rand() % 180000);
+
+        //loop thorugh all the animals in each cage.
+        while (CurrentAnimal->AnimalType == Visitor->CageLocation)
+        {
+            //Get the next animal in the cage.
+
+        }
+        
+    }
+}
