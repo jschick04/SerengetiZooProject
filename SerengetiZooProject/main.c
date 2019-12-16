@@ -6,21 +6,6 @@
 
 #define IS_LIST_EMPTY(listHead) ((listHead)->blink == (listHead));
 
-enum VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
-
-typedef struct NodeEntry {
-    struct NodeEntry* Flink;
-    struct NodeEntry* Blink;
-} NodeEntry;
-
-typedef struct Visitor {
-    LPTSTR UniqueName;
-    LPTSTR CageLocation;
-    DWORD HappinessLevel;
-    enum VisitorStatus Status;
-    struct NodeEntry Links;
-} Visitor;
-
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
 
