@@ -2,6 +2,7 @@
 #include <WriteLine.h>
 #include <tchar.h>
 #include <ConsoleColors.h>
+#include "SerengetiZooProject.h"
 
 HANDLE feedEvent;
 HANDLE healthEvent;
@@ -22,11 +23,11 @@ ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageN
     return newAnimal;
 }
 
-void AddAnimal(ZooAnimal* zooAnimal) {
+void AddAnimal(ZooAnimal* animal) {
 
     AnimalList* newListItem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(AnimalList));
 
-    if (zooAnimal == NULL || newListItem == NULL) {
+    if (animal == NULL || newListItem == NULL) {
         ConsoleWriteLine(_T("%cFailed to allocate memory for new list: %d"), RED, GetLastError());
         return;
     }
@@ -40,7 +41,7 @@ void AddAnimal(ZooAnimal* zooAnimal) {
     temp->Blink = &newListItem->LinkedList;
     animalListHead->Flink = &newListItem->LinkedList;
 
-    newListItem->ZooAnimal = zooAnimal;
+    newListItem->ZooAnimal = animal;
 
     LeaveCriticalSection(&AnimalListCrit);
 }

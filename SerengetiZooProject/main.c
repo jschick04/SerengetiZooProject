@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <WriteLine.h>
 #include <ConsoleColors.h>
-#include "Animals.h"
+#include "SerengetiZooProject.h"
 
 #define IS_LIST_EMPTY(listHead) ((listHead)->blink == (listHead));
 #define MAXS 20;

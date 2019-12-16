@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SERENGETI_ZOO_PROJECT_H
+#define SERENGETI_ZOO_PROJECT_H
 
 typedef struct NodeEntry {
     struct NodeEntry* Flink;
@@ -12,3 +13,5 @@ NodeEntry* animalListHead;
 NodeEntry* visitorListHead;
 
 int g_Score;
+
+#endif

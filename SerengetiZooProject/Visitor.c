@@ -1,8 +1,8 @@
 #include <windows.h>
 #include <tchar.h>
-#include "main.c"
 #include "ConsoleColors.h"
-
+#include "Visitor.h"
+#include "Animals.h"
 
 //GLOBALS
 CRITICAL_SECTION VisitorListCS;
@@ -20,7 +20,7 @@ HANDLE InitVisitorsEvent()
 }
 
 //Adds a visitor to the linked list and kicks off a thread to start user loop.
-Visitor* AddVisitor(VisitorNodeEntry* VisitorListHead, const char* Name)
+Visitor* AddVisitor(NodeEntry* VisitorListHead, const char* Name)
 {
     WaitForSingleObject(hVisitorEvent, INFINITE);
     //EnterCriticalSection(&VisitorListCS);
@@ -93,7 +93,7 @@ DWORD WINAPI VisitorLoop(Visitor* Visitor, AnimalList* Animals)
     while (CurrentCage->LinkedList.Flink != NULL)
     {
         //Move from Entry to first cage after a sleep timer. This should be a random number between 1 and 3 minutes or so
-        sleep(rand() % 180000);
+        Sleep(rand() % 180000);
 
         //loop thorugh all the animals in each cage.
         while (CurrentAnimal->AnimalType == Visitor->CageLocation)
