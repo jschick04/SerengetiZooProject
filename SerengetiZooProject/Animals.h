@@ -21,10 +21,8 @@ typedef struct ZooAnimal {
     BOOL InteractivityPrompted;
 } ZooAnimal;
 
-void InitializeAnimalCriticalSection();
-
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel);
-void AddAnimal(CRITICAL_SECTION* cs, NodeEntry* listHead, ZooAnimal* animal);
+void AddAnimal(ZooAnimal* animal);
 
 void FeedAnimal(ZooAnimal* animal);
 

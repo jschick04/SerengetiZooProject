@@ -19,8 +19,6 @@ int g_Score = 0;
 
 int mTurns = 15;
 
-CRITICAL_SECTION cScore;
-
 BOOL InitializeListHead() {
     animalListHead = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
     visitorListHead = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
@@ -41,7 +39,8 @@ int _tmain() {
         return -1;
     }
 
-    InitializeAnimalCriticalSection();
+    InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000);
+    InitializeCriticalSectionAndSpinCount(&cScore, 4000);
 
     // TODO: Implement Main Loop
     ConsoleWriteLine(_T("Please select your action"), WHITE);
