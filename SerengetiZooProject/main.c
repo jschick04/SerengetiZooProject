@@ -15,6 +15,8 @@ void NextTurn();
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
 
+int g_Score = 0;
+
 int mTurns = 15;
 
 CRITICAL_SECTION cScore;
