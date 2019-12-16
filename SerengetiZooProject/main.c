@@ -2,6 +2,7 @@
 #include <tchar.h>
 
 enum AnimalType { Antelopes, Giraffes, Hyaena, Hippos, Monkeys, Mongoose, Tigers, WildeBeast, Zebras };
+enum VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
 
 typedef struct NodeEntry {
     struct NodeEntry* Flink;
@@ -22,7 +23,7 @@ typedef struct Visitor {
     LPTSTR UniqueName;
     LPTSTR CageLocation;
     DWORD HapinessLevel;
-    DWORD Status;
+    enum Status;
 } Visitor;
 
 
