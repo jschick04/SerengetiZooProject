@@ -4,10 +4,7 @@
 #include <ConsoleColors.h>
 
 HANDLE feedEvent;
-
-void InitializeAnimalCriticalSection() {
-    
-}
+HANDLE healthEvent;
 
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel) {
     ZooAnimal* newAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
@@ -25,8 +22,8 @@ ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageN
     return newAnimal;
 }
 
-void AddAnimal(CRITICAL_SECTION* cs, NodeEntry* listHead, ZooAnimal* zooAnimal) {
-    
+void AddAnimal(ZooAnimal* zooAnimal) {
+
     AnimalList* newListItem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(AnimalList));
 
     if (zooAnimal == NULL || newListItem == NULL) {
@@ -34,18 +31,18 @@ void AddAnimal(CRITICAL_SECTION* cs, NodeEntry* listHead, ZooAnimal* zooAnimal) 
         return;
     }
 
-    EnterCriticalSection(cs);
+    EnterCriticalSection(&AnimalListCrit);
 
-    NodeEntry* temp = listHead->Flink;
+    NodeEntry* temp = animalListHead->Flink;
 
     newListItem->LinkedList.Flink = temp;
-    newListItem->LinkedList.Blink = listHead;
+    newListItem->LinkedList.Blink = animalListHead;
     temp->Blink = &newListItem->LinkedList;
-    listHead->Flink = &newListItem->LinkedList;
+    animalListHead->Flink = &newListItem->LinkedList;
 
     newListItem->ZooAnimal = zooAnimal;
 
-    LeaveCriticalSection(cs);
+    LeaveCriticalSection(&AnimalListCrit);
 }
 
 DWORD WINAPI AnimalHealth(LPVOID lpParam) {
@@ -55,6 +52,18 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
         ConsoleWriteLine(_T("%cFailed to create event: %d"), GetLastError());
         return -1;
     }
+
+    do {
+        WaitForSingleObject(feedEvent, INFINITE);
+
+        EnterCriticalSection(&AnimalListCrit);
+
+        // TODO: What are we searching for?
+
+        //ConsoleWriteLine(_T("%s the %s has been fed"), name, type);
+
+        LeaveCriticalSection(&AnimalListCrit);
+    } while (TRUE);
 
     return 0;
 }
