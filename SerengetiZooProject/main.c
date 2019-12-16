@@ -18,6 +18,14 @@ typedef struct ZooAnimal {
     BOOL InteractivityPrompted;
 } ZooAnimal;
 
+typedef struct Visitor {
+    LPTSTR UniqueName;
+    LPTSTR CageLocation;
+    DWORD HapinessLevel;
+    DWORD Status;
+} Visitor;
+
+
 CRITICAL_SECTION AnimalListCrit;
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
