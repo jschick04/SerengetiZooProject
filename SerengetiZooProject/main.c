@@ -1,27 +1,17 @@
 #include <Windows.h>
 #include <tchar.h>
-#include "WriteLine.h"
-#include "ConsoleColors.h"
-#include "Animals.h"
+#include <WriteLine.h>
+#include <ConsoleColors.h>
 #include "Visitor.h"
 
-enum AnimalType { Antelopes, Giraffes, Hyaena, Hippos, Monkeys, Mongoose, Tigers, WildeBeast, Zebras };
+#define IS_LIST_EMPTY(listHead) ((listHead)->blink == (listHead));
+
 enum VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
 
 typedef struct NodeEntry {
     struct NodeEntry* Flink;
     struct NodeEntry* Blink;
 } NodeEntry;
-
-typedef struct ZooAnimal {
-    enum AnimalType AnimalType;
-    LPTSTR UniqueName;
-    LPTSTR CageName;
-    DWORD HealthLevel;
-    BOOL HealthLevelChange;
-    DWORD InteractiveLevel;
-    BOOL InteractivityPrompted;
-} ZooAnimal;
 
 typedef struct Visitor {
     LPTSTR UniqueName;
@@ -31,10 +21,10 @@ typedef struct Visitor {
     struct NodeEntry Links;
 } Visitor;
 
-
-CRITICAL_SECTION AnimalListCrit;
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
+
+CRITICAL_SECTION AnimalListCrit;
 
 BOOL InitializeListHead() {
     animalListHead = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
