@@ -24,6 +24,7 @@ typedef struct Visitor {
     LPTSTR CageLocation;
     DWORD HapinessLevel;
     enum Status;
+    struct NodeEntry Links;
 } Visitor;
 
 
