@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <tchar.h>
+#include "Animals.h"
 
 enum AnimalType { Antelopes, Giraffes, Hyaena, Hippos, Monkeys, Mongoose, Tigers, WildeBeast, Zebras };
 enum VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
@@ -22,8 +23,8 @@ typedef struct ZooAnimal {
 typedef struct Visitor {
     LPTSTR UniqueName;
     LPTSTR CageLocation;
-    DWORD HapinessLevel;
-    enum Status;
+    DWORD HappinessLevel;
+    DWORD Status;
 } Visitor;
 
 
