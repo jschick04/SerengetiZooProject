@@ -3,6 +3,12 @@
 #include <tchar.h>
 #include <ConsoleColors.h>
 
+HANDLE feedEvent;
+
+void InitializeAnimalCriticalSection() {
+    
+}
+
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel) {
     ZooAnimal* newAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
 
@@ -43,6 +49,13 @@ void AddAnimal(CRITICAL_SECTION* cs, NodeEntry* listHead, ZooAnimal* zooAnimal) 
 }
 
 DWORD WINAPI AnimalHealth(LPVOID lpParam) {
+    feedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+    if (feedEvent == NULL) {
+        ConsoleWriteLine(_T("%cFailed to create event: %d"), GetLastError());
+        return -1;
+    }
+
     return 0;
 }
 

@@ -2,11 +2,7 @@
 #define ANIMALS_H
 
 #include <Windows.h>
-
-typedef struct NodeEntry {
-    struct NodeEntry* Flink;
-    struct NodeEntry* Blink;
-} NodeEntry;
+#include "SerengetiZooProject.h"
 
 enum AnimalType { Antelopes, Giraffes, Hyaena, Hippos, Monkeys, Mongoose, Tigers, WildeBeast, Zebras };
 
@@ -25,8 +21,12 @@ typedef struct ZooAnimal {
     BOOL InteractivityPrompted;
 } ZooAnimal;
 
+void InitializeAnimalCriticalSection();
+
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel);
-void AddAnimal(CRITICAL_SECTION* cs, NodeEntry* listHead, ZooAnimal* zooAnimal);
+void AddAnimal(CRITICAL_SECTION* cs, NodeEntry* listHead, ZooAnimal* animal);
+
+void FeedAnimal(ZooAnimal* animal);
 
 DWORD WINAPI AnimalHealth(LPVOID lpParam);
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam);

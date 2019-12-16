@@ -1,13 +1,9 @@
 #ifndef Visitor_H
 #define Visitor_H
 #include <Windows.h>
+#include "SerengetiZooProject.h"
 
 enum VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
-
-typedef struct NodeEntry {
-    struct NodeEntry* Flink;
-    struct NodeEntry* Blink;
-} NodeEntry;
 
 typedef struct Visitor {
     LPTSTR UniqueName;
