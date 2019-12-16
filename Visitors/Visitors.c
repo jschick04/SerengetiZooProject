@@ -31,7 +31,6 @@ int AddVisitor(NodeEntry* VisitorListHead) {
             NewVisitor->Links.Flink = NewVisitor->Links.Flink
         }
 
-        NodeEntry* PreviousEntry = 
 
     }
 
