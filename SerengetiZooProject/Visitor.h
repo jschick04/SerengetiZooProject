@@ -1,14 +1,13 @@
 #ifndef Visitor_H
 #define Visitor_H
 #include <Windows.h>
-#include "Animals.h"
 
 enum VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
 
-typedef struct VisitorNodeEntry {
-    struct VisitorNodeEntry* Flink;
-    struct VisitorNodeEntry* Blink;
-} VisitorNodeEntry;
+typedef struct NodeEntry {
+    struct NodeEntry* Flink;
+    struct NodeEntry* Blink;
+} NodeEntry;
 
 typedef struct Visitor {
     LPTSTR UniqueName;

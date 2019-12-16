@@ -1,9 +1,7 @@
 #include <windows.h>
 #include <tchar.h>
-#include <time.h>
 #include "main.c"
 #include "ConsoleColors.h"
-#include "Animals.h"
 
 
 //GLOBALS
@@ -25,7 +23,7 @@ HANDLE InitVisitorsEvent()
 Visitor* AddVisitor(VisitorNodeEntry* VisitorListHead, const char* Name)
 {
     WaitForSingleObject(hVisitorEvent, INFINITE);
-    EnterCriticalSection(&VisitorListCS);
+    //EnterCriticalSection(&VisitorListCS);
 
     Visitor* NewVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
 
@@ -72,7 +70,7 @@ Visitor* AddVisitor(VisitorNodeEntry* VisitorListHead, const char* Name)
     NewVisitor->HappinessLevel = 8;
     NewVisitor->Status = Happy;
 
-    LeaveCriticalSection(&VisitorListCS);
+    //LeaveCriticalSection(&VisitorListCS);
     SetEvent(hVisitorEvent);
 
     //Start the Thread for the Visitor Loop HERE.
