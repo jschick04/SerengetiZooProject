@@ -20,12 +20,15 @@ typedef struct ZooAnimal {
     LPTSTR UniqueName;
     LPTSTR CageName;
     DWORD HealthLevel;
-    BOOL HealthLevelChange = FALSE;
+    BOOL HealthLevelChange;
     DWORD InteractiveLevel;
-    BOOL InteractivityPrompted = FALSE;
+    BOOL InteractivityPrompted;
 } ZooAnimal;
 
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel);
-void AddAnimal(CRITICAL_SECTION* cs, NodeEntry* listHead);
+void AddAnimal(CRITICAL_SECTION* cs, NodeEntry* listHead, ZooAnimal* zooAnimal);
+
+DWORD WINAPI AnimalHealth(LPVOID lpParam);
+DWORD WINAPI AnimalInteractivity(LPVOID lpParam);
 
 #endif
