@@ -21,9 +21,15 @@
     <ClCompile Include="Animal.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Visitor.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Visitor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
