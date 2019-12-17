@@ -17,6 +17,7 @@ int mTurns = 15;
 HANDLE hTimer = NULL;
 LARGE_INTEGER liDueTime;
 HANDLE tEvent;
+int tThread = 0;
 
 
 DWORD WINAPI mTimer(LPVOID lpParam);
@@ -53,7 +54,7 @@ int _tmain() {
 
     TCHAR buffer[MAX_PATH];
     int menuOption;
-    tEvent = CreateEvent(NULL, FALSE, FALSE, _T("mLoopTEvent"));
+    
     //Initialize animals structs.
     char aTypeinit[MAXA][15] =
     {
@@ -150,7 +151,7 @@ GAMELOOP:
     QUIT:
     CancelWaitableTimer(hTimer);
     //if(ht)TerminateThread(ht,0);
-    SetEvent(tEvent);
+    tThread = 1;
     HeapFree(GetProcessHeap(), 0, &animalListHead);
     HeapFree(GetProcessHeap(), 0, &visitorListHead);
 }
@@ -173,7 +174,7 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
     }
     // Wait for the timer.
     mtimerloop:
-    if (tEvent)return 0;
+    if (tThread != 0)return 0;
     if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
         printf("WaitForSingleObject failed (%d)\n", GetLastError());
     else {
