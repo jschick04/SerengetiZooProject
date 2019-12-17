@@ -24,7 +24,8 @@ typedef struct ZooAnimal {
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel);
 void AddAnimal(ZooAnimal* animal);
 
-void FeedAnimal(ZooAnimal* animal);
+void GetAllAnimals();
+DWORD GetInteractiveLevel(LPTSTR cageName); // returns interactiveLevel
 
 DWORD WINAPI AnimalHealth(LPVOID lpParam);
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam);

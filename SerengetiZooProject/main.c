@@ -5,7 +5,6 @@
 #include <WriteLine.h>
 #include <ConsoleColors.h>
 
-#define IS_LIST_EMPTY(listHead) ((listHead)->blink == (listHead));
 #define MAXS 20;
 
 NodeEntry* animalListHead = 0;

@@ -45,6 +45,15 @@ void AddAnimal(ZooAnimal* animal) {
     LeaveCriticalSection(&AnimalListCrit);
 }
 
+//void GetAllAnimals() {
+//    AnimalList* temp = CONTAINING_RECORD(animalListHead->Flink, AnimalList, );
+//
+//    do {
+//        temp = temp->LinkedList;
+//        ZooAnimal tempAnimal = CONTAINING_RECORD(temp, ZooAnimal*, )
+//    } while (temp->Flink != animalListHead);
+//}
+
 DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     feedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
