@@ -1,16 +1,12 @@
+#include "SerengetiZooProject.h"
 #include <Windows.h>
 #include <tchar.h>
 #include <stdio.h>
 #include <WriteLine.h>
 #include <ConsoleColors.h>
-#include "Animals.h"
 
 #define IS_LIST_EMPTY(listHead) ((listHead)->blink == (listHead));
 #define MAXS 20;
-
-void printScore();
-void printvHappinessLevel();
-void NextTurn();
 
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
@@ -19,7 +15,11 @@ int g_Score = 0;
 
 int mTurns = 15;
 
-BOOL InitializeListHead() {
+void printScore();
+void printvHappinessLevel();
+void NextTurn();
+
+BOOL InitializeListHeads() {
     animalListHead = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
     visitorListHead = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
 
@@ -34,26 +34,41 @@ BOOL InitializeListHead() {
 }
 
 int _tmain() {
-    if (InitializeListHead() == FALSE) {
-        ConsoleWriteLine(_T("%cFailed to create list heads"), RED);
+    if (InitializeListHeads() == FALSE) {
+        ConsoleWriteLine(_T("%cFailed to create list heads\n"), RED);
         return -1;
     }
 
-    InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000);
-    InitializeCriticalSectionAndSpinCount(&cScore, 4000);
+    if (!InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000)) {
+        ConsoleWriteLine(_T("%cFailed to create Animal List CRITICAL_SECTION"), RED);
+    }
+    if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
+        ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION"), RED);
+    }
 
-    // TODO: Implement Main Loop
-    ConsoleWriteLine(_T("Please select your action"), WHITE);
-    int Menu;
-    ConsoleWriteLine(
-        _T(
-            "1 - Create a visitor\n2 - Feed Animals\n3 - Check Animal Interactivity Levels\n4 - Display Current Disposition of visitors\n5 - Show Case Animal\n6 - Check Visitors Happiness Level\n7 - Turn"
-        ),
-        WHITE
-    );
-    scanf_s("%d", &Menu, 1);
+    TCHAR buffer[MAX_PATH];
+    int menuOption;
+
 GAMELOOP:
-    switch (Menu) {
+
+    ConsoleWriteLine(_T("Please select your action\n"));
+    ConsoleWriteLine(_T("-------------------------\n"));
+    ConsoleWriteLine(_T("1 - Create a visitor\n"));
+    ConsoleWriteLine(_T("2 - Feed Animals\n"));
+    ConsoleWriteLine(_T("3 - Check Animal Interactivity Levels\n"));
+    ConsoleWriteLine(_T("4 - Display Current Disposition of visitors\n"));
+    ConsoleWriteLine(_T("5 - Show Case Animal\n"));
+    ConsoleWriteLine(_T("6 - Check Visitors Happiness Level\n"));
+    ConsoleWriteLine(_T("7 - Turn\n"));
+    ConsoleWriteLine(_T("0 - Exit\n"));
+
+    _fgetts(buffer, _countof(buffer), stdin);
+    if (_stscanf_s(buffer, _T("%d"), &menuOption) != 1) {
+        ConsoleWriteLine(_T("Invalid Selection...\n"));
+        goto GAMELOOP;
+    }
+
+    switch (menuOption) {
         case 1 : // Create a visitor
             /*Call a function from Visitor.c that triggers the creation of a visitor. This functions should accept a string to fill Visitor->UniqueName. The creation of the visitor should also define:
             Visitor->CageLocation to 1
@@ -88,8 +103,11 @@ GAMELOOP:
             //Calls NextTurn() function which signal Visitors and Animals that they can move one step forward.
             //Print current score and Happiness Level.
             break;
-        default :
+        case 0 :
+            // Quit logic
             break;
+        default :
+            ConsoleWriteLine(_T("Invalid Selection...\n"));
             goto GAMELOOP;
     }
 
