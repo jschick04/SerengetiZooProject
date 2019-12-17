@@ -1,17 +1,16 @@
+#include "SerengetiZooProject.h"
 #include "Animals.h"
 #include <WriteLine.h>
 #include <tchar.h>
 #include <ConsoleColors.h>
-#include "SerengetiZooProject.h"
 
-HANDLE feedEvent;
 HANDLE healthEvent;
 
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel) {
     ZooAnimal* newAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
 
     if (newAnimal == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory for new animal: %d"), RED, GetLastError());
+        ConsoleWriteLine(_T("%cFailed to allocate memory for new animal: %d\n"), RED, GetLastError());
         return NULL;
     }
 
@@ -28,7 +27,7 @@ void AddAnimal(ZooAnimal* animal) {
     AnimalList* newListItem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(AnimalList));
 
     if (animal == NULL || newListItem == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory for new list: %d"), RED, GetLastError());
+        ConsoleWriteLine(_T("%cFailed to allocate memory for new list: %d\n"), RED, GetLastError());
         return;
     }
 
@@ -50,7 +49,7 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     feedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
     if (feedEvent == NULL) {
-        ConsoleWriteLine(_T("%cFailed to create event: %d"), GetLastError());
+        ConsoleWriteLine(_T("%cFailed to create event: %d\n"), GetLastError());
         return -1;
     }
 
@@ -61,7 +60,7 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
 
         // TODO: What are we searching for?
 
-        //ConsoleWriteLine(_T("%s the %s has been fed"), name, type);
+        //ConsoleWriteLine(_T("%s the %s has been fed\n"), name, type);
 
         LeaveCriticalSection(&AnimalListCrit);
     } while (TRUE);

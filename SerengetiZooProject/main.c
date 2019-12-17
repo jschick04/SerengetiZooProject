@@ -1,9 +1,9 @@
+#include "SerengetiZooProject.h"
 #include <Windows.h>
 #include <tchar.h>
 #include <stdio.h>
 #include <WriteLine.h>
 #include <ConsoleColors.h>
-#include "SerengetiZooProject.h"
 
 #define IS_LIST_EMPTY(listHead) ((listHead)->blink == (listHead));
 #define MAXS 20;
@@ -19,7 +19,7 @@ int g_Score = 0;
 
 int mTurns = 15;
 
-BOOL InitializeListHead() {
+BOOL InitializeListHeads() {
     animalListHead = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
     visitorListHead = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
 
@@ -34,8 +34,8 @@ BOOL InitializeListHead() {
 }
 
 int _tmain() {
-    if (InitializeListHead() == FALSE) {
-        ConsoleWriteLine(_T("%cFailed to create list heads"), RED);
+    if (InitializeListHeads() == FALSE) {
+        ConsoleWriteLine(_T("%cFailed to create list heads\n"), RED);
         return -1;
     }
 
@@ -43,14 +43,15 @@ int _tmain() {
     InitializeCriticalSectionAndSpinCount(&cScore, 4000);
 
     // TODO: Implement Main Loop
-    ConsoleWriteLine(_T("Please select your action"), WHITE);
+    ConsoleWriteLine(_T("Please select your action\n"));
     int Menu;
-    ConsoleWriteLine(
-        _T(
-            "1 - Create a visitor\n2 - Feed Animals\n3 - Check Animal Interactivity Levels\n4 - Display Current Disposition of visitors\n5 - Show Case Animal\n6 - Check Visitors Happiness Level\n7 - Turn"
-        ),
-        WHITE
-    );
+    ConsoleWriteLine(_T("1 - Create a visitor\n"));
+    ConsoleWriteLine(_T("2 - Feed Animals\n"));
+    ConsoleWriteLine(_T("3 - Check Animal Interactivity Levels\n"));
+    ConsoleWriteLine(_T("4 - Display Current Disposition of visitors\n"));
+    ConsoleWriteLine(_T("5 - Show Case Animal\n"));
+    ConsoleWriteLine(_T("6 - Check Visitors Happiness Level\n"));
+    ConsoleWriteLine(_T("7 - Turn\n"));
     scanf_s("%d", &Menu, 1);
 GAMELOOP:
     switch (Menu) {
