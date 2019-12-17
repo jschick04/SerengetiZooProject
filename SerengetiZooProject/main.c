@@ -11,7 +11,7 @@
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
 
-int g_Score = 0;
+g_Score = 0;
 int mTurns = 15;
 HANDLE hTimer = NULL;
 LARGE_INTEGER liDueTime;
@@ -131,7 +131,7 @@ GAMELOOP:
             break;
         default :
             ConsoleWriteLine(_T("Invalid Selection...\n"));
-            CancelWaitableTimer(hTimer);
+            TerminateThread(ht, -1);
             printScore();
             goto GAMELOOP;
     }
