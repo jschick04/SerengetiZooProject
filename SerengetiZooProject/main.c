@@ -14,7 +14,6 @@
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
 
-g_Score = 10;
 int mTurns = 15;
 HANDLE hTimer = NULL;
 LARGE_INTEGER liDueTime;
@@ -55,8 +54,9 @@ void InitializeAnimals() {
         DWORD interactiveLevel = (rand() % (6 - 4 + 1)) + 4;
 
         TCHAR buffer[5];
-        TCHAR cageName[10] = _T("Cage");
+        TCHAR cageName[10];
         _itot_s(i, buffer, _countof(buffer), 10);
+        _tcscpy_s(cageName, _countof(cageName), _T("Cage")); // Resolves uninitialized warning
         _tcscat_s(cageName, _countof(cageName), buffer);
 
         NewAnimal(i, uniqueName[i], cageName, interactiveLevel);
@@ -121,9 +121,7 @@ GAMELOOP:
         case 2 : // Check Animal Interactivity Levels
             /*Call a function from Animal.c that prints all the animals within the list and their respective Interactivity Levels.
             */
-            EnterCriticalSection(&AnimalListCrit);
             ConsoleWriteLine(_T("%cYou selected - Check Animal Int Levels\n"),BLUE);
-            LeaveCriticalSection(&AnimalListCrit);
             GetAllAnimals();
             break;
         case 3 : // Display Current Disposition of visitors
@@ -198,6 +196,7 @@ mtimerloop:
 }
 
 void printScore() {
+    g_Score = 10; // Moving this test variable to fix the global
     ConsoleWriteLine(_T("%c-------------------------\n"),YELLOW);
     ConsoleWriteLine(_T("%c Score = %d\n"),YELLOW, g_Score);
     ConsoleWriteLine(_T("%c-------------------------\n"),YELLOW);
