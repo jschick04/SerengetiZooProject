@@ -8,16 +8,16 @@
 #define IS_LIST_EMPTY(listHead) ((listHead)->blink == (listHead));
 #define MAXS 20;
 
-void printScore();
-void printvHappinessLevel();
-void NextTurn();
-
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
 
 int g_Score = 0;
 
 int mTurns = 15;
+
+void printScore();
+void printvHappinessLevel();
+void NextTurn();
 
 BOOL InitializeListHeads() {
     animalListHead = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
@@ -39,12 +39,20 @@ int _tmain() {
         return -1;
     }
 
-    InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000);
-    InitializeCriticalSectionAndSpinCount(&cScore, 4000);
+    if (!InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000)) {
+        ConsoleWriteLine(_T("%cFailed to create Animal List CRITICAL_SECTION"), RED);
+    }
+    if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
+        ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION"), RED);
+    }
 
-    // TODO: Implement Main Loop
+    TCHAR buffer[MAX_PATH];
+    int menuOption;
+
+GAMELOOP:
+
     ConsoleWriteLine(_T("Please select your action\n"));
-    int Menu;
+    ConsoleWriteLine(_T("-------------------------\n"));
     ConsoleWriteLine(_T("1 - Create a visitor\n"));
     ConsoleWriteLine(_T("2 - Feed Animals\n"));
     ConsoleWriteLine(_T("3 - Check Animal Interactivity Levels\n"));
@@ -52,9 +60,15 @@ int _tmain() {
     ConsoleWriteLine(_T("5 - Show Case Animal\n"));
     ConsoleWriteLine(_T("6 - Check Visitors Happiness Level\n"));
     ConsoleWriteLine(_T("7 - Turn\n"));
-    scanf_s("%d", &Menu, 1);
-GAMELOOP:
-    switch (Menu) {
+    ConsoleWriteLine(_T("0 - Exit\n"));
+
+    _fgetts(buffer, _countof(buffer), stdin);
+    if (_stscanf_s(buffer, _T("%d"), &menuOption) != 1) {
+        ConsoleWriteLine(_T("Invalid Selection...\n"));
+        goto GAMELOOP;
+    }
+
+    switch (menuOption) {
         case 1 : // Create a visitor
             /*Call a function from Visitor.c that triggers the creation of a visitor. This functions should accept a string to fill Visitor->UniqueName. The creation of the visitor should also define:
             Visitor->CageLocation to 1
@@ -89,8 +103,11 @@ GAMELOOP:
             //Calls NextTurn() function which signal Visitors and Animals that they can move one step forward.
             //Print current score and Happiness Level.
             break;
-        default :
+        case 0 :
+            // Quit logic
             break;
+        default :
+            ConsoleWriteLine(_T("Invalid Selection...\n"));
             goto GAMELOOP;
     }
 
