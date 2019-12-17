@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <WriteLine.h>
 #include <ConsoleColors.h>
+#include "Visitor.h"
 
 #define MAXS 20
 #define MAXA 5
@@ -79,6 +80,14 @@ int _tmain() {
     int menuOption;
 
     InitializeAnimals(); // TODO: Need to error handle
+    InitVisitorsEvent();
+
+    AddVisitor(visitorListHead, _T("Tom"));
+    AddVisitor(visitorListHead, _T("Jerry"));
+    AddVisitor(visitorListHead, _T("Cornelius"));
+    AddVisitor(visitorListHead, _T("Fred"));
+    EnumVisitors(visitorListHead, TRUE);
+
 
     DWORD tid = 0;
     HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);

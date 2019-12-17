@@ -18,65 +18,43 @@ DWORD dwThreadIds[999];
 HANDLE InitVisitorsEvent()
 {
     hVisitorEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    SetEvent(hVisitorEvent);
     return hVisitorEvent;
 }
 
 //Adds a visitor to the linked list and kicks off a thread to start user loop.
 Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 {
-    WaitForSingleObject(hVisitorEvent, INFINITE);
-    //EnterCriticalSection(&VisitorListCS);
-
+   //create struct and return values.
     Visitor* NewVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
 
-    //Determine if List is Empty or not.
-    if (VisitorListHead->Flink == NULL)
+    if (NewVisitor == 0)
     {
-        //set the flink to the new entry.
-        VisitorListHead->Flink = &NewVisitor->Links;
-
-        //Set the Blink to the list head and the flink to null for the new visitor
-        NewVisitor->Links.Blink = VisitorListHead;
-        NewVisitor->Links.Flink = NULL;
-
+        //Allocation failed and we need to warn
+        return;
     }
 
-    //otherwise find the last entry in list and put the visitor at the end.
-    else
-    {
-        NewVisitor->Links = *VisitorListHead;
+    //update pointer to the first node
+    NodeEntry* next;
+    next = VisitorListHead->Blink;
 
-        while (NewVisitor->Links.Flink != NULL)
-        {
-            NewVisitor->Links = *NewVisitor->Links.Flink;
-        }
+    //point the flink to the list head and the blink to the current first node.
+    NewVisitor->Links.Blink = next;
+    NewVisitor->Links.Flink = VisitorListHead;
 
-        //save the previous info.
-        Visitor* PreviousVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
-        PreviousVisitor->Links = NewVisitor->Links;
+    //point current node first node's flink     
+    next->Flink = &(NewVisitor->Links);
 
-        //Set the Blink to the previous node and the flink to null for the new visitor
-        NewVisitor->Links.Blink = &(PreviousVisitor->Links);
-        NewVisitor->Links.Flink = NULL;
+    //point list head to new node.      
+    VisitorListHead->Blink = &(NewVisitor->Links);
 
-        //point the flink of the previous visitor at the new Visitor.
-        PreviousVisitor->Links.Flink = &(NewVisitor->Links);
-
-    }
-
-    //links should be updated at this point, data should be set here.
-
+    //Add data
     LPTSTR Entry = _T("Test");
-   
+
     NewVisitor->UniqueName = Name;
     NewVisitor->CageLocation = Entry;
     NewVisitor->HappinessLevel = 8;
     NewVisitor->Status = Happy;
-
-    //LeaveCriticalSection(&VisitorListCS);
-    SetEvent(hVisitorEvent);
-
-    //Start the Thread for the Visitor Loop HERE.
 
     return NewVisitor;
 }
@@ -132,7 +110,7 @@ DWORD WINAPI VisitorLoop(Visitor* Visitor, AnimalList* Animals)
 
         //Get the interactivity level and increase or decrease happiness of visitor. 
         DWORD AverageInterActivityLevel = 0;
-        //AverageInterActivityLevel = GetInteractiveLevel(Visitor->CageLocation);
+        AverageInterActivityLevel = GetCageTotalInteractiveLevel(Visitor->CageLocation);
 
         if (AverageInterActivityLevel <= 4)
         {
@@ -202,12 +180,12 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
     EnumNode = VisitorListHead->Flink;
     Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
 
-    if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[  Visitor  ] [  Cage Location ] [ Happiness Level ] [  Status  ]")); }
+    if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[  Visitor  ] [  Cage Location ] [ Happiness Level ] [  Status  ]\n")); }
 
     while (EnumNode->Flink != VisitorListHead)
     {
         eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
-        if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[  %s  ] [  %s  ] [    %d    ] [  %s  ]"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, eVisitor->Status); }
+        if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[  %s  ] [  %s  ] [    %d    ] [  %d  ]\n"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, eVisitor->Status); }
         EnumNode = EnumNode->Flink;
     }
 
