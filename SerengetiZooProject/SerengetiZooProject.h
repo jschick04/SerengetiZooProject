@@ -1,6 +1,8 @@
 #ifndef SERENGETI_ZOO_PROJECT_H
 #define SERENGETI_ZOO_PROJECT_H
 
+#include <Windows.h>
+
 typedef struct NodeEntry {
     struct NodeEntry* Flink;
     struct NodeEntry* Blink;
