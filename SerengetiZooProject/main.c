@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <tchar.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <WriteLine.h>
 #include <ConsoleColors.h>
 
@@ -11,7 +12,7 @@
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
 
-g_Score = 0;
+g_Score = 10;
 int mTurns = 15;
 HANDLE hTimer = NULL;
 LARGE_INTEGER liDueTime;
@@ -74,9 +75,9 @@ int _tmain() {
         interactiveLevel[i] = (rand() % (6 - 4 + 1)) + 4;
         NewAnimal(aTypeinit[i], aUniqueinit[i], aTypeinit[i], interactiveLevel);
     }
-    DWORD tid;
+    DWORD tid = 0;
     HANDLE ht;
-
+    ht = CreateThread(NULL, 0, mTimer, NULL, 0, tid);
 GAMELOOP:
 
     ConsoleWriteLine(_T("Please select your action\n"));
@@ -89,7 +90,7 @@ GAMELOOP:
     ConsoleWriteLine(_T("6 - Turn\n"));
     ConsoleWriteLine(_T("0 - Exit\n"));
 
-    ht = CreateThread(NULL,0,mTimer,NULL,0,tid);
+    
 
     _fgetts(buffer, _countof(buffer), stdin);
     if (_stscanf_s(buffer, _T("%d"), &menuOption) != 1) {
@@ -103,45 +104,57 @@ GAMELOOP:
             Call a function from Animal.c that triggers the feeding of a particular animal within the list. This functions should accept a string that would be compared to Animal->UniqueName
             In order to be compliant with the code requirements, this function should also check if the feedevent has been set, I will set the event and then call the feed function passing the animal name as a string.
             */
+            ConsoleWriteLine(_T("%cYou selected - Feed Animals\n"),BLUE);
 
             break;
         case 2 : // Check Animal Interactivity Levels
             /*Call a function from Animal.c that prints all the animals within the list and their respective Interactivity Levels.
             */
+            ConsoleWriteLine(_T("%cYou selected - Check Animal Int Levels\n"),BLUE);
             break;
         case 3 : // Display Current Disposition of visitors
             /*Call a function from Vistor.c that prints all the visitors within the list and their respective CageLocation.
             */
+            ConsoleWriteLine(_T("%cYou selected - Display Current Disp of Visitors\n"),BLUE);
             break;
         case 4 : // Show Case Animal
             /*Call a function from Visitor.c that increases the HappinessLevel of all visitors that are currently at a specific cage. This functions should accept a string to be compared with each visitor Visitor->CageLocation. 
             */
             //Call NextTurn()
+            ConsoleWriteLine(_T("%cYou selected - Show Case Animal\n"),BLUE);
             break;
         case 5 : // Check Visitors Happiness Level
             /*Call a function from Vistor.c that prints all the visitors within the list and their respective HappinessLevel.
             */
+            ConsoleWriteLine(_T("%cYou selected - Check Visitors Happ Level\n"),BLUE);
             break;
         case 6 : //Next Turn
             //Calls NextTurn() function which signal Visitors and Animals that they can move one step forward.
             //Print current score and Happiness Level.
+            ConsoleWriteLine(_T("%cYou selected - Next Turn\n"),BLUE);
             break;
         case 0 :
+            ConsoleWriteLine(_T("%cYou selected - Quit\n"),BLUE);
+            goto QUIT;
             // Quit logic
             break;
         default :
             ConsoleWriteLine(_T("Invalid Selection...\n"));
-            TerminateThread(ht, -1);
-            printScore();
-            goto GAMELOOP;
+            break;
     }
-
+    CancelWaitableTimer(hTimer);
+    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
+    printScore();
+    goto GAMELOOP;
+    QUIT:
+    CancelWaitableTimer(hTimer);
+    TerminateThread(ht,0);
     HeapFree(GetProcessHeap(), 0, &animalListHead);
     HeapFree(GetProcessHeap(), 0, &visitorListHead);
 }
 
 DWORD WINAPI mTimer(LPVOID lpParam) {
-    liDueTime.QuadPart = -600000000LL;
+    liDueTime.QuadPart = -100000000LL;
     // Create an unnamed waitable timer.
     hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
     if (NULL == hTimer)
@@ -156,13 +169,21 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
         return 2;
     }
     // Wait for the timer.
+    mtimerloop:
     if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
         printf("WaitForSingleObject failed (%d)\n", GetLastError());
-    else ConsoleWriteLine(_T("You took too long to select your option\nPlease select an option from the menu.\n"));
+    else {
+        ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
+        ConsoleWriteLine(_T("%cYou took too long to select your option\nPlease select an option from the menu.\n"),RED);
+        
+    }
+    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
+    goto mtimerloop;
     return 0;
 }
 
 void printScore() {
-    ConsoleWriteLine(_T("-------------------------\n"));
-    ConsoleWriteLine(_T("--------Score = %d-------\n",g_Score));
+    ConsoleWriteLine(_T("%c-------------------------\n"),YELLOW);
+    ConsoleWriteLine(_T("%c Score = %d\n"),YELLOW, g_Score);
+    ConsoleWriteLine(_T("%c-------------------------\n"),YELLOW);
 }
