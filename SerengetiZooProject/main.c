@@ -16,6 +16,7 @@ g_Score = 10;
 int mTurns = 15;
 HANDLE hTimer = NULL;
 LARGE_INTEGER liDueTime;
+HANDLE tEvent;
 
 
 DWORD WINAPI mTimer(LPVOID lpParam);
@@ -52,7 +53,7 @@ int _tmain() {
 
     TCHAR buffer[MAX_PATH];
     int menuOption;
-
+    tEvent = CreateEvent(NULL, FALSE, FALSE, _T("mLoopTEvent"));
     //Initialize animals structs.
     char aTypeinit[MAXA][15] =
     {
@@ -77,7 +78,7 @@ int _tmain() {
     }
     DWORD tid = 0;
     HANDLE ht;
-    ht = CreateThread(NULL, 0, mTimer, NULL, 0, tid);
+    ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
 GAMELOOP:
 
     ConsoleWriteLine(_T("Please select your action\n"));
@@ -148,12 +149,14 @@ GAMELOOP:
     goto GAMELOOP;
     QUIT:
     CancelWaitableTimer(hTimer);
-    TerminateThread(ht,0);
+    //if(ht)TerminateThread(ht,0);
+    SetEvent(tEvent);
     HeapFree(GetProcessHeap(), 0, &animalListHead);
     HeapFree(GetProcessHeap(), 0, &visitorListHead);
 }
 
 DWORD WINAPI mTimer(LPVOID lpParam) {
+    lpParam = "10";
     liDueTime.QuadPart = -100000000LL;
     // Create an unnamed waitable timer.
     hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
@@ -170,6 +173,7 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
     }
     // Wait for the timer.
     mtimerloop:
+    if (tEvent)return 0;
     if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
         printf("WaitForSingleObject failed (%d)\n", GetLastError());
     else {
@@ -179,7 +183,7 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
     }
     SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
     goto mtimerloop;
-    return 0;
+    
 }
 
 void printScore() {
