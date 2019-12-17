@@ -4,12 +4,7 @@
 #include <Windows.h>
 #include "SerengetiZooProject.h"
 
-enum AnimalType { Antelopes, Giraffes, Hyaena, Hippos, Monkeys, Mongoose, Tigers, WildeBeast, Zebras };
-
-typedef struct AnimalList {
-    struct ZooAnimal* ZooAnimal;
-    struct NodeEntry LinkedList;
-} AnimalList;
+enum AnimalType { Antelopes, Cheetahs, Giraffes, Hyaena, Hippos, Monkeys, Mongoose, Tigers, WildeBeast, Zebras };
 
 typedef struct ZooAnimal {
     enum AnimalType AnimalType;
@@ -21,11 +16,19 @@ typedef struct ZooAnimal {
     BOOL InteractivityPrompted;
 } ZooAnimal;
 
+typedef struct AnimalList {
+    ZooAnimal ZooAnimal;
+    struct NodeEntry LinkedList;
+} AnimalList;
+
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel);
 void AddAnimal(ZooAnimal* animal);
+void RemoveAnimal(ZooAnimal* animal);
 
 void GetAllAnimals();
-DWORD GetInteractiveLevel(LPTSTR cageName); // returns interactiveLevel
+
+DWORD GetCageTotalInteractiveLevel(LPTSTR cageName);
+DWORD GetCageAverageInteractiveLevel(LPTSTR cageName);
 
 DWORD WINAPI AnimalHealth(LPVOID lpParam);
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam);

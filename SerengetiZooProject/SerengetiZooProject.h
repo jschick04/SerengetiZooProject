@@ -3,7 +3,7 @@
 
 #include <Windows.h>
 
-#define IS_LIST_EMPTY(listHead) ((listHead)->blink == (listHead));
+#define IS_LIST_EMPTY(listHead) ((listHead)->Blink == (listHead))
 
 typedef struct NodeEntry {
     struct NodeEntry* Flink;

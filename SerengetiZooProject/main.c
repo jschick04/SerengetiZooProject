@@ -1,4 +1,5 @@
 #include "SerengetiZooProject.h"
+#include "Animals.h"
 #include <Windows.h>
 #include <tchar.h>
 #include <stdio.h>
@@ -19,9 +20,9 @@ LARGE_INTEGER liDueTime;
 HANDLE tEvent;
 int tThread = 0;
 
-
 DWORD WINAPI mTimer(LPVOID lpParam);
 void printScore();
+
 //void printvHappinessLevel();
 //void NextTurn();
 
@@ -39,6 +40,28 @@ BOOL InitializeListHeads() {
     return TRUE;
 }
 
+void InitializeAnimals() {
+    //Initialize animals structs.
+    LPTSTR uniqueName[] = {
+        _T("Julien"),
+        _T("Melman"),
+        _T("Maurice"),
+        _T("Gloria"),
+        _T("Mason"),
+    };
+
+    for (int i = 0; i != MAXA; i++) {
+        DWORD interactiveLevel = (rand() % (6 - 4 + 1)) + 4;
+
+        TCHAR buffer[5];
+        TCHAR cageName[10] = _T("Cage");
+        _itot_s(i, buffer, _countof(buffer), 10);
+        _tcscat_s(cageName, _countof(cageName), buffer);
+
+        NewAnimal(i, uniqueName[i], cageName, interactiveLevel);
+    }
+}
+
 int _tmain() {
     if (InitializeListHeads() == FALSE) {
         ConsoleWriteLine(_T("%cFailed to create list heads\n"), RED);
@@ -54,32 +77,11 @@ int _tmain() {
 
     TCHAR buffer[MAX_PATH];
     int menuOption;
-    
-    //Initialize animals structs.
-    char aTypeinit[MAXA][15] =
-    {
-        "Antelopes",
-        "Giraffes",
-        "Hyaena",
-        "Hippos",
-        "Monkeys",
-    };
-    char aUniqueinit[MAXA][15] =
-    {
-        "Julien",
-        "Melman",
-        "Maurice",
-        "Gloria",
-        "Mason",
-    };
-    DWORD interactiveLevel[MAXA];
-    for (int i = 0; i != MAXA; i++) {
-        interactiveLevel[i] = (rand() % (6 - 4 + 1)) + 4;
-        NewAnimal(aTypeinit[i], aUniqueinit[i], aTypeinit[i], interactiveLevel);
-    }
+
+    InitializeAnimals(); // TODO: Need to error handle
+
     DWORD tid = 0;
-    HANDLE ht;
-    ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
+    HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
 GAMELOOP:
 
     ConsoleWriteLine(_T("Please select your action\n"));
@@ -91,8 +93,6 @@ GAMELOOP:
     ConsoleWriteLine(_T("5 - Check Visitors Happiness Level\n"));
     ConsoleWriteLine(_T("6 - Turn\n"));
     ConsoleWriteLine(_T("0 - Exit\n"));
-
-    
 
     _fgetts(buffer, _countof(buffer), stdin);
     if (_stscanf_s(buffer, _T("%d"), &menuOption) != 1) {
@@ -112,7 +112,10 @@ GAMELOOP:
         case 2 : // Check Animal Interactivity Levels
             /*Call a function from Animal.c that prints all the animals within the list and their respective Interactivity Levels.
             */
+            EnterCriticalSection(&AnimalListCrit);
             ConsoleWriteLine(_T("%cYou selected - Check Animal Int Levels\n"),BLUE);
+            LeaveCriticalSection(&AnimalListCrit);
+            GetAllAnimals();
             break;
         case 3 : // Display Current Disposition of visitors
             /*Call a function from Vistor.c that prints all the visitors within the list and their respective CageLocation.
@@ -148,7 +151,7 @@ GAMELOOP:
     SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
     printScore();
     goto GAMELOOP;
-    QUIT:
+QUIT:
     CancelWaitableTimer(hTimer);
     //if(ht)TerminateThread(ht,0);
     tThread = 1;
@@ -161,30 +164,28 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
     liDueTime.QuadPart = -100000000LL;
     // Create an unnamed waitable timer.
     hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
-    if (NULL == hTimer)
-    {
+    if (NULL == hTimer) {
         printf("CreateWaitableTimer failed (%d)\n", GetLastError());
         return 1;
     }
     // Set a timer to wait for 60 seconds.
-    if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0))
-    {
+    if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
         printf("SetWaitableTimer failed (%d)\n", GetLastError());
         return 2;
     }
     // Wait for the timer.
-    mtimerloop:
+mtimerloop:
     if (tThread != 0)return 0;
     if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
         printf("WaitForSingleObject failed (%d)\n", GetLastError());
     else {
         ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
         ConsoleWriteLine(_T("%cYou took too long to select your option\nPlease select an option from the menu.\n"),RED);
-        
+
     }
     SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
     goto mtimerloop;
-    
+
 }
 
 void printScore() {

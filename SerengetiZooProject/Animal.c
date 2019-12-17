@@ -6,6 +6,33 @@
 
 HANDLE healthEvent;
 
+LPTSTR AnimalTypeToString(enum AnimalType animalType) {
+    switch (animalType) {
+        case Antelopes :
+            return _T("Antelopes");
+        case Cheetahs :
+            return _T("Cheetahs");
+        case Giraffes :
+            return _T("Giraffes");
+        case Hyaena :
+            return _T("Hyaena");
+        case Hippos :
+            return _T("Hippos");
+        case Monkeys :
+            return _T("Monkeys");
+        case Mongoose :
+            return _T("Mongoose");
+        case Tigers :
+            return _T("Tigers");
+        case WildeBeast :
+            return _T("WildeBeast");
+        case Zebras :
+            return _T("Zebras");
+        default :
+            return _T("");
+    }
+}
+
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel) {
     ZooAnimal* newAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
 
@@ -19,11 +46,12 @@ ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageN
     newAnimal->CageName = cageName;
     newAnimal->InteractiveLevel = interactiveLevel;
 
+    AddAnimal(newAnimal);
+
     return newAnimal;
 }
 
 void AddAnimal(ZooAnimal* animal) {
-
     AnimalList* newListItem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(AnimalList));
 
     if (animal == NULL || newListItem == NULL) {
@@ -40,19 +68,107 @@ void AddAnimal(ZooAnimal* animal) {
     temp->Blink = &newListItem->LinkedList;
     animalListHead->Flink = &newListItem->LinkedList;
 
-    newListItem->ZooAnimal = animal;
+    newListItem->ZooAnimal = *animal;
 
     LeaveCriticalSection(&AnimalListCrit);
 }
 
-//void GetAllAnimals() {
-//    AnimalList* temp = CONTAINING_RECORD(animalListHead->Flink, AnimalList, );
-//
-//    do {
-//        temp = temp->LinkedList;
-//        ZooAnimal tempAnimal = CONTAINING_RECORD(temp, ZooAnimal*, )
-//    } while (temp->Flink != animalListHead);
-//}
+// TODO: Finish Implementation
+void RemoveAnimal(ZooAnimal* animal) {
+    if (IS_LIST_EMPTY(animalListHead)) { return; }
+
+    EnterCriticalSection(&AnimalListCrit);
+
+    NodeEntry* temp = animalListHead->Blink;
+
+    while (temp != animalListHead) {
+        const AnimalList* tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList);
+
+        if (memcmp(animal, &tempAnimal->ZooAnimal, sizeof(animal)) == 0) {
+            NodeEntry* node = temp;
+            NodeEntry* flink = temp->Flink;
+            temp = node->Blink;
+            flink->Blink = temp;
+        }
+
+        temp = temp->Blink;
+    };
+
+    LeaveCriticalSection(&AnimalListCrit);
+}
+
+void GetAllAnimals() {
+    if (IS_LIST_EMPTY(animalListHead)) { return; }
+
+    EnterCriticalSection(&AnimalListCrit);
+
+    NodeEntry* temp = animalListHead->Blink;
+
+    while (temp != animalListHead) {
+        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+        ConsoleWriteLine(
+            _T("Type: %s, Name: %s, Cage: %s\n"),
+            AnimalTypeToString(tempAnimal.AnimalType),
+            tempAnimal.UniqueName,
+            tempAnimal.CageName
+        );
+
+        temp = temp->Blink;
+    };
+
+    LeaveCriticalSection(&AnimalListCrit);
+}
+
+DWORD GetCageTotalInteractiveLevel(LPTSTR cageName) {
+    DWORD total = 0;
+
+    if (IS_LIST_EMPTY(animalListHead)) { return total; }
+
+    EnterCriticalSection(&AnimalListCrit);
+
+    NodeEntry* temp = animalListHead->Blink;
+
+    while (temp != animalListHead) {
+        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+        if (_tcscmp(tempAnimal.CageName, cageName) == 0) {
+            total += tempAnimal.InteractiveLevel;
+        }
+
+        temp = temp->Blink;
+    };
+
+    LeaveCriticalSection(&AnimalListCrit);
+
+    return total;
+}
+
+DWORD GetCageAverageInteractiveLevel(LPTSTR cageName) {
+    DWORD total = 0;
+    DWORD count = 0;
+
+    if (IS_LIST_EMPTY(animalListHead)) { return total; }
+
+    EnterCriticalSection(&AnimalListCrit);
+
+    NodeEntry* temp = animalListHead->Blink;
+
+    while (temp != animalListHead) {
+        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+        if (_tcscmp(tempAnimal.CageName, cageName) == 0) {
+            total += tempAnimal.InteractiveLevel;
+            count++;
+        }
+
+        temp = temp->Blink;
+    };
+
+    LeaveCriticalSection(&AnimalListCrit);
+
+    return total / count;
+}
 
 DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     feedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
