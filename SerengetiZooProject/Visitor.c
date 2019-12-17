@@ -182,7 +182,7 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
 
     if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[  Visitor  ] [  Cage Location ] [ Happiness Level ] [  Status  ]\n")); }
 
-    while (EnumNode->Flink != VisitorListHead)
+    while (EnumNode->Flink != VisitorListHead->Flink)
     {
         eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
         if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[  %s  ] [  %s  ] [    %d    ] [  %d  ]\n"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, eVisitor->Status); }
