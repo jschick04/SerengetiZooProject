@@ -2,13 +2,12 @@
 #include <tchar.h>
 #include "main.c"
 #include "ConsoleColors.h"
-
+#include "Visitor.h"
 
 //GLOBALS
 CRITICAL_SECTION VisitorListCS;
 HANDLE hVisitorEvent;
 DWORD dwThreadIds[999];
-
 
 //FUNCTIONS
 
@@ -103,4 +102,5 @@ DWORD WINAPI VisitorLoop(Visitor* Visitor, AnimalList* Animals)
         }
         
     }
+    return Visitor;
 }

@@ -4,10 +4,10 @@
 
 enum VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
 
-typedef struct NodeEntry {
-    struct NodeEntry* Flink;
-    struct NodeEntry* Blink;
-} NodeEntry;
+typedef struct VisitorNodeEntry {
+    struct VisitorNodeEntry* Flink;
+    struct VisitorNodeEntry* Blink;
+} VisitorNodeEntry;
 
 typedef struct Visitor {
     LPTSTR UniqueName;
