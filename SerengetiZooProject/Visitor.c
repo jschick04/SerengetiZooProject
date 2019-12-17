@@ -131,8 +131,8 @@ DWORD WINAPI VisitorLoop(Visitor* Visitor, AnimalList* Animals)
         ConsoleWriteLine(_T("%s entered cage: %s"), Visitor->UniqueName, Visitor->CageLocation );
 
         //Get the interactivity level and increase or decrease happiness of visitor. 
-        DWORD AverageInterActivityLevel;
-        AverageInterActivityLevel = GetInteractiveLevel(Visitor->CageLocation);
+        DWORD AverageInterActivityLevel = 0;
+        //AverageInterActivityLevel = GetInteractiveLevel(Visitor->CageLocation);
 
         if (AverageInterActivityLevel <= 4)
         {
