@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "ConsoleColors.h"
 #include "Visitor.h"
 #include "Animals.h"
@@ -16,6 +17,7 @@ HANDLE hThreadHandles[999];
 //Function is used to signify Zoo Open
 HANDLE InitVisitorsEvent()
 {
+    InitializeCriticalSection(&VisitorListCrit);
     hVisitorEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     SetEvent(hVisitorEvent);
     return hVisitorEvent;
@@ -24,13 +26,16 @@ HANDLE InitVisitorsEvent()
 //Adds a visitor to the linked list and kicks off a thread to start user loop.
 Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 {
+    WaitForSingleObject(hVisitorEvent, INFINITE);
+    EnterCriticalSection(&VisitorListCrit);
    //create struct and return values.
     Visitor* NewVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
 
     if (NewVisitor == 0)
     {
+        LeaveCriticalSection(&VisitorListCrit);
         //Allocation failed and we need to warn
-        DWORD failed = -1;
+        Visitor* failed = -1;
         return failed;
     }
 
@@ -60,14 +65,17 @@ Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
     Params->Visitor = NewVisitor;
     Params->listHead = animalListHead;
 
+    LeaveCriticalSection(&VisitorListCrit);
+    SetEvent(hVisitorEvent);
+
     //create the thread to start the visitorloop
-    dwThreadId[VisitorTID] = CreateThread(
+    hThreadHandles[VisitorTID]= CreateThread(
         NULL,
         0,
         VisitorLoop,
         Params,
         0,
-        &hThreadHandles[VisitorTID]
+        dwThreadId[VisitorTID]
     );
     VisitorTID++;
     return NewVisitor;
@@ -76,6 +84,9 @@ Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 //Removes a visitor from the list of visitors.
 Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 {
+    WaitForSingleObject(hVisitorEvent, INFINITE);
+    EnterCriticalSection(&VisitorListCrit);
+
     NodeEntry* RemovedNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
     NodeEntry* TempNodePrev = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
     NodeEntry* TempNodeNext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
@@ -98,6 +109,9 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
     PreviousVisitor->Links.Flink = TempNodeNext;
     NextVisitor->Links.Blink = TempNodePrev;
 
+    LeaveCriticalSection(&VisitorListCrit);
+    SetEvent(hVisitorEvent);
+
     return 0;
 }
 
@@ -105,100 +119,77 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 //This loop is to iterate through each cage, and each animal end to end.
 DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 {
-    AnimalList* CurrentCage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(AnimalList));
-    NodeEntry* CurrentNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
-    CurrentNode = Params->listHead;
-
-    Visitor* Visitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
-    Visitor = Params->Visitor;
-
-    //need to get the current zoo animal struct here implementation not currently present.
-    //ZooAnimal* CurrentAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
-
-    srand(1000);
-
-    //loop to go through the entire list of cages
-    while (CurrentNode->Flink != Params->listHead)
+    int i = 0;
+    while (i <= _countof(Cages))
     {
-        if (Visitor->CageLocation != "Entry")
-        {
-            //Move from Entry to first cage after a sleep timer. This should be a random number between 1 and 3 minutes or so
-            Sleep(rand() % 180000);
-            CurrentCage = CONTAINING_RECORD(CurrentCage, AnimalList, LinkedList);
+       
+        Params->Visitor->CageLocation = Cages[i]->Name;
 
-            //zookeeper should be alerted after user enterse cage.
-            ConsoleWriteLine(_T("%s entered cage: %s"), Visitor->UniqueName, Visitor->CageLocation);
+        //zookeeper should be alerted after user enterse cage.
+        ConsoleWriteLine(_T("%s entered cage: %s\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
 
-            //Get the interactivity level and increase or decrease happiness of visitor. 
-            DWORD AverageInterActivityLevel = 0;
-            AverageInterActivityLevel = GetCageTotalInteractiveLevel(Visitor->CageLocation);
+        //Get the interactivity level and increase or decrease happiness of visitor. 
+        DWORD AverageInterActivityLevel = 0;
+        AverageInterActivityLevel = GetCageTotalInteractiveLevel(&Cages[i]);
 
+            //increase or decrease happiness point based on interctivity level
             if (AverageInterActivityLevel <= 4)
             {
                 //reduce one happiness point
-                Visitor->HappinessLevel = Visitor->HappinessLevel - 1;
+                Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel - 1;
 
             }
             else if (AverageInterActivityLevel == 5)
             {
                 //do not add or remove happiness point
-                Visitor->HappinessLevel = Visitor->HappinessLevel;
+                Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel;
             }
             else
             {
                 //Add one happiness point
-                Visitor->HappinessLevel = Visitor->HappinessLevel + 1;
+                Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel + 1;
             }
 
             //after the increase or decrease update status of visitor.
-            if (Visitor->HappinessLevel < 5)
+            if (Params->Visitor->HappinessLevel < 5)
             {
-                Visitor->HappinessLevel = RefundDemanded;
-                ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Visitor->UniqueName, Visitor->CageLocation, Visitor->Status);
+                Params->Visitor->HappinessLevel = RefundDemanded;
+                ConsoleWriteLine(_T("%s visited cage %s and left with status: %d\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation, Params->Visitor->Status);
             }
-            else if (Visitor->HappinessLevel > 5 && Visitor->HappinessLevel <= 7);
+            else if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7);
             {
-                Visitor->HappinessLevel = Disappointed;
-                ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Visitor->UniqueName, Visitor->CageLocation, Visitor->Status);
+                Params->Visitor->HappinessLevel = Disappointed;
+                ConsoleWriteLine(_T("%s visited cage %s and left with status: %d\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation, Params->Visitor->Status);
             }
-            //NOT SURE WHY THIS ELSE ISN'T CATCHING THE IF ABOVE IT.
-            //else
-            //{
-            //    Visitor->HappinessLevel = Happy;
-            //    ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Visitor->UniqueName, Visitor->CageLocation, Visitor->Status);
-            //}
+           /* else
+            {
+            Visitor->HappinessLevel = Happy;
+            ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Params->Visitor->UniqueName, Params->Visitor->CageLocation, Params->Visitor->Status);
+            }*/
 
-            
-            //Move the visitor forward one CAGE.
-            CurrentNode = CurrentCage->LinkedList.Flink;
-        }
-        else 
-        {
-            Sleep(rand() % 180000);
-            CurrentNode = CurrentCage->LinkedList.Flink;
-        }
-
+            //move the visitor to the next cage in the array
+            i++;
     }
 
     //visitor should have visited all locations at this point so we need to calculate if leaving happy leaving angry or demanding a refund.
-    if (Visitor->HappinessLevel < 5)
+    if (Params->Visitor->HappinessLevel < 5)
     {
-        Visitor->HappinessLevel = RefundDemanded;
-        ConsoleWriteLine(_T("%s made visited all cages and left with status: %s"), Visitor->UniqueName, Visitor->Status);
+        Params->Visitor->HappinessLevel = RefundDemanded;
+        ConsoleWriteLine(_T("%s visited all cages and left with status: %d\n"), Params->Visitor->UniqueName, Params->Visitor->Status);
     }
-    else if (Visitor->HappinessLevel > 5 && Visitor->HappinessLevel <= 7)
+    else if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7)
     {
-        Visitor->HappinessLevel = LeavingAngry;
-        ConsoleWriteLine(_T("%s made visited all cages and left with status: %s"), Visitor->UniqueName, Visitor->Status);
+        Params->Visitor->HappinessLevel = LeavingAngry;
+        ConsoleWriteLine(_T("%s visited all cages and left with status: %d\n"), Params->Visitor->UniqueName, Params->Visitor->Status);
     }
     else
     {
-        Visitor->HappinessLevel = LeavingHappy;
-        ConsoleWriteLine(_T("%s made visited all cages and left with status: %s"), Visitor->UniqueName, Visitor->Status);
+        Params->Visitor->HappinessLevel = LeavingHappy;
+        ConsoleWriteLine(_T("%s visited all cages and left with status: %d\n"), Params->Visitor->UniqueName, Params->Visitor->Status);
     }
 
-    //need to remove visitor from linked list here.
-    RemoveVisitor(visitorListHead, Visitor->UniqueName);
+    Sleep(1000);
+    RemoveVisitor(visitorListHead, Params->Visitor->UniqueName);
 
     //thread should exit at this point.
     return 0;
