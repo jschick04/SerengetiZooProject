@@ -42,13 +42,6 @@ BOOL InitializeListHeads() {
 }
 
 void InitializeZoo() {
-    // Initialize visitor structs
-    AddVisitor(visitorListHead, _T("Tom"));
-    AddVisitor(visitorListHead, _T("Jerry"));
-    AddVisitor(visitorListHead, _T("Cornelius"));
-    AddVisitor(visitorListHead, _T("Fred"));
-    EnumVisitors(visitorListHead, TRUE);
-
     // Initialize animals structs
     LPTSTR uniqueName[] = {
         _T("Julien"),
@@ -77,6 +70,13 @@ void InitializeZoo() {
         // Breaks cage name but need to cleanup at some point
         //HeapFree(GetProcessHeap(), 0, cageName);
     }
+
+    // Initialize visitor structs
+    AddVisitor(visitorListHead, _T("Tom"));
+    AddVisitor(visitorListHead, _T("Jerry"));
+    AddVisitor(visitorListHead, _T("Cornelius"));
+    AddVisitor(visitorListHead, _T("Fred"));
+    EnumVisitors(visitorListHead, TRUE);
 }
 
 void Dispose() {

@@ -8,7 +8,6 @@
 #include <WriteLine.h>
 
 //GLOBALS
-CRITICAL_SECTION VisitorListCS;
 HANDLE hVisitorEvent;
 HANDLE hThreadHandles[999];
 
@@ -120,7 +119,7 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 {
     int i = 0;
-    while (i <= _countof(cages))
+    while (i < (int)_countof(cages))
     {
        
         Params->Visitor->CageLocation = cages[i]->Name;
@@ -130,7 +129,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 
         //Get the interactivity level and increase or decrease happiness of visitor. 
         DWORD AverageInterActivityLevel = 0;
-        AverageInterActivityLevel = GetCageTotalInteractiveLevel(&cages[i]);
+        AverageInterActivityLevel = GetCageTotalInteractiveLevel(cages[i]->Name);
 
             //increase or decrease happiness point based on interctivity level
             if (AverageInterActivityLevel <= 4)
