@@ -6,6 +6,7 @@
 #include "Visitor.h"
 #include "Animals.h"
 #include <WriteLine.h>
+#include <time.h>
 
 //GLOBALS
 CRITICAL_SECTION VisitorListCS;
@@ -119,9 +120,17 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 //This loop is to iterate through each cage, and each animal end to end.
 DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 {
+    int SleepTimeRand = 0;
     for (int i = 0; i != _countof(cages); ++i)
     {
+        //sleep between 1 and 3 minutes to simulate walk/watch times. 
+        SleepTimeRand = (rand() % (180000 - 60000 + 1)) + 60000;
+        ConsoleWriteLine(_T("%s Sleeping for %d\n"), Params->Visitor->UniqueName, SleepTimeRand);
+        Sleep(SleepTimeRand);
+
+
         //handle error if the cage name is NULL. Something is very wrong, there are no animals.
+
         if (cages[i]->Name == NULL)
         {
             //WriteConsoleOutput(_T("There are no animals in the zoo left!"),RED);
