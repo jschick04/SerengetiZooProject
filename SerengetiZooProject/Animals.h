@@ -28,6 +28,9 @@ typedef struct AnimalList {
     struct NodeEntry LinkedList;
 } AnimalList;
 
+// Defines the number of cages that will be in the zoo
+Cage* cages[5];
+
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel);
 void AddAnimal(ZooAnimal* animal);
 void RemoveAnimal(ZooAnimal* animal);
