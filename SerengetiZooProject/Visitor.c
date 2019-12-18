@@ -119,18 +119,24 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 //This loop is to iterate through each cage, and each animal end to end.
 DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 {
-    int i = 0;
-    while (i <= _countof(cages))
+    for (int i = 0; i != _countof(cages); ++i)
     {
-       
-        Params->Visitor->CageLocation = cages[i]->Name;
+        //handle error if the cage name is NULL. Something is very wrong, there are no animals.
+        if (cages[i]->Name == NULL)
+        {
+            //WriteConsoleOutput(_T("There are no animals in the zoo left!"),RED);
+            ConsoleWriteLine(_T("There are no animals left in the Zoo!\n"));
+        }
+        else
+        {
+            Params->Visitor->CageLocation = cages[i]->Name;
 
-        //zookeeper should be alerted after user enterse cage.
-        ConsoleWriteLine(_T("%s entered cage: %s\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
+            //zookeeper should be alerted after user enterse cage.
+            ConsoleWriteLine(_T("%s entered cage: %s\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
 
-        //Get the interactivity level and increase or decrease happiness of visitor. 
-        DWORD AverageInterActivityLevel = 0;
-        AverageInterActivityLevel = GetCageTotalInteractiveLevel(&cages[i]);
+            //Get the interactivity level and increase or decrease happiness of visitor. 
+            DWORD AverageInterActivityLevel = 0;
+            AverageInterActivityLevel = GetCageTotalInteractiveLevel(cages[i]);
 
             //increase or decrease happiness point based on interctivity level
             if (AverageInterActivityLevel <= 4)
@@ -154,21 +160,18 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
             if (Params->Visitor->HappinessLevel < 5)
             {
                 Params->Visitor->HappinessLevel = RefundDemanded;
-                ConsoleWriteLine(_T("%s visited cage %s and left with status: %d\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation, Params->Visitor->Status);
+                
             }
-            else if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7);
+            if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7);
             {
                 Params->Visitor->HappinessLevel = Disappointed;
-                ConsoleWriteLine(_T("%s visited cage %s and left with status: %d\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation, Params->Visitor->Status);
+                
             }
-           /* else
-            {
-            Visitor->HappinessLevel = Happy;
-            ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Params->Visitor->UniqueName, Params->Visitor->CageLocation, Params->Visitor->Status);
-            }*/
-
-            //move the visitor to the next cage in the array
-            i++;
+            if (Params->Visitor->HappinessLevel >= 8)
+             {
+                Params->Visitor->HappinessLevel = Happy;
+             }
+        }
     }
 
     //visitor should have visited all locations at this point so we need to calculate if leaving happy leaving angry or demanding a refund.
@@ -202,12 +205,12 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
     EnumNode = VisitorListHead->Flink;
     Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
 
-    if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[  Visitor  ] [  Cage Location ] [ Happiness Level ] [  Status  ]\n")); }
+    if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[  Visitor  ] [  Cage  ] [ Happiness Level ] [  Status  ]\n")); }
 
     while (EnumNode->Flink != VisitorListHead->Flink)
     {
         eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
-        if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[  %s  ] [  %s  ] [    %d    ] [  %d  ]\n"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, eVisitor->Status); }
+        if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[ %s ] [ %s ] [ %d ] [ %d ]\n"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, eVisitor->Status); }
         EnumNode = EnumNode->Flink;
     }
 
