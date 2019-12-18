@@ -33,6 +33,8 @@ LPTSTR AnimalTypeToString(enum AnimalType animalType) {
     }
 }
 
+#pragma region Animal Functions
+
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel) {
     ZooAnimal* newAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
 
@@ -73,7 +75,6 @@ void AddAnimal(ZooAnimal* animal) {
     LeaveCriticalSection(&AnimalListCrit);
 }
 
-// TODO: Finish Implementation
 void RemoveAnimal(ZooAnimal* animal) {
     if (IS_LIST_EMPTY(animalListHead)) { return; }
 
@@ -96,6 +97,10 @@ void RemoveAnimal(ZooAnimal* animal) {
 
     LeaveCriticalSection(&AnimalListCrit);
 }
+
+#pragma endregion
+
+#pragma region Animal Get Functions
 
 void GetAllAnimals() {
     if (IS_LIST_EMPTY(animalListHead)) { return; }
@@ -170,20 +175,42 @@ DWORD GetCageAverageInteractiveLevel(LPTSTR cageName) {
     return total / count;
 }
 
-DWORD WINAPI AnimalHealth(LPVOID lpParam) {
-    feedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+#pragma endregion
 
-    if (feedEvent == NULL) {
+#pragma region Cage Functions
+
+Cage* NewCage(LPTSTR cageName) {
+    Cage* cage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Cage));
+
+    cage->Name = cageName;
+    cage->FeedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+    if (cage->FeedEvent == NULL) {
         ConsoleWriteLine(_T("%cFailed to create event: %d\n"), GetLastError());
+        return NULL;
+    }
+
+    return cage;
+}
+
+#pragma endregion
+
+#pragma region Animal Thread Functions
+
+DWORD WINAPI AnimalHealth(LPVOID lpParam) {
+    const Cage cage = *(Cage*)lpParam;
+
+    if (cage.FeedEvent == NULL) {
+        ConsoleWriteLine(_T("%cFeed Event is NULL"), RED);
         return -1;
     }
 
     do {
-        WaitForSingleObject(feedEvent, INFINITE);
+        WaitForSingleObject(cage.FeedEvent, INFINITE);
 
         EnterCriticalSection(&AnimalListCrit);
 
-        // TODO: What are we searching for?
+        // TODO: Look for each animal in cage and feed
 
         //ConsoleWriteLine(_T("%s the %s has been fed\n"), name, type);
 
@@ -196,3 +223,5 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
     return 0;
 }
+
+#pragma endregion

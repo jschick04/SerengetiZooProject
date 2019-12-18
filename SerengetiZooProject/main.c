@@ -1,18 +1,20 @@
 #include "SerengetiZooProject.h"
 #include "Animals.h"
+#include "Visitor.h"
 #include <Windows.h>
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <WriteLine.h>
 #include <ConsoleColors.h>
-#include "Visitor.h"
 
 #define MAXS 20
 #define MAXA 5
 
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
+
+Cage* cages[5];
 
 int mTurns = 15;
 HANDLE hTimer = NULL;
@@ -40,8 +42,15 @@ BOOL InitializeListHeads() {
     return TRUE;
 }
 
-void InitializeAnimals() {
-    //Initialize animals structs.
+void InitializeZoo() {
+    // Initialize visitor structs
+    AddVisitor(visitorListHead, _T("Tom"));
+    AddVisitor(visitorListHead, _T("Jerry"));
+    AddVisitor(visitorListHead, _T("Cornelius"));
+    AddVisitor(visitorListHead, _T("Fred"));
+    EnumVisitors(visitorListHead, TRUE);
+
+    // Initialize animals structs
     LPTSTR uniqueName[] = {
         _T("Julien"),
         _T("Melman"),
@@ -50,16 +59,18 @@ void InitializeAnimals() {
         _T("Mason"),
     };
 
-    for (int i = 0; i != MAXA; i++) {
+    for (int i = 0; i != _countof(cages); i++) {
         DWORD interactiveLevel = (rand() % (6 - 4 + 1)) + 4;
 
-        TCHAR buffer[5];
-        TCHAR cageName[10];
+        TCHAR buffer[2];
+        TCHAR cageName[6];
         _itot_s(i, buffer, _countof(buffer), 10);
         _tcscpy_s(cageName, _countof(cageName), _T("Cage")); // Resolves uninitialized warning
         _tcscat_s(cageName, _countof(cageName), buffer);
 
-        NewAnimal(i, uniqueName[i], cageName, interactiveLevel);
+        cages[i] = NewCage(cageName);
+
+        NewAnimal(i, uniqueName[i], cages[i]->Name, interactiveLevel);
     }
 }
 
@@ -79,15 +90,8 @@ int _tmain() {
     TCHAR buffer[MAX_PATH];
     int menuOption;
 
-    InitializeAnimals(); // TODO: Need to error handle
+    InitializeZoo(); // TODO: Need to error handle
     InitVisitorsEvent();
-
-    AddVisitor(visitorListHead, _T("Tom"));
-    AddVisitor(visitorListHead, _T("Jerry"));
-    AddVisitor(visitorListHead, _T("Cornelius"));
-    AddVisitor(visitorListHead, _T("Fred"));
-    EnumVisitors(visitorListHead, TRUE);
-
 
     DWORD tid = 0;
     HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);

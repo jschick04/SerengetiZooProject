@@ -6,6 +6,11 @@
 
 enum AnimalType { Antelopes, Cheetahs, Giraffes, Hyaena, Hippos, Monkeys, Mongoose, Tigers, WildeBeast, Zebras };
 
+typedef struct Cage {
+    LPTSTR Name;
+    HANDLE FeedEvent;
+} Cage;
+
 typedef struct ZooAnimal {
     enum AnimalType AnimalType;
     LPTSTR UniqueName;
@@ -26,6 +31,8 @@ void AddAnimal(ZooAnimal* animal);
 void RemoveAnimal(ZooAnimal* animal);
 
 void GetAllAnimals();
+
+Cage* NewCage(LPTSTR cageName);
 
 DWORD GetCageTotalInteractiveLevel(LPTSTR cageName);
 DWORD GetCageAverageInteractiveLevel(LPTSTR cageName);
