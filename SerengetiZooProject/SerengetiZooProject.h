@@ -20,6 +20,7 @@ NodeEntry* visitorListHead;
 
 // Events
 HANDLE feedEvent;
+HANDLE hVisitorThreadArray[999];
 
 HANDLE cage1;
 HANDLE cage2;
@@ -28,5 +29,7 @@ HANDLE cage4;
 HANDLE cage5;
 
 int g_Score;
+__declspec(selectany) int VisitorTID = 0;;
+DWORD dwThreadIds[999];
 
 #endif

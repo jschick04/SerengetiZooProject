@@ -82,13 +82,6 @@ int _tmain() {
     InitializeAnimals(); // TODO: Need to error handle
     InitVisitorsEvent();
 
-    AddVisitor(visitorListHead, _T("Tom"));
-    AddVisitor(visitorListHead, _T("Jerry"));
-    AddVisitor(visitorListHead, _T("Cornelius"));
-    AddVisitor(visitorListHead, _T("Fred"));
-    EnumVisitors(visitorListHead, TRUE);
-
-
     DWORD tid = 0;
     HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
 GAMELOOP:

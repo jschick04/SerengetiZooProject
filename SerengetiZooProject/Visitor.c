@@ -9,8 +9,7 @@
 //GLOBALS
 CRITICAL_SECTION VisitorListCS;
 HANDLE hVisitorEvent;
-DWORD dwThreadIds[999];
-
+HANDLE hThreadHandles[999];
 
 //FUNCTIONS
 
@@ -31,7 +30,8 @@ Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
     if (NewVisitor == 0)
     {
         //Allocation failed and we need to warn
-        return;
+        DWORD failed = -1;
+        return failed;
     }
 
     //update pointer to the first node
@@ -49,13 +49,27 @@ Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
     VisitorListHead->Blink = &(NewVisitor->Links);
 
     //Add data
-    LPTSTR Entry = _T("Test");
+    LPTSTR Entry = _T("Entry");
 
     NewVisitor->UniqueName = Name;
     NewVisitor->CageLocation = Entry;
     NewVisitor->HappinessLevel = 8;
     NewVisitor->Status = Happy;
 
+    VisitorLoopParams* Params = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VisitorLoopParams));;
+    Params->Visitor = NewVisitor;
+    Params->listHead = animalListHead;
+
+    //create the thread to start the visitorloop
+    dwThreadIds[VisitorTID] = CreateThread(
+        NULL,
+        0,
+        VisitorLoop,
+        Params,
+        0,
+        &hThreadHandles[VisitorTID]
+    );
+    VisitorTID++;
     return NewVisitor;
 }
 
@@ -89,10 +103,14 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 
 
 //This loop is to iterate through each cage, and each animal end to end.
-DWORD WINAPI VisitorLoop(Visitor* Visitor, AnimalList* Animals)
+DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 {
     AnimalList* CurrentCage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(AnimalList));
-    CurrentCage = Animals;
+    NodeEntry* CurrentNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    CurrentNode = Params->listHead;
+
+    Visitor* Visitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+    Visitor = Params->Visitor;
 
     //need to get the current zoo animal struct here implementation not currently present.
     //ZooAnimal* CurrentAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
@@ -100,52 +118,65 @@ DWORD WINAPI VisitorLoop(Visitor* Visitor, AnimalList* Animals)
     srand(1000);
 
     //loop to go through the entire list of cages
-    while (CurrentCage->LinkedList.Flink != NULL)
+    while (CurrentNode->Flink != Params->listHead)
     {
-        //Move from Entry to first cage after a sleep timer. This should be a random number between 1 and 3 minutes or so
-        Sleep(rand() % 180000);
-
-        //zookeeper should be alerted after user enterse cage.
-        ConsoleWriteLine(_T("%s entered cage: %s"), Visitor->UniqueName, Visitor->CageLocation );
-
-        //Get the interactivity level and increase or decrease happiness of visitor. 
-        DWORD AverageInterActivityLevel = 0;
-        AverageInterActivityLevel = GetCageTotalInteractiveLevel(Visitor->CageLocation);
-
-        if (AverageInterActivityLevel <= 4)
+        if (Visitor->CageLocation != "Entry")
         {
-            //reduce one happiness point
-            Visitor->HappinessLevel = Visitor->HappinessLevel - 1;
+            //Move from Entry to first cage after a sleep timer. This should be a random number between 1 and 3 minutes or so
+            Sleep(rand() % 180000);
+            CurrentCage = CONTAINING_RECORD(CurrentCage, AnimalList, LinkedList);
 
-        }
-        else if (AverageInterActivityLevel == 5)
-        {
-            //do not add or remove happiness point
-            Visitor->HappinessLevel = Visitor->HappinessLevel;
-        }
-        else
-        {
-            //Add one happiness point
-            Visitor->HappinessLevel = Visitor->HappinessLevel + 1;
-        }
+            //zookeeper should be alerted after user enterse cage.
+            ConsoleWriteLine(_T("%s entered cage: %s"), Visitor->UniqueName, Visitor->CageLocation);
 
-        //after the increase or decrease update status of visitor.
-        if (Visitor->HappinessLevel < 5)
-        {
-            Visitor->HappinessLevel = RefundDemanded;
-            ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Visitor->UniqueName, Visitor->CageLocation, Visitor->Status);
+            //Get the interactivity level and increase or decrease happiness of visitor. 
+            DWORD AverageInterActivityLevel = 0;
+            AverageInterActivityLevel = GetCageTotalInteractiveLevel(Visitor->CageLocation);
+
+            if (AverageInterActivityLevel <= 4)
+            {
+                //reduce one happiness point
+                Visitor->HappinessLevel = Visitor->HappinessLevel - 1;
+
+            }
+            else if (AverageInterActivityLevel == 5)
+            {
+                //do not add or remove happiness point
+                Visitor->HappinessLevel = Visitor->HappinessLevel;
+            }
+            else
+            {
+                //Add one happiness point
+                Visitor->HappinessLevel = Visitor->HappinessLevel + 1;
+            }
+
+            //after the increase or decrease update status of visitor.
+            if (Visitor->HappinessLevel < 5)
+            {
+                Visitor->HappinessLevel = RefundDemanded;
+                ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Visitor->UniqueName, Visitor->CageLocation, Visitor->Status);
+            }
+            else if (Visitor->HappinessLevel > 5 && Visitor->HappinessLevel <= 7);
+            {
+                Visitor->HappinessLevel = Disappointed;
+                ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Visitor->UniqueName, Visitor->CageLocation, Visitor->Status);
+            }
+            //NOT SURE WHY THIS ELSE ISN'T CATCHING THE IF ABOVE IT.
+            //else
+            //{
+            //    Visitor->HappinessLevel = Happy;
+            //    ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Visitor->UniqueName, Visitor->CageLocation, Visitor->Status);
+            //}
+
+            
+            //Move the visitor forward one CAGE.
+            CurrentNode = CurrentCage->LinkedList.Flink;
         }
-        else if (Visitor->HappinessLevel > 5 && Visitor->HappinessLevel <= 7);
+        else 
         {
-            Visitor->HappinessLevel = Disappointed;
-            ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Visitor->UniqueName, Visitor->CageLocation, Visitor->Status);
+            Sleep(rand() % 180000);
+            CurrentNode = CurrentCage->LinkedList.Flink;
         }
-        //NOT SURE WHY THIS ELSE ISN'T CATCHING THE IF ABOVE IT.
-        //else
-        //{
-        //    Visitor->HappinessLevel = Happy;
-        //    ConsoleWriteLine(_T("%s visited cage %s and left with status: %s"), Visitor->UniqueName, Visitor->CageLocation, Visitor->Status);
-        //}
 
     }
 

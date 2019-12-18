@@ -14,9 +14,13 @@ typedef struct Visitor {
     struct NodeEntry Links;
 } Visitor;
 
+typedef struct VisitorLoopParams {
+    Visitor* Visitor;
+    NodeEntry* listHead;
+} VisitorLoopParams;
 
 Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name);
-DWORD WINAPI VisitorLoop(Visitor* Visitor, AnimalList* Animals);
+DWORD WINAPI VisitorLoop(VisitorLoopParams* Params);
 HANDLE InitVisitorsEvent();
 DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole);
 Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name);
