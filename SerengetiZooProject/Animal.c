@@ -33,6 +33,8 @@ LPTSTR AnimalTypeToString(enum AnimalType animalType) {
     }
 }
 
+#pragma region Animal Functions
+
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel) {
     ZooAnimal* newAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
 
@@ -73,7 +75,6 @@ void AddAnimal(ZooAnimal* animal) {
     LeaveCriticalSection(&AnimalListCrit);
 }
 
-// TODO: Finish Implementation
 void RemoveAnimal(ZooAnimal* animal) {
     if (IS_LIST_EMPTY(animalListHead)) { return; }
 
@@ -97,6 +98,10 @@ void RemoveAnimal(ZooAnimal* animal) {
     LeaveCriticalSection(&AnimalListCrit);
 }
 
+#pragma endregion
+
+#pragma region Animal Get Functions
+
 void GetAllAnimals() {
     if (IS_LIST_EMPTY(animalListHead)) { return; }
 
@@ -119,6 +124,33 @@ void GetAllAnimals() {
 
     LeaveCriticalSection(&AnimalListCrit);
 }
+
+void GetAllAnimalsHealth() {
+    if (IS_LIST_EMPTY(animalListHead)) { return; }
+
+    EnterCriticalSection(&AnimalListCrit);
+
+    NodeEntry* temp = animalListHead->Blink;
+
+    while (temp != animalListHead) {
+        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+        ConsoleWriteLine(
+            _T("Cage: %s Name: %s Health: %d\n"),
+            tempAnimal.CageName,
+            tempAnimal.UniqueName,
+            tempAnimal.HealthLevel
+        );
+
+        temp = temp->Blink;
+    };
+
+    LeaveCriticalSection(&AnimalListCrit);
+}
+
+#pragma endregion
+
+#pragma region Cage Get Functions
 
 DWORD GetCageTotalInteractiveLevel(LPTSTR cageName) {
     DWORD total = 0;
@@ -170,25 +202,71 @@ DWORD GetCageAverageInteractiveLevel(LPTSTR cageName) {
     return total / count;
 }
 
-DWORD WINAPI AnimalHealth(LPVOID lpParam) {
-    feedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+#pragma endregion
+
+#pragma region Cage Functions
+
+Cage* NewCage(LPTSTR cageName) {
+    Cage* cage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Cage));
+
+    if (cage == 0) {
+        ConsoleWriteLine(_T("%cFailed to create cage\n"), RED);
+        return NULL;
+    }
+
+    HANDLE feedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
     if (feedEvent == NULL) {
         ConsoleWriteLine(_T("%cFailed to create event: %d\n"), GetLastError());
-        return -1;
+        return NULL;
+    }
+
+    cage->Name = cageName;
+    cage->FeedEvent = feedEvent;
+    cage->AnimalHealthThread = CreateThread(NULL, 0, &AnimalHealth, cage, 0, NULL);
+
+    return cage;
+}
+
+#pragma endregion
+
+#pragma region Animal Thread Functions
+
+DWORD WINAPI AnimalHealth(LPVOID lpParam) {
+    Cage* cage = lpParam;
+
+    if (cage->FeedEvent == NULL) {
+        ConsoleWriteLine(_T("%cFeed Event is NULL"), RED);
+        return 1;
     }
 
     do {
-        WaitForSingleObject(feedEvent, INFINITE);
+        WaitForSingleObject(cage->FeedEvent, INFINITE);
+
+        if (IS_LIST_EMPTY(animalListHead)) { continue; }
 
         EnterCriticalSection(&AnimalListCrit);
 
-        // TODO: What are we searching for?
+        NodeEntry* temp = animalListHead->Blink;
 
-        //ConsoleWriteLine(_T("%s the %s has been fed\n"), name, type);
+        while (temp != animalListHead) {
+            ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+            if (_tcscmp(tempAnimal->CageName, cage->Name) == 0) {
+                tempAnimal->HealthLevel++;
+
+                ConsoleWriteLine(
+                    _T("%s the %s has been fed"),
+                    tempAnimal->UniqueName,
+                    AnimalTypeToString(tempAnimal->AnimalType)
+                );
+            }
+
+            temp = temp->Blink;
+        };
 
         LeaveCriticalSection(&AnimalListCrit);
-    } while (TRUE);
+    } while (TRUE); // Need a break condition
 
     return 0;
 }
@@ -196,3 +274,5 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
     return 0;
 }
+
+#pragma endregion

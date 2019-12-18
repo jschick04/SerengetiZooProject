@@ -1,18 +1,21 @@
 #include "SerengetiZooProject.h"
 #include "Animals.h"
+#include "Visitor.h"
 #include <Windows.h>
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <strsafe.h>
 #include <WriteLine.h>
 #include <ConsoleColors.h>
-#include "Visitor.h"
 
 #define MAXS 20
 #define MAXA 5
 
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
+
+Cage* cages[5];
 
 int mTurns = 15;
 HANDLE hTimer = NULL;
@@ -40,8 +43,15 @@ BOOL InitializeListHeads() {
     return TRUE;
 }
 
-void InitializeAnimals() {
-    //Initialize animals structs.
+void InitializeZoo() {
+    // Initialize visitor structs
+    AddVisitor(visitorListHead, _T("Tom"));
+    AddVisitor(visitorListHead, _T("Jerry"));
+    AddVisitor(visitorListHead, _T("Cornelius"));
+    AddVisitor(visitorListHead, _T("Fred"));
+    EnumVisitors(visitorListHead, TRUE);
+
+    // Initialize animals structs
     LPTSTR uniqueName[] = {
         _T("Julien"),
         _T("Melman"),
@@ -50,17 +60,41 @@ void InitializeAnimals() {
         _T("Mason"),
     };
 
-    for (int i = 0; i != MAXA; i++) {
-        DWORD interactiveLevel = (rand() % (6 - 4 + 1)) + 4;
+    for (int i = 0; i != _countof(cages); ++i) {
+        const DWORD interactiveLevel = (rand() % (6 - 4 + 1)) + 4;
 
-        TCHAR buffer[5];
-        TCHAR cageName[10];
-        _itot_s(i, buffer, _countof(buffer), 10);
-        _tcscpy_s(cageName, _countof(cageName), _T("Cage")); // Resolves uninitialized warning
-        _tcscat_s(cageName, _countof(cageName), buffer);
+        const LPTSTR cageName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10);
+        const LPTSTR prepend = _T("Cage");
+
+        if (cageName == NULL) {
+            continue; // TODO: Add better handling if we can't assign a name
+        }
+
+        StringCchPrintf(cageName, 10, _T("%s%d"), prepend, i);
+
+        cages[i] = NewCage(cageName);
 
         NewAnimal(i, uniqueName[i], cageName, interactiveLevel);
+
+        // Breaks cage name but need to cleanup at some point
+        //HeapFree(GetProcessHeap(), 0, cageName);
     }
+}
+
+void Dispose() {
+    CancelWaitableTimer(hTimer);
+    //if(ht)TerminateThread(ht,0);
+    tThread = 1;
+
+    // Commented for debugging since we dont have a break condition yet
+    /*for (int i = 0; i != _countof(cages); ++i) {
+        WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
+    }*/
+
+    HeapFree(GetProcessHeap(), 0, animalListHead);
+    HeapFree(GetProcessHeap(), 0, visitorListHead);
+
+    ExitProcess(0);
 }
 
 int _tmain() {
@@ -78,12 +112,16 @@ int _tmain() {
 
     TCHAR buffer[MAX_PATH];
     int menuOption;
+    int cageNumber;
 
-    InitializeAnimals(); // TODO: Need to error handle
+    InitializeZoo(); // TODO: Need to error handle
     InitVisitorsEvent();
 
     DWORD tid = 0;
-    HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
+    const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
+    if (ht == NULL) {
+        ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
+    }
 GAMELOOP:
 
     ConsoleWriteLine(_T("Please select your action\n"));
@@ -109,6 +147,19 @@ GAMELOOP:
             In order to be compliant with the code requirements, this function should also check if the feedevent has been set, I will set the event and then call the feed function passing the animal name as a string.
             */
             ConsoleWriteLine(_T("%cYou selected - Feed Animals\n"),BLUE);
+
+            GetAllAnimalsHealth();
+
+            ConsoleWriteLine(_T("Which cage number would you like to feed?\n"));
+            _fgetts(buffer, _countof(buffer), stdin);
+            if (_stscanf_s(buffer, _T("%d"), &cageNumber) != 1) {
+                if (cageNumber < 0 || cageNumber >= 5) {
+                    ConsoleWriteLine(_T("Invalid Selection...\n"));
+                    goto GAMELOOP;
+                }
+
+                SetEvent(cages[cageNumber]->FeedEvent);
+            }
 
             break;
         case 2 : // Check Animal Interactivity Levels
@@ -140,9 +191,7 @@ GAMELOOP:
             break;
         case 0 :
             ConsoleWriteLine(_T("%cYou selected - Quit\n"),BLUE);
-            goto QUIT;
-            // Quit logic
-            break;
+            Dispose();
         default :
             ConsoleWriteLine(_T("Invalid Selection...\n"));
             break;
@@ -151,12 +200,6 @@ GAMELOOP:
     SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
     printScore();
     goto GAMELOOP;
-QUIT:
-    CancelWaitableTimer(hTimer);
-    //if(ht)TerminateThread(ht,0);
-    tThread = 1;
-    HeapFree(GetProcessHeap(), 0, &animalListHead);
-    HeapFree(GetProcessHeap(), 0, &visitorListHead);
 }
 
 DWORD WINAPI mTimer(LPVOID lpParam) {
@@ -165,19 +208,19 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
     // Create an unnamed waitable timer.
     hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
     if (NULL == hTimer) {
-        printf("CreateWaitableTimer failed (%d)\n", GetLastError());
+        ConsoleWriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
         return 1;
     }
     // Set a timer to wait for 60 seconds.
     if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
-        printf("SetWaitableTimer failed (%d)\n", GetLastError());
+        ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
         return 2;
     }
     // Wait for the timer.
 mtimerloop:
     if (tThread != 0)return 0;
     if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
-        printf("WaitForSingleObject failed (%d)\n", GetLastError());
+        ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
     else {
         ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
         ConsoleWriteLine(_T("%cYou took too long to select your option\nPlease select an option from the menu.\n"),RED);
