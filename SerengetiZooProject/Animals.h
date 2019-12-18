@@ -9,6 +9,8 @@ enum AnimalType { Antelopes, Cheetahs, Giraffes, Hyaena, Hippos, Monkeys, Mongoo
 typedef struct Cage {
     LPTSTR Name;
     HANDLE FeedEvent;
+    HANDLE AnimalHealthThread;
+    HANDLE AnimalInteractivityThread;
 } Cage;
 
 typedef struct ZooAnimal {
@@ -31,6 +33,7 @@ void AddAnimal(ZooAnimal* animal);
 void RemoveAnimal(ZooAnimal* animal);
 
 void GetAllAnimals();
+void GetAllAnimalsHealth();
 
 Cage* NewCage(LPTSTR cageName);
 

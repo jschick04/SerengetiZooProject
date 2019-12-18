@@ -5,6 +5,8 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <strsafe.h>
+#include <intsafe.h>
 #include <WriteLine.h>
 #include <ConsoleColors.h>
 
@@ -59,19 +61,36 @@ void InitializeZoo() {
         _T("Mason"),
     };
 
-    for (int i = 0; i != _countof(cages); i++) {
-        DWORD interactiveLevel = (rand() % (6 - 4 + 1)) + 4;
+    for (int i = 0; i != _countof(cages); ++i) {
+        const DWORD interactiveLevel = (rand() % (6 - 4 + 1)) + 4;
 
-        TCHAR buffer[2];
-        TCHAR cageName[6];
-        _itot_s(i, buffer, _countof(buffer), 10);
-        _tcscpy_s(cageName, _countof(cageName), _T("Cage")); // Resolves uninitialized warning
-        _tcscat_s(cageName, _countof(cageName), buffer);
+        const LPTSTR cageName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10);
+        const LPTSTR prepend = _T("Cage");
+
+        StringCchPrintf(cageName, 10, _T("%s%d"), prepend, i);
 
         cages[i] = NewCage(cageName);
 
-        NewAnimal(i, uniqueName[i], cages[i]->Name, interactiveLevel);
+        NewAnimal(i, uniqueName[i], cageName, interactiveLevel);
+
+        HeapFree(GetProcessHeap(), 0, cageName);
     }
+}
+
+void Dispose() {
+    CancelWaitableTimer(hTimer);
+    //if(ht)TerminateThread(ht,0);
+    tThread = 1;
+
+    // Commented for debugging since we dont have a break condition yet
+    /*for (int i = 0; i != _countof(cages); ++i) {
+        WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
+    }*/
+
+    HeapFree(GetProcessHeap(), 0, animalListHead);
+    HeapFree(GetProcessHeap(), 0, visitorListHead);
+
+    ExitProcess(0);
 }
 
 int _tmain() {
@@ -115,11 +134,25 @@ GAMELOOP:
 
     switch (menuOption) {
         case 1 : // Feed Animal
+            int cageNumber;
             /*Call a function from Animal.c that prints all the animals within the list and their respective health level.
             Call a function from Animal.c that triggers the feeding of a particular animal within the list. This functions should accept a string that would be compared to Animal->UniqueName
             In order to be compliant with the code requirements, this function should also check if the feedevent has been set, I will set the event and then call the feed function passing the animal name as a string.
             */
             ConsoleWriteLine(_T("%cYou selected - Feed Animals\n"),BLUE);
+
+            GetAllAnimalsHealth();
+
+            ConsoleWriteLine(_T("Which cage number would you like to feed?\n"));
+            _fgetts(buffer, _countof(buffer), stdin);
+            if (_stscanf_s(buffer, _T("%d"), &cageNumber) != 1) {
+                if (cageNumber < 0 || cageNumber >= 5) {
+                    ConsoleWriteLine(_T("Invalid Selection...\n"));
+                    goto GAMELOOP;
+                }
+
+                SetEvent(cages[cageNumber]->FeedEvent);
+            }
 
             break;
         case 2 : // Check Animal Interactivity Levels
@@ -151,9 +184,7 @@ GAMELOOP:
             break;
         case 0 :
             ConsoleWriteLine(_T("%cYou selected - Quit\n"),BLUE);
-            goto QUIT;
-            // Quit logic
-            break;
+            Dispose();
         default :
             ConsoleWriteLine(_T("Invalid Selection...\n"));
             break;
@@ -162,12 +193,6 @@ GAMELOOP:
     SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
     printScore();
     goto GAMELOOP;
-QUIT:
-    CancelWaitableTimer(hTimer);
-    //if(ht)TerminateThread(ht,0);
-    tThread = 1;
-    HeapFree(GetProcessHeap(), 0, &animalListHead);
-    HeapFree(GetProcessHeap(), 0, &visitorListHead);
 }
 
 DWORD WINAPI mTimer(LPVOID lpParam) {
