@@ -120,17 +120,17 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 {
     int i = 0;
-    while (i <= _countof(Cages))
+    while (i <= _countof(cages))
     {
        
-        Params->Visitor->CageLocation = Cages[i]->Name;
+        Params->Visitor->CageLocation = cages[i]->Name;
 
         //zookeeper should be alerted after user enterse cage.
         ConsoleWriteLine(_T("%s entered cage: %s\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
 
         //Get the interactivity level and increase or decrease happiness of visitor. 
         DWORD AverageInterActivityLevel = 0;
-        AverageInterActivityLevel = GetCageTotalInteractiveLevel(&Cages[i]);
+        AverageInterActivityLevel = GetCageTotalInteractiveLevel(&cages[i]);
 
             //increase or decrease happiness point based on interctivity level
             if (AverageInterActivityLevel <= 4)
