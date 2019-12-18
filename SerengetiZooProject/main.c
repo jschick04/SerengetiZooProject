@@ -112,8 +112,8 @@ int _tmain() {
     int menuOption;
     int cageNumber;
 
-    InitializeZoo(); // TODO: Need to error handle
     InitVisitorsEvent();
+    InitializeZoo(); // TODO: Need to error handle
 
     DWORD tid = 0;
     const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
