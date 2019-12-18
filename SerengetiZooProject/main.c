@@ -66,6 +66,10 @@ void InitializeZoo() {
         const LPTSTR cageName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10);
         const LPTSTR prepend = _T("Cage");
 
+        if (cageName == NULL) {
+            continue; // TODO: Add better handling if we can't assign a name
+        }
+
         StringCchPrintf(cageName, 10, _T("%s%d"), prepend, i);
 
         cages[i] = NewCage(cageName);
@@ -108,12 +112,16 @@ int _tmain() {
 
     TCHAR buffer[MAX_PATH];
     int menuOption;
+    int cageNumber;
 
     InitializeZoo(); // TODO: Need to error handle
     InitVisitorsEvent();
 
     DWORD tid = 0;
-    HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
+    const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
+    if (ht == NULL) {
+        ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
+    }
 GAMELOOP:
 
     ConsoleWriteLine(_T("Please select your action\n"));
@@ -134,7 +142,6 @@ GAMELOOP:
 
     switch (menuOption) {
         case 1 : // Feed Animal
-            int cageNumber;
             /*Call a function from Animal.c that prints all the animals within the list and their respective health level.
             Call a function from Animal.c that triggers the feeding of a particular animal within the list. This functions should accept a string that would be compared to Animal->UniqueName
             In order to be compliant with the code requirements, this function should also check if the feedevent has been set, I will set the event and then call the feed function passing the animal name as a string.
@@ -201,19 +208,19 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
     // Create an unnamed waitable timer.
     hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
     if (NULL == hTimer) {
-        printf("CreateWaitableTimer failed (%d)\n", GetLastError());
+        ConsoleWriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
         return 1;
     }
     // Set a timer to wait for 60 seconds.
     if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
-        printf("SetWaitableTimer failed (%d)\n", GetLastError());
+        ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
         return 2;
     }
     // Wait for the timer.
 mtimerloop:
     if (tThread != 0)return 0;
     if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
-        printf("WaitForSingleObject failed (%d)\n", GetLastError());
+        ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
     else {
         ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
         ConsoleWriteLine(_T("%cYou took too long to select your option\nPlease select an option from the menu.\n"),RED);
