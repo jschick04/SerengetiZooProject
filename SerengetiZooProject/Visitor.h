@@ -19,6 +19,11 @@ typedef struct VisitorLoopParams {
     NodeEntry* listHead;
 } VisitorLoopParams;
 
+DWORD dwThreadId[999];
+HANDLE hThreadHandles[999];
+__declspec(selectany) int VisitorTID = 0;
+
+
 Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name);
 DWORD WINAPI VisitorLoop(VisitorLoopParams* Params);
 HANDLE InitVisitorsEvent();

@@ -61,7 +61,7 @@ Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
     Params->listHead = animalListHead;
 
     //create the thread to start the visitorloop
-    dwThreadIds[VisitorTID] = CreateThread(
+    dwThreadId[VisitorTID] = CreateThread(
         NULL,
         0,
         VisitorLoop,
