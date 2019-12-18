@@ -15,8 +15,6 @@
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
 
-Cage* cages[5];
-
 int mTurns = 15;
 HANDLE hTimer = NULL;
 LARGE_INTEGER liDueTime;
@@ -70,7 +68,7 @@ void InitializeZoo() {
             continue; // TODO: Add better handling if we can't assign a name
         }
 
-        StringCchPrintf(cageName, 10, _T("%s%d"), prepend, i);
+        StringCchPrintf(cageName, 10, _T("%s%d"), prepend, i + 1);
 
         cages[i] = NewCage(cageName);
 
@@ -152,13 +150,13 @@ GAMELOOP:
 
             ConsoleWriteLine(_T("Which cage number would you like to feed?\n"));
             _fgetts(buffer, _countof(buffer), stdin);
-            if (_stscanf_s(buffer, _T("%d"), &cageNumber) != 1) {
-                if (cageNumber < 0 || cageNumber >= 5) {
+            if (_stscanf_s(buffer, _T("%d"), &cageNumber) == 1) {
+                if (cageNumber < 1 || cageNumber > (int)_countof(cages)) {
                     ConsoleWriteLine(_T("Invalid Selection...\n"));
                     goto GAMELOOP;
                 }
 
-                SetEvent(cages[cageNumber]->FeedEvent);
+                SetEvent(cages[cageNumber - 1]->FeedEvent);
             }
 
             break;
