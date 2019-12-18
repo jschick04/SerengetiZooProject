@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <strsafe.h>
-#include <intsafe.h>
 #include <WriteLine.h>
 #include <ConsoleColors.h>
 
@@ -73,7 +72,8 @@ void InitializeZoo() {
 
         NewAnimal(i, uniqueName[i], cageName, interactiveLevel);
 
-        HeapFree(GetProcessHeap(), 0, cageName);
+        // Breaks cage name but need to cleanup at some point
+        //HeapFree(GetProcessHeap(), 0, cageName);
     }
 }
 

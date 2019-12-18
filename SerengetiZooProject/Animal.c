@@ -136,7 +136,7 @@ void GetAllAnimalsHealth() {
         const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
 
         ConsoleWriteLine(
-            _T("Cage: %s Name: %s Health: %s\n"),
+            _T("Cage: %s Name: %s Health: %d\n"),
             tempAnimal.CageName,
             tempAnimal.UniqueName,
             tempAnimal.HealthLevel
@@ -216,14 +216,14 @@ Cage* NewCage(LPTSTR cageName) {
 
     HANDLE feedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
-    if (cage->FeedEvent == NULL) {
+    if (feedEvent == NULL) {
         ConsoleWriteLine(_T("%cFailed to create event: %d\n"), GetLastError());
         return NULL;
     }
 
     cage->Name = cageName;
     cage->FeedEvent = feedEvent;
-    cage->AnimalHealthThread = CreateThread(NULL, 0, &AnimalHealth, &feedEvent, 0, NULL);
+    cage->AnimalHealthThread = CreateThread(NULL, 0, &AnimalHealth, cage, 0, NULL);
 
     return cage;
 }
@@ -233,15 +233,15 @@ Cage* NewCage(LPTSTR cageName) {
 #pragma region Animal Thread Functions
 
 DWORD WINAPI AnimalHealth(LPVOID lpParam) {
-    const Cage cage = *(Cage*)lpParam;
+    Cage* cage = lpParam;
 
-    if (cage.FeedEvent == NULL) {
+    if (cage->FeedEvent == NULL) {
         ConsoleWriteLine(_T("%cFeed Event is NULL"), RED);
         return 1;
     }
 
     do {
-        WaitForSingleObject(cage.FeedEvent, INFINITE);
+        WaitForSingleObject(cage->FeedEvent, INFINITE);
 
         if (IS_LIST_EMPTY(animalListHead)) { continue; }
 
@@ -252,7 +252,7 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
         while (temp != animalListHead) {
             ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
 
-            if (_tcscmp(tempAnimal->CageName, cage.Name) == 0) {
+            if (_tcscmp(tempAnimal->CageName, cage->Name) == 0) {
                 tempAnimal->HealthLevel++;
 
                 ConsoleWriteLine(
