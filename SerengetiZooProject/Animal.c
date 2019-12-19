@@ -29,7 +29,7 @@ LPTSTR AnimalTypeToString(enum AnimalType animalType) {
         case Zebras :
             return _T("Zebras");
         default :
-            return _T("");
+            return _T("Invalid Animal");
     }
 }
 
@@ -331,7 +331,7 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     }
 
     do {
-        HANDLE events[] = { cage->FeedEvent, appClose };
+        HANDLE events[] = {cage->FeedEvent, appClose};
 
         if (WaitForMultipleObjects(_countof(events), events, FALSE, INFINITE) == 1) {
             return 0;
