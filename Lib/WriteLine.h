@@ -4,6 +4,5 @@
 #include <Windows.h>
 
 int ConsoleWriteLine(const LPTSTR pszText, ...);
-int ConsoleWriteError(const LPTSTR);
 
 #endif
