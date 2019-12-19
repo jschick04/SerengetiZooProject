@@ -9,7 +9,7 @@ HANDLE g_Console;
 WORD g_Attributes;
 
 DWORD PrintToFile(HANDLE hOutputFile, const LPTSTR pszText) {
-    const DWORD stringBytes = (DWORD)(_tcslen(pszText) * sizeof(TCHAR));
+    const byte stringBytes = (byte)(_tcslen(pszText) * sizeof(TCHAR));
     DWORD bytesWritten = 0;
 
     if (WriteFile(hOutputFile, pszText, stringBytes, &bytesWritten, NULL)) {
