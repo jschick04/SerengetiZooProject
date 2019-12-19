@@ -29,5 +29,6 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params);
 HANDLE InitVisitorsEvent();
 DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole);
 Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name);
+DWORD WINAPI AddVisitorsThread();
 
 #endif

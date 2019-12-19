@@ -125,7 +125,6 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
     {
         //sleep between 1 and 3 minutes to simulate walk/watch times. 
         SleepTimeRand = (rand() % (180000 - 60000 + 1)) + 60000;
-        ConsoleWriteLine(_T("%s Sleeping for %d\n"), Params->Visitor->UniqueName, SleepTimeRand);
         Sleep(SleepTimeRand);
 
 
@@ -221,6 +220,42 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
         eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
         if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[ %s ] [ %s ] [ %d ] [ %d ]\n"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, eVisitor->Status); }
         EnumNode = EnumNode->Flink;
+    }
+
+    return 0;
+}
+
+//Thread to simulate a random amount of visitors being added periodically.
+DWORD WINAPI AddVisitorsThread()
+{
+    LPTSTR VisitorName[] = {
+    _T("Ron"),
+    _T("Deveroux"),
+    _T("Felicio"),
+    _T("Gary"),
+    _T("Jorge"),
+    _T("Joseph"),
+    _T("Travis"),
+    _T("Ryan"),
+    _T("Tony"),
+    _T("Leonardo"),
+    _T("Barry"),
+    _T("David"),
+    _T("Bruce"),
+    _T("Cliff"),
+    _T("Jack"),
+    };
+
+    //int numVisitorsRand = 0;
+    //numVisitorsRand = (rand() % (2));
+
+    int SleepRand = 0;
+    SleepRand = (rand() % (300000 - 80000 + 1)) + 80000;
+
+    for (int i = 0; i != _countof(VisitorName); ++i)
+    {
+        Sleep(SleepRand);
+        AddVisitor(visitorListHead, VisitorName[i]);
     }
 
     return 0;

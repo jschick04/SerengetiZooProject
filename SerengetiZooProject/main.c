@@ -77,6 +77,16 @@ void InitializeZoo() {
     AddVisitor(visitorListHead, _T("Cornelius"));
     AddVisitor(visitorListHead, _T("Fred"));
     EnumVisitors(visitorListHead, TRUE);
+
+    //BareBones Entry to test the random visitor entering simulation test.
+    CreateThread(
+        NULL,
+        0,
+        AddVisitorsThread,
+        NULL,
+        0,
+        NULL
+    );
 }
 
 void Dispose() {
