@@ -32,54 +32,54 @@ Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
    //create struct and return values.
     Visitor* NewVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
 
-    if (NewVisitor == 0)
-    {
-        LeaveCriticalSection(&VisitorListCrit);
-        //Allocation failed and we need to warn
-        Visitor* failed = -1;
-        return failed;
-    }
-
-    //update pointer to the first node
-    NodeEntry* next;
-    next = VisitorListHead->Blink;
-
-    //point the flink to the list head and the blink to the current first node.
-    NewVisitor->Links.Blink = next;
-    NewVisitor->Links.Flink = VisitorListHead;
-
-    //point current node first node's flink     
-    next->Flink = &(NewVisitor->Links);
-
-    //point list head to new node.      
-    VisitorListHead->Blink = &(NewVisitor->Links);
-
-    //Add data
-    LPTSTR Entry = _T("Entry");
-
-    NewVisitor->UniqueName = Name;
-    NewVisitor->CageLocation = Entry;
-    NewVisitor->HappinessLevel = 8;
-    NewVisitor->Status = Happy;
-
-    VisitorLoopParams* Params = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VisitorLoopParams));;
-    Params->Visitor = NewVisitor;
-    Params->listHead = animalListHead;
-
+if (NewVisitor == 0)
+{
     LeaveCriticalSection(&VisitorListCrit);
-    SetEvent(hVisitorEvent);
+    //Allocation failed and we need to warn
+    Visitor* failed = -1;
+    return failed;
+}
 
-    //create the thread to start the visitorloop
-    hThreadHandles[VisitorTID]= CreateThread(
-        NULL,
-        0,
-        VisitorLoop,
-        Params,
-        0,
-        dwThreadId[VisitorTID]
-    );
-    VisitorTID++;
-    return NewVisitor;
+//update pointer to the first node
+NodeEntry* next;
+next = VisitorListHead->Blink;
+
+//point the flink to the list head and the blink to the current first node.
+NewVisitor->Links.Blink = next;
+NewVisitor->Links.Flink = VisitorListHead;
+
+//point current node first node's flink     
+next->Flink = &(NewVisitor->Links);
+
+//point list head to new node.      
+VisitorListHead->Blink = &(NewVisitor->Links);
+
+//Add data
+LPTSTR Entry = _T("Entry");
+
+NewVisitor->UniqueName = Name;
+NewVisitor->CageLocation = Entry;
+NewVisitor->HappinessLevel = 8;
+NewVisitor->Status = Happy;
+
+VisitorLoopParams* Params = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VisitorLoopParams));;
+Params->Visitor = NewVisitor;
+Params->listHead = animalListHead;
+
+LeaveCriticalSection(&VisitorListCrit);
+SetEvent(hVisitorEvent);
+
+//create the thread to start the visitorloop
+hThreadHandles[VisitorTID] = CreateThread(
+    NULL,
+    0,
+    VisitorLoop,
+    Params,
+    0,
+    dwThreadId[VisitorTID]
+);
+VisitorTID++;
+return NewVisitor;
 }
 
 //Removes a visitor from the list of visitors.
@@ -110,6 +110,11 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
     PreviousVisitor->Links.Flink = TempNodeNext;
     NextVisitor->Links.Blink = TempNodePrev;
 
+    //cleanup
+    HeapFree(GetProcessHeap(), 0, RemovedVisitor);
+    //HeapFree(GetProcessHeap(), 0, PreviousVisitor);
+    //HeapFree(GetProcessHeap(), 0, NextVisitor);
+
     LeaveCriticalSection(&VisitorListCrit);
     SetEvent(hVisitorEvent);
 
@@ -123,13 +128,18 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
     int SleepTimeRand = 0;
     for (int i = 0; i != _countof(cages); ++i)
     {
-        //sleep between 1 and 3 minutes to simulate walk/watch times. 
-        SleepTimeRand = (rand() % (180000 - 60000 + 1)) + 60000;
-        Sleep(SleepTimeRand);
+        //ADD EVENT FOR TURN BASED SCENARIO HERE;
 
+        //sleep between 1 and 3 minutes to simulate walk/watch times. 
+        int sleeparray[5];
+        for (int s = 0; s != 5; ++s)
+        {
+            sleeparray[s] = SleepTimeRand = (rand() % (180000 - 60000 + 1)) + 60000;
+        }       
+        int selector = (rand() % 5);
+        Sleep(sleeparray[selector]);
 
         //handle error if the cage name is NULL. Something is very wrong, there are no animals.
-
         if (cages[i]->Name == NULL)
         {
             //WriteConsoleOutput(_T("There are no animals in the zoo left!"),RED);
@@ -144,7 +154,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 
             //Get the interactivity level and increase or decrease happiness of visitor. 
             DWORD AverageInterActivityLevel = 0;
-            AverageInterActivityLevel = GetCageTotalInteractiveLevel(cages[i]);
+            AverageInterActivityLevel = GetCageTotalInteractiveLevel(cages[i]->Name);
 
             //increase or decrease happiness point based on interctivity level
             if (AverageInterActivityLevel <= 4)
@@ -167,17 +177,18 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
             //after the increase or decrease update status of visitor.
             if (Params->Visitor->HappinessLevel < 5)
             {
-                Params->Visitor->HappinessLevel = RefundDemanded;
+                Params->Visitor->Status = RefundDemanded;
+                //BREAK OUT OF LOOP HERE AND IMMEDIATELY EXIT ZOO.
                 
             }
             if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7);
             {
-                Params->Visitor->HappinessLevel = Disappointed;
+                Params->Visitor->Status = Disappointed;
                 
             }
             if (Params->Visitor->HappinessLevel >= 8)
              {
-                Params->Visitor->HappinessLevel = Happy;
+                Params->Visitor->Status = Happy;
              }
         }
     }
@@ -221,6 +232,10 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
         if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[ %s ] [ %s ] [ %d ] [ %d ]\n"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, eVisitor->Status); }
         EnumNode = EnumNode->Flink;
     }
+
+    //cleanup heap
+    //HeapFree(GetProcessHeap(), 0, EnumNode);
+    //HeapFree(GetProcessHeap(), 0, eVisitor);
 
     return 0;
 }
@@ -276,24 +291,33 @@ DWORD WINAPI AddVisitorsThread()
     _T("Harry"),
     _T("Anna"),
     };
-
-    //int numVisitorsRand = 0;
-    //numVisitorsRand = (rand() % (2));
-
+        
         int SleepRand = 0;
+        int i = 0;
+        int num = 0;
+        int numVisitorsRand = 0;
+
+        //Sleep at the begginning to delay after initial seed.
         SleepRand = (rand() % (300000 - 80000 + 1)) + 80000;
+        Sleep(SleepRand);
 
-        for (int i = 0; i != _countof(VisitorName); ++i)
+        //Determine number of visitors to add
+        while(1)
         {
-            Sleep(SleepRand);
-            AddVisitor(visitorListHead, VisitorName[i]);
-
+            numVisitorsRand = (rand() % 3);
+            for (num = 0; num != numVisitorsRand; ++num)
+            {
+                AddVisitor(visitorListHead, VisitorName[i]);
+                ++i;
+            }
             if (i == _countof(VisitorName))
             {
+                // go back to the beginning of the name list.
                 i = 0;
             }
+            SleepRand = (rand() % (300000 - 80000 + 1)) + 80000;
+            Sleep(SleepRand);
         }
-
 
     return 0;
 }
