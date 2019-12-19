@@ -244,56 +244,19 @@ DWORD WINAPI AddVisitorsThread()
     _T("Bruce"),
     _T("Cliff"),
     _T("Jack"),
-    _T("Emma"),
-    _T("Taylor"),
-    _T("Alex"),
-    _T("Sophia"),
-    _T("James"),
-    _T("Diego"),
-    _T("Samuel"),
-    _T("Maria"),
-    _T("Richard"),
-    _T("Logan"),
-    _T("Brianna"),
-    _T("Martin"),
-    _T("Jessica"),
-    _T("Patricia"),
-    _T("Linda"),
-    _T("Caroline"),
-    _T("Liam"),
-    _T("Oliver"),
-    _T("Ben"),
-    _T("Dorothy"),
-    _T("Mabel"),
-    _T("Ariel"),
-    _T("Louis"),
-    _T("Nathan"),
-    _T("Nicole"),
-    _T("Adam"),
-    _T("Felix"),
-    _T("Jon"),
-    _T("Marco"),
-    _T("Harry"),
-    _T("Anna"),
     };
 
     //int numVisitorsRand = 0;
     //numVisitorsRand = (rand() % (2));
 
-        int SleepRand = 0;
-        SleepRand = (rand() % (300000 - 80000 + 1)) + 80000;
+    int SleepRand = 0;
+    SleepRand = (rand() % (300000 - 80000 + 1)) + 80000;
 
-        for (int i = 0; i != _countof(VisitorName); ++i)
-        {
-            Sleep(SleepRand);
-            AddVisitor(visitorListHead, VisitorName[i]);
-
-            if (i == _countof(VisitorName))
-            {
-                i = 0;
-            }
-        }
-
+    for (int i = 0; i != _countof(VisitorName); ++i)
+    {
+        Sleep(SleepRand);
+        AddVisitor(visitorListHead, VisitorName[i]);
+    }
 
     return 0;
 }
