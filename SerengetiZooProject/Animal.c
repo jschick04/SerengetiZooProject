@@ -33,6 +33,34 @@ LPTSTR AnimalTypeToString(enum AnimalType animalType) {
     }
 }
 
+void SetHealthEvent(ZooAnimal* animal) {
+    if (healthEvent == NULL) {
+        healthEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // Temporary, will be moved to NewCage
+
+        if (healthEvent == NULL) {
+            ConsoleWriteLine(_T("%cFailed to create event: %d"), RED, GetLastError());
+            return;
+        }
+    }
+
+    if (animal->HealthLevel <= 0) {
+        ConsoleWriteLine(
+            _T("%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n"),
+            YELLOW,
+            animal->UniqueName,
+            AnimalTypeToString(animal->AnimalType)
+        );
+
+        RemoveAnimal(animal);
+
+        g_Score -= 3;
+    } else if (animal->HealthLevel < 5) {
+        ConsoleWriteLine(_T("%s the %s is %csick\n"), animal->UniqueName, AnimalTypeToString(animal->AnimalType), PINK);
+    }
+
+    SetEvent(healthEvent);
+}
+
 #pragma region Animal Functions
 
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel) {
@@ -47,6 +75,13 @@ ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageN
     newAnimal->UniqueName = uniqueName;
     newAnimal->CageName = cageName;
     newAnimal->InteractiveLevel = interactiveLevel;
+
+    newAnimal->HealthLevel = 5;
+    newAnimal->HealthLevelChange = FALSE;
+
+    newAnimal->InteractivityPrompted = FALSE;
+
+    newAnimal->FeedTimer = 10;
 
     AddAnimal(newAnimal);
 
@@ -78,7 +113,14 @@ void AddAnimal(ZooAnimal* animal) {
 void RemoveAnimal(ZooAnimal* animal) {
     if (IS_LIST_EMPTY(animalListHead)) { return; }
 
-    EnterCriticalSection(&AnimalListCrit);
+    CRITICAL_SECTION animalRemovalCrit;
+
+    if (!InitializeCriticalSectionAndSpinCount(&animalRemovalCrit, 4000)) {
+        ConsoleWriteLine(_T("Failed to initialize CRITICAL_SECTION: %d"), GetLastError());
+        return;
+    }
+
+    EnterCriticalSection(&animalRemovalCrit);
 
     NodeEntry* temp = animalListHead->Blink;
 
@@ -95,7 +137,9 @@ void RemoveAnimal(ZooAnimal* animal) {
         temp = temp->Blink;
     };
 
-    LeaveCriticalSection(&AnimalListCrit);
+    LeaveCriticalSection(&animalRemovalCrit);
+
+    DeleteCriticalSection(&animalRemovalCrit);
 }
 
 #pragma endregion
@@ -113,10 +157,11 @@ void GetAllAnimals() {
         const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
 
         ConsoleWriteLine(
-            _T("Type: %s, Name: %s, Cage: %s\n"),
-            AnimalTypeToString(tempAnimal.AnimalType),
+            _T("[%c%s%r] %s the %s\n"),
+            SKYBLUE,
+            tempAnimal.CageName,
             tempAnimal.UniqueName,
-            tempAnimal.CageName
+            AnimalTypeToString(tempAnimal.AnimalType)
         );
 
         temp = temp->Blink;
@@ -136,11 +181,56 @@ void GetAllAnimalsHealth() {
         const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
 
         ConsoleWriteLine(
-            _T("Cage: %s Name: %s Health: %d\n"),
+            _T("[%c%s%r] %s the %s "),
+            SKYBLUE,
             tempAnimal.CageName,
             tempAnimal.UniqueName,
-            tempAnimal.HealthLevel
+            AnimalTypeToString(tempAnimal.AnimalType)
         );
+
+        if (tempAnimal.HealthLevel >= 6) {
+            ConsoleWriteLine(_T("(%c%d%r)\n"), LIME, tempAnimal.HealthLevel);
+        } else if (tempAnimal.HealthLevel >= 3) {
+            ConsoleWriteLine(_T("(%c%d%r)\n"), YELLOW, tempAnimal.HealthLevel);
+        } else {
+            ConsoleWriteLine(_T("(%c%d%r)\n"), PINK, tempAnimal.HealthLevel);
+        }
+
+        temp = temp->Blink;
+    };
+
+    LeaveCriticalSection(&AnimalListCrit);
+}
+
+#pragma endregion
+
+#pragma region Animal Change Functions
+
+void DecreaseAnimalFedTimer() {
+    if (IS_LIST_EMPTY(animalListHead)) { return; }
+
+    EnterCriticalSection(&AnimalListCrit);
+
+    NodeEntry* temp = animalListHead->Blink;
+
+    while (temp != animalListHead) {
+        ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+        if (tempAnimal->FeedTimer <= 0) {
+            tempAnimal->HealthLevel--;
+            tempAnimal->FeedTimer = 10;
+
+            ConsoleWriteLine(
+                _T("%c%s the %s is hungry\n"),
+                YELLOW,
+                tempAnimal->UniqueName,
+                AnimalTypeToString(tempAnimal->AnimalType)
+            );
+
+            SetHealthEvent(tempAnimal);
+        } else {
+            tempAnimal->FeedTimer--;
+        }
 
         temp = temp->Blink;
     };
@@ -236,7 +326,7 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     Cage* cage = lpParam;
 
     if (cage->FeedEvent == NULL) {
-        ConsoleWriteLine(_T("%cFeed Event is NULL"), RED);
+        ConsoleWriteLine(_T("%cFeed Event is NULL\n"), RED);
         return 1;
     }
 
@@ -254,24 +344,31 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
 
             if (_tcscmp(tempAnimal->CageName, cage->Name) == 0) {
                 tempAnimal->HealthLevel++;
+                tempAnimal->HealthLevelChange = TRUE;
 
                 ConsoleWriteLine(
-                    _T("%s the %s has been fed"),
+                    _T("%c%s the %s has been fed\n"),
+                    LIME,
                     tempAnimal->UniqueName,
                     AnimalTypeToString(tempAnimal->AnimalType)
                 );
+
+                SetHealthEvent(tempAnimal);
             }
 
             temp = temp->Blink;
         };
 
         LeaveCriticalSection(&AnimalListCrit);
-    } while (TRUE); // Need a break condition
-
-    return 0;
+    } while (TRUE);
 }
 
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
+    // TODO: Implement SignificantEventTimer
+
+    // Waits for health event
+    // Check for Animal->HealthLevelChange == TRUE
+    // IF TRUE Animal->InteractiveLevel++ ELSE --
     return 0;
 }
 

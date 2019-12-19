@@ -89,15 +89,19 @@ void InitializeZoo() {
     );
 }
 
+void EndTurnActions() {
+    DecreaseAnimalFedTimer();
+}
+
 void Dispose() {
     CancelWaitableTimer(hTimer);
     //if(ht)TerminateThread(ht,0);
     tThread = 1;
 
-    // Commented for debugging since we dont have a break condition yet
-    /*for (int i = 0; i != _countof(cages); ++i) {
+    for (int i = 0; i != _countof(cages); ++i) {
+        TerminateThread(cages[i]->AnimalHealthThread, 0); // Should probably find a better way then this
         WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
-    }*/
+    }
 
     HeapFree(GetProcessHeap(), 0, animalListHead);
     HeapFree(GetProcessHeap(), 0, visitorListHead);
@@ -196,6 +200,7 @@ GAMELOOP:
             //Calls NextTurn() function which signal Visitors and Animals that they can move one step forward.
             //Print current score and Happiness Level.
             ConsoleWriteLine(_T("%cYou selected - Next Turn\n"),BLUE);
+            EndTurnActions();
             break;
         case 0 :
             ConsoleWriteLine(_T("%cYou selected - Quit\n"),BLUE);
