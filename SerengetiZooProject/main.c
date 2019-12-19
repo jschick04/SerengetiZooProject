@@ -46,12 +46,12 @@ void InitializeMain() {
 
     if (appClose == NULL) {
         ConsoleWriteLine(_T("%cFailed to create critical event: %d"), RED, GetLastError());
-        ExitProcess(-1);
+        ExitProcess(1);
     }
 
     if (InitializeListHeads() == FALSE) {
         ConsoleWriteLine(_T("%cFailed to create list heads\n"), RED);
-        ExitProcess(-1);
+        ExitProcess(1);
     }
 
     if (!InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000)) {
@@ -126,7 +126,8 @@ void Dispose() {
     }
 
     HeapFree(GetProcessHeap(), 0, animalListHead);
-    HeapFree(GetProcessHeap(), 0, visitorListHead); // TODO: Need to terminate Visitor threads or this will throw an exception
+    HeapFree(GetProcessHeap(), 0, visitorListHead);
+    // TODO: Need to terminate Visitor threads or this will throw an exception
 
     ExitProcess(0);
 }
