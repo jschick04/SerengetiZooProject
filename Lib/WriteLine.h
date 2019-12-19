@@ -3,6 +3,12 @@
 
 #include <Windows.h>
 
-int ConsoleWriteLine(const LPTSTR pszText, ...);
+#ifdef UNICODE
+#define ConsoleWriteLine ConsoleWriteLineW
+#else
+#define ConsoleWriteLine ConsoleWriteLineA
+#endif
+
+int ConsoleWriteLine(LPTSTR pszText, ...);
 
 #endif
