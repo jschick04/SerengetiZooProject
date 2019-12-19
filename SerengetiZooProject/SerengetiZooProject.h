@@ -14,6 +14,8 @@ CRITICAL_SECTION VisitorListCrit;
 CRITICAL_SECTION AnimalListCrit;
 CRITICAL_SECTION cScore;
 
+HANDLE appClose;
+
 // Lists
 NodeEntry* animalListHead;
 NodeEntry* visitorListHead;

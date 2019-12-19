@@ -41,6 +41,27 @@ BOOL InitializeListHeads() {
     return TRUE;
 }
 
+void InitializeMain() {
+    appClose = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+    if (appClose == NULL) {
+        ConsoleWriteLine(_T("%cFailed to create critical event: %d"), RED, GetLastError());
+        ExitProcess(-1);
+    }
+
+    if (InitializeListHeads() == FALSE) {
+        ConsoleWriteLine(_T("%cFailed to create list heads\n"), RED);
+        ExitProcess(-1);
+    }
+
+    if (!InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000)) {
+        ConsoleWriteLine(_T("%cFailed to create Animal List CRITICAL_SECTION"), RED);
+    }
+    if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
+        ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION"), RED);
+    }
+}
+
 void InitializeZoo() {
     // Initialize animals structs
     LPTSTR uniqueName[] = {
@@ -89,15 +110,20 @@ void InitializeZoo() {
     );
 }
 
+void EndTurnActions() {
+    DecreaseAnimalFedTimer();
+}
+
 void Dispose() {
+    SetEvent(appClose);
+
     CancelWaitableTimer(hTimer);
     //if(ht)TerminateThread(ht,0);
     tThread = 1;
 
-    // Commented for debugging since we dont have a break condition yet
-    /*for (int i = 0; i != _countof(cages); ++i) {
+    for (int i = 0; i != _countof(cages); ++i) {
         WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
-    }*/
+    }
 
     HeapFree(GetProcessHeap(), 0, animalListHead);
     HeapFree(GetProcessHeap(), 0, visitorListHead);
@@ -106,17 +132,7 @@ void Dispose() {
 }
 
 int _tmain() {
-    if (InitializeListHeads() == FALSE) {
-        ConsoleWriteLine(_T("%cFailed to create list heads\n"), RED);
-        return -1;
-    }
-
-    if (!InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000)) {
-        ConsoleWriteLine(_T("%cFailed to create Animal List CRITICAL_SECTION"), RED);
-    }
-    if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
-        ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION"), RED);
-    }
+    InitializeMain();
 
     TCHAR buffer[MAX_PATH];
     int menuOption;
@@ -196,6 +212,7 @@ GAMELOOP:
             //Calls NextTurn() function which signal Visitors and Animals that they can move one step forward.
             //Print current score and Happiness Level.
             ConsoleWriteLine(_T("%cYou selected - Next Turn\n"),BLUE);
+            EndTurnActions();
             break;
         case 0 :
             ConsoleWriteLine(_T("%cYou selected - Quit\n"),BLUE);

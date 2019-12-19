@@ -21,6 +21,7 @@ typedef struct ZooAnimal {
     BOOL HealthLevelChange;
     DWORD InteractiveLevel;
     BOOL InteractivityPrompted;
+    DWORD FeedTimer;
 } ZooAnimal;
 
 typedef struct AnimalList {
@@ -37,6 +38,8 @@ void RemoveAnimal(ZooAnimal* animal);
 
 void GetAllAnimals();
 void GetAllAnimalsHealth();
+
+void DecreaseAnimalFedTimer();
 
 Cage* NewCage(LPTSTR cageName);
 
