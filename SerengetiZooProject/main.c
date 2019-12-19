@@ -41,6 +41,27 @@ BOOL InitializeListHeads() {
     return TRUE;
 }
 
+void InitializeMain() {
+    appClose = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+    if (appClose == NULL) {
+        ConsoleWriteLine(_T("%cFailed to create critical event: %d"), RED, GetLastError());
+        ExitProcess(-1);
+    }
+
+    if (InitializeListHeads() == FALSE) {
+        ConsoleWriteLine(_T("%cFailed to create list heads\n"), RED);
+        ExitProcess(-1);
+    }
+
+    if (!InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000)) {
+        ConsoleWriteLine(_T("%cFailed to create Animal List CRITICAL_SECTION"), RED);
+    }
+    if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
+        ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION"), RED);
+    }
+}
+
 void InitializeZoo() {
     // Initialize animals structs
     LPTSTR uniqueName[] = {
@@ -94,12 +115,13 @@ void EndTurnActions() {
 }
 
 void Dispose() {
+    SetEvent(appClose);
+
     CancelWaitableTimer(hTimer);
     //if(ht)TerminateThread(ht,0);
     tThread = 1;
 
     for (int i = 0; i != _countof(cages); ++i) {
-        TerminateThread(cages[i]->AnimalHealthThread, 0); // Should probably find a better way then this
         WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
     }
 
@@ -110,17 +132,7 @@ void Dispose() {
 }
 
 int _tmain() {
-    if (InitializeListHeads() == FALSE) {
-        ConsoleWriteLine(_T("%cFailed to create list heads\n"), RED);
-        return -1;
-    }
-
-    if (!InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000)) {
-        ConsoleWriteLine(_T("%cFailed to create Animal List CRITICAL_SECTION"), RED);
-    }
-    if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
-        ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION"), RED);
-    }
+    InitializeMain();
 
     TCHAR buffer[MAX_PATH];
     int menuOption;

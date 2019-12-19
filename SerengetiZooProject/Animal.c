@@ -331,7 +331,11 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     }
 
     do {
-        WaitForSingleObject(cage->FeedEvent, INFINITE);
+        HANDLE events[] = { cage->FeedEvent, appClose };
+
+        if (WaitForMultipleObjects(_countof(events), events, FALSE, INFINITE) == 1) {
+            return 0;
+        }
 
         if (IS_LIST_EMPTY(animalListHead)) { continue; }
 
