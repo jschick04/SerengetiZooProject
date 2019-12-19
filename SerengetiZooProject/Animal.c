@@ -314,6 +314,7 @@ Cage* NewCage(LPTSTR cageName) {
     cage->Name = cageName;
     cage->FeedEvent = feedEvent;
     cage->AnimalHealthThread = CreateThread(NULL, 0, &AnimalHealth, cage, 0, NULL);
+    cage->AnimalInteractivityThread = CreateThread(NULL, 0, &AnimalInteractivity, NULL, 0, NULL);
 
     return cage;
 }
@@ -324,15 +325,17 @@ Cage* NewCage(LPTSTR cageName) {
 
 DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     Cage* cage = lpParam;
+    HANDLE events[2];
 
     if (cage->FeedEvent == NULL) {
         ConsoleWriteLine(_T("%cFeed Event is NULL\n"), RED);
         return 1;
     }
 
-    do {
-        HANDLE events[] = {cage->FeedEvent, appClose};
+    events[0] = cage->FeedEvent;
+    events[1] = appClose;
 
+    do {
         if (WaitForMultipleObjects(_countof(events), events, FALSE, INFINITE) == 1) {
             return 0;
         }
@@ -347,8 +350,10 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
             ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
 
             if (_tcscmp(tempAnimal->CageName, cage->Name) == 0) {
-                tempAnimal->HealthLevel++;
-                tempAnimal->HealthLevelChange = TRUE;
+                if (tempAnimal->HealthLevel < 10) {
+                    tempAnimal->HealthLevel++;
+                    tempAnimal->HealthLevelChange = TRUE;
+                }
 
                 ConsoleWriteLine(
                     _T("%c%s the %s has been fed\n"),
@@ -368,12 +373,40 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
 }
 
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
-    // TODO: Implement SignificantEventTimer
+    lpParam = NULL; // Clears W4 warning
+    HANDLE events[2];
 
-    // Waits for health event
-    // Check for Animal->HealthLevelChange == TRUE
-    // IF TRUE Animal->InteractiveLevel++ ELSE --
-    return 0;
+    events[0] = healthEvent;
+    events[1] = appClose;
+
+    do {
+        if (WaitForMultipleObjects(_countof(events), events, FALSE, INFINITE) == 1) {
+            return 0;
+        }
+
+        if (IS_LIST_EMPTY(animalListHead)) { continue; }
+
+        EnterCriticalSection(&AnimalListCrit);
+
+        NodeEntry* temp = animalListHead->Blink;
+
+        while (temp != animalListHead) {
+            ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+            if (tempAnimal->HealthLevelChange) {
+                if (tempAnimal->InteractiveLevel < 10) {
+                    tempAnimal->InteractiveLevel++;
+                    // TODO: Need to determine if HealthLevel went up or down
+                }
+
+                tempAnimal->HealthLevelChange = FALSE;
+            }
+
+            temp = temp->Blink;
+        };
+
+        LeaveCriticalSection(&AnimalListCrit);
+    } while (TRUE);
 }
 
 #pragma endregion

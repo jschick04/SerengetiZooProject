@@ -126,7 +126,7 @@ void Dispose() {
     }
 
     HeapFree(GetProcessHeap(), 0, animalListHead);
-    HeapFree(GetProcessHeap(), 0, visitorListHead);
+    HeapFree(GetProcessHeap(), 0, visitorListHead); // TODO: Need to terminate Visitor threads or this will throw an exception
 
     ExitProcess(0);
 }
