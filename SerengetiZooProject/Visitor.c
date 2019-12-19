@@ -179,6 +179,8 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
             {
                 Params->Visitor->Status = RefundDemanded;
                 //BREAK OUT OF LOOP HERE AND IMMEDIATELY EXIT ZOO.
+                int X = 1;
+                break;
                 
             }
             if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7);
@@ -193,21 +195,29 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
         }
     }
 
+    Sleep(SleepTimeRand);
     //visitor should have visited all locations at this point so we need to calculate if leaving happy leaving angry or demanding a refund.
+    LPTSTR ExitStatus;
     if (Params->Visitor->HappinessLevel < 5)
     {
         Params->Visitor->HappinessLevel = RefundDemanded;
-        ConsoleWriteLine(_T("%s visited all cages and left with status: %d\n"), Params->Visitor->UniqueName, Params->Visitor->Status);
+        ExitStatus = _T("Demanded a Refund");
+        ConsoleWriteLine(_T("%s visited all cages and %s\n"), Params->Visitor->UniqueName, ExitStatus);
     }
     else if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7)
     {
         Params->Visitor->HappinessLevel = LeavingAngry;
-        ConsoleWriteLine(_T("%s visited all cages and left with status: %d\n"), Params->Visitor->UniqueName, Params->Visitor->Status);
+        ExitStatus = _T("Left Angry");
+        ConsoleWriteLine(_T("%s visited all cages and %s\n"), Params->Visitor->UniqueName, ExitStatus);
+        g_Score = g_Score - 10;
     }
     else
     {
         Params->Visitor->HappinessLevel = LeavingHappy;
-        ConsoleWriteLine(_T("%s visited all cages and left with status: %d\n"), Params->Visitor->UniqueName, Params->Visitor->Status);
+        ExitStatus = _T("Left Happy");
+        ConsoleWriteLine(_T("%s visited all cages and %s\n"), Params->Visitor->UniqueName, ExitStatus);
+        g_Score = g_Score + 10;
+        
     }
 
     Sleep(1000);
@@ -224,12 +234,30 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
     EnumNode = VisitorListHead->Flink;
     Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
 
-    if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[  Visitor  ] [  Cage  ] [ Happiness Level ] [  Status  ]\n")); }
+    if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[ Visitor ] [ Cage ] [ Happiness ] [ Status ]\n")); }
 
     while (EnumNode->Flink != VisitorListHead->Flink)
     {
+        //enum VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
+        LPTSTR status = 0;
         eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
-        if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[ %s ] [ %s ] [ %d ] [ %d ]\n"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, eVisitor->Status); }
+
+        if (eVisitor->Status == 0)
+        {
+            status = _T("Happy");
+        }
+
+        else if (eVisitor->Status == 1)
+        {
+            status = _T("Disappointed");
+        }
+
+        else if (eVisitor->Status == 2)
+        {
+            status = _T("RefundDemanded");
+        }
+
+        if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[ %s   -  %s  -  %d  -  %s  ]\n"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status); }
         EnumNode = EnumNode->Flink;
     }
 

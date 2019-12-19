@@ -207,6 +207,7 @@ GAMELOOP:
             /*Call a function from Vistor.c that prints all the visitors within the list and their respective HappinessLevel.
             */
             ConsoleWriteLine(_T("%cYou selected - Check Visitors Happ Level\n"),BLUE);
+            EnumVisitors(visitorListHead, TRUE);
             break;
         case 6 : //Next Turn
             //Calls NextTurn() function which signal Visitors and Animals that they can move one step forward.
