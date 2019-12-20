@@ -12,6 +12,7 @@
 CRITICAL_SECTION VisitorListCS;
 HANDLE hVisitorEvent;
 HANDLE hThreadHandles[999];
+BOOL bExitZoo;
 
 //FUNCTIONS
 
@@ -223,6 +224,11 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
              {
                 Params->Visitor->Status = Happy;
              }
+
+            if (bExitZoo == TRUE)
+            {
+                i = _countof(cages);
+            }
             LeaveCriticalSection(&VisitorListCrit);
             SetEvent(hVisitorEvent);
         }
@@ -260,7 +266,32 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
     return 0;
 }
 
-//Function to enumerate all visitors, simply prints them forward.
+     //Function to enumerate all visitors, simply prints them forward.
+    DWORD WINAPI ExitZoo(NodeEntry * VisitorListHead)
+    {
+        DWORD Count = 0;
+        WaitForSingleObject(hVisitorEvent, INFINITE);
+        EnterCriticalSection(&VisitorListCrit);
+
+        NodeEntry* EnumNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+        if (EnumNode == NULL) {
+            ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+            return NULL;
+        }
+        EnumNode = VisitorListHead->Flink;
+        Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+
+        while (EnumNode->Flink != VisitorListHead->Flink)
+        {
+            Count++;
+            EnumNode = EnumNode->Flink;
+        }
+        
+        bExitZoo = TRUE;
+        return Count;
+    }
+
+    //Function to enumerate all visitors, simply prints them forward.
 DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
 {
 
