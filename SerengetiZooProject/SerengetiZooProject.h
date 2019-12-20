@@ -10,8 +10,9 @@ typedef struct NodeEntry {
     struct NodeEntry* Blink;
 } NodeEntry;
 
-CRITICAL_SECTION VisitorListCrit;
 CRITICAL_SECTION AnimalListCrit;
+CRITICAL_SECTION VisitorListCrit;
+CRITICAL_SECTION ConsoleCrit;
 CRITICAL_SECTION cScore;
 
 HANDLE appClose;

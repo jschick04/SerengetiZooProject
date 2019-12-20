@@ -4,6 +4,14 @@
 #include <tchar.h>
 #include <ConsoleColors.h>
 
+#pragma region Declarations
+
+void SetHealthEvent(ZooAnimal* animal);
+DWORD WINAPI AnimalHealth(LPVOID lpParam);
+DWORD WINAPI AnimalInteractivity(LPVOID lpParam);
+
+#pragma endregion
+
 HANDLE healthEvent;
 
 LPTSTR AnimalTypeToString(enum AnimalType animalType) {
@@ -31,34 +39,6 @@ LPTSTR AnimalTypeToString(enum AnimalType animalType) {
         default :
             return _T("Invalid Animal");
     }
-}
-
-void SetHealthEvent(ZooAnimal* animal) {
-    if (healthEvent == NULL) {
-        healthEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // Temporary, will be moved to NewCage
-
-        if (healthEvent == NULL) {
-            ConsoleWriteLine(_T("%cFailed to create event: %d\n"), RED, GetLastError());
-            return;
-        }
-    }
-
-    if (animal->HealthLevel <= 0) {
-        ConsoleWriteLine(
-            _T("%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n"),
-            YELLOW,
-            animal->UniqueName,
-            AnimalTypeToString(animal->AnimalType)
-        );
-
-        RemoveAnimal(animal);
-
-        g_Score -= 3;
-    } else if (animal->HealthLevel < 5) {
-        ConsoleWriteLine(_T("%s the %s is %csick\n"), animal->UniqueName, AnimalTypeToString(animal->AnimalType), PINK);
-    }
-
-    SetEvent(healthEvent);
 }
 
 #pragma region Animal Functions
@@ -212,6 +192,41 @@ void GetAllAnimalsHealth() {
     LeaveCriticalSection(&AnimalListCrit);
 }
 
+void GetAllAnimalsInteractivity() {
+    if (IS_LIST_EMPTY(animalListHead)) {
+        ConsoleWriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
+        return;
+    }
+
+    EnterCriticalSection(&AnimalListCrit);
+
+    NodeEntry* temp = animalListHead->Blink;
+
+    while (temp != animalListHead) {
+        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+        ConsoleWriteLine(
+            _T("[%c%s%r] %s the %s "),
+            SKYBLUE,
+            tempAnimal.CageName,
+            tempAnimal.UniqueName,
+            AnimalTypeToString(tempAnimal.AnimalType)
+        );
+
+        if (tempAnimal.InteractiveLevel >= 6) {
+            ConsoleWriteLine(_T("(%c%d%r)\n"), LIME, tempAnimal.InteractiveLevel);
+        } else if (tempAnimal.InteractiveLevel >= 3) {
+            ConsoleWriteLine(_T("(%c%d%r)\n"), YELLOW, tempAnimal.InteractiveLevel);
+        } else {
+            ConsoleWriteLine(_T("(%c%d%r)\n"), PINK, tempAnimal.InteractiveLevel);
+        }
+
+        temp = temp->Blink;
+    };
+
+    LeaveCriticalSection(&AnimalListCrit);
+}
+
 #pragma endregion
 
 #pragma region Animal Change Functions
@@ -249,6 +264,34 @@ void DecreaseAnimalFedTimer() {
     };
 
     LeaveCriticalSection(&AnimalListCrit);
+}
+
+void SetHealthEvent(ZooAnimal* animal) {
+    if (healthEvent == NULL) {
+        healthEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // Temporary, will be moved to NewCage
+
+        if (healthEvent == NULL) {
+            ConsoleWriteLine(_T("%cFailed to create event: %d\n"), RED, GetLastError());
+            return;
+        }
+    }
+
+    if (animal->HealthLevel <= 0) {
+        ConsoleWriteLine(
+            _T("%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n"),
+            YELLOW,
+            animal->UniqueName,
+            AnimalTypeToString(animal->AnimalType)
+        );
+
+        RemoveAnimal(animal);
+
+        g_Score -= 3;
+    } else if (animal->HealthLevel < 5) {
+        ConsoleWriteLine(_T("%s the %s is %csick\n"), animal->UniqueName, AnimalTypeToString(animal->AnimalType), PINK);
+    }
+
+    SetEvent(healthEvent);
 }
 
 #pragma endregion
@@ -426,6 +469,12 @@ DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
 
         LeaveCriticalSection(&AnimalListCrit);
     } while (TRUE);
+}
+
+DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
+    lpParam = NULL;
+
+    return 0;
 }
 
 #pragma endregion

@@ -38,6 +38,7 @@ void RemoveAnimal(ZooAnimal* animal);
 
 void GetAllAnimals();
 void GetAllAnimalsHealth();
+void GetAllAnimalsInteractivity();
 
 void DecreaseAnimalFedTimer();
 
@@ -45,8 +46,5 @@ Cage* NewCage(LPTSTR cageName);
 
 DWORD GetCageTotalInteractiveLevel(LPTSTR cageName);
 DWORD GetCageAverageInteractiveLevel(LPTSTR cageName);
-
-DWORD WINAPI AnimalHealth(LPVOID lpParam);
-DWORD WINAPI AnimalInteractivity(LPVOID lpParam);
 
 #endif
