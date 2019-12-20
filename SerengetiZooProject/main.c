@@ -57,12 +57,19 @@ void InitializeMain() {
     if (!InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000)) {
         ConsoleWriteLine(_T("%cFailed to create Animal List CRITICAL_SECTION"), RED);
     }
+
+    if (!InitializeCriticalSectionAndSpinCount(&ConsoleCrit, 4000)) {
+        ConsoleWriteLine(_T("%cFailed to create Console CRITICAL_SECTION"), RED);
+    }
+
     if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
         ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION"), RED);
     }
 }
 
 void InitializeZoo() {
+    g_Score = 0;
+
     // Initialize animals structs
     LPTSTR uniqueName[] = {
         _T("Julien"),
@@ -147,6 +154,7 @@ int _tmain() {
         ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
     }
 GAMELOOP:
+    LeaveCriticalSection(&ConsoleCrit);
 
     ConsoleWriteLine(_T("Please select your action\n"));
     ConsoleWriteLine(_T("-------------------------\n"));
@@ -157,6 +165,8 @@ GAMELOOP:
     ConsoleWriteLine(_T("5 - Check Visitors Happiness Level\n"));
     ConsoleWriteLine(_T("6 - Turn\n"));
     ConsoleWriteLine(_T("0 - Exit\n"));
+
+    LeaveCriticalSection(&ConsoleCrit);
 
     _fgetts(buffer, _countof(buffer), stdin);
     if (_stscanf_s(buffer, _T("%d"), &menuOption) != 1) {
@@ -170,6 +180,8 @@ GAMELOOP:
             Call a function from Animal.c that triggers the feeding of a particular animal within the list. This functions should accept a string that would be compared to Animal->UniqueName
             In order to be compliant with the code requirements, this function should also check if the feedevent has been set, I will set the event and then call the feed function passing the animal name as a string.
             */
+            EnterCriticalSection(&ConsoleCrit);
+
             ConsoleWriteLine(_T("%cYou selected - Feed Animals\n"),BLUE);
 
             GetAllAnimalsHealth();
@@ -185,12 +197,18 @@ GAMELOOP:
                 SetEvent(cages[cageNumber - 1]->FeedEvent);
             }
 
+            LeaveCriticalSection(&ConsoleCrit);
+
             break;
         case 2 : // Check Animal Interactivity Levels
             /*Call a function from Animal.c that prints all the animals within the list and their respective Interactivity Levels.
             */
+            EnterCriticalSection(&ConsoleCrit);
+
             ConsoleWriteLine(_T("%cYou selected - Check Animal Int Levels\n"),BLUE);
-            GetAllAnimals();
+            GetAllAnimalsInteractivity();
+
+            LeaveCriticalSection(&ConsoleCrit);
             break;
         case 3 : // Display Current Disposition of visitors
             /*Call a function from Vistor.c that prints all the visitors within the list and their respective CageLocation.
@@ -258,7 +276,6 @@ mtimerloop:
 }
 
 void printScore() {
-    g_Score = 10; // Moving this test variable to fix the global
     ConsoleWriteLine(_T("%c-------------------------\n"),YELLOW);
     ConsoleWriteLine(_T("%c Score = %d\n"),YELLOW, g_Score);
     ConsoleWriteLine(_T("%c-------------------------\n"),YELLOW);
