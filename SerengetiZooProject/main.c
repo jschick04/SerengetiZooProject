@@ -15,6 +15,8 @@
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
 
+HANDLE significantEventThread;
+
 int mTurns = 15;
 HANDLE hTimer = NULL;
 LARGE_INTEGER liDueTime;
@@ -125,7 +127,18 @@ void InitializeZoo() {
 }
 
 void InitializeTimers() {
-    // TODO: Initialize significantEventTimer
+    significantEventThread = CreateThread(NULL, 0, SignificantEventTimer, NULL, 0, NULL);
+
+    if (significantEventTimer == NULL) {
+        ConsoleWriteLine(_T("Failed to create Significant Event Timer Thread: %d\n"), GetLastError());
+        return;
+    }
+
+    seDueTime.QuadPart = ((SIGNIFICANT_EVENT_MIN * 60) * TIMER_SECONDS) * -1;
+
+    if (!SetWaitableTimer(significantEventTimer, &seDueTime, 0, NULL, NULL, FALSE)) {
+        ConsoleWriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
+    }
 }
 
 void EndTurnActions() {
@@ -139,7 +152,8 @@ void Dispose() {
     //if(ht)TerminateThread(ht,0);
     tThread = 1;
 
-    // TODO: Close SignificantEventTimer Thread
+    WaitForSingleObject(significantEventThread, INFINITE);
+    CancelWaitableTimer(significantEventTimer);
 
     for (int i = 0; i != _countof(cages); ++i) {
         WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);

@@ -1,8 +1,9 @@
 #include "SerengetiZooProject.h"
 #include "Animals.h"
-#include <WriteLine.h>
 #include <tchar.h>
+#include <time.h>
 #include <ConsoleColors.h>
+#include <WriteLine.h>
 
 #pragma region Function Declarations
 
@@ -110,7 +111,7 @@ void RemoveAnimal(ZooAnimal* animal) {
     while (temp != animalListHead) {
         AnimalList* tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList);
 
-        if (memcmp(animal, &tempAnimal->ZooAnimal, sizeof(animal)) == 0) {
+        if (_tcscmp(animal->UniqueName, tempAnimal->ZooAnimal.UniqueName) == 0) {
             temp->Flink->Blink = temp->Blink;
             temp->Blink->Flink = temp->Flink;
         }
@@ -424,7 +425,7 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     events[1] = appClose;
 
     do {
-        if (WaitForMultipleObjects(_countof(events), events, FALSE, INFINITE) == 1) {
+        if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == 1) {
             return 0;
         }
 
@@ -468,7 +469,8 @@ DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
     events[1] = appClose;
 
     do {
-        if (WaitForMultipleObjects(_countof(events), events, FALSE, INFINITE) == 1) {
+        // TODO: Why is this using so much CPU?
+        if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == 1) {
             return 0;
         }
 
@@ -500,7 +502,79 @@ DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
 DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
     lpParam = NULL;
 
-    return 0;
+    HANDLE events[2];
+
+    events[0] = significantEventTimer;
+    events[1] = appClose;
+
+    do {
+        if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == 1) {
+            return 0;
+        }
+
+        srand((unsigned)time(NULL));
+
+        BOOL action;
+        ZooAnimal* selectedAnimal = NULL;
+
+        if (IS_LIST_EMPTY(animalListHead)) { continue; }
+
+        EnterCriticalSection(&AnimalListCrit);
+
+        NodeEntry* temp = animalListHead->Blink;
+
+        while (temp != animalListHead) {
+            ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+            action = rand() % 2;
+
+            if (action) {
+                selectedAnimal = tempAnimal;
+                break;
+            }
+
+            temp = temp->Blink;
+        };
+
+        action = rand() % 2;
+
+        if (selectedAnimal != NULL) {
+            if (action) {
+                ConsoleWriteLine(
+                    _T("%c%s the %s has escaped!\n"),
+                    YELLOW,
+                    selectedAnimal->UniqueName,
+                    AnimalTypeToString(selectedAnimal->AnimalType)
+                );
+                // Replace 1 with method to call number of visitors
+                ConsoleWriteLine(_T("You have lost %d points because all visitors left the zoo...\n"), 1);
+                g_Score += 1;
+
+                RemoveAnimal(selectedAnimal);
+            } else {
+                ConsoleWriteLine(
+                    _T("%c%s the %s has given birth to a baby %s!\n"),
+                    LIME,
+                    selectedAnimal->UniqueName,
+                    AnimalTypeToString(selectedAnimal->AnimalType),
+                    AnimalTypeToString(selectedAnimal->AnimalType)
+                );
+                // Replace 1 with method to call number of visitors
+                ConsoleWriteLine(_T("All visitors have left for the day and you earned %d points...\n"), 3);
+                g_Score += 3;
+
+                // TODO: Need to get a random name and interactive level
+                NewAnimal(selectedAnimal->AnimalType, _T("BabyAnimal"), selectedAnimal->CageName, 5);
+            }
+        }
+
+        LeaveCriticalSection(&AnimalListCrit);
+
+        if (!SetWaitableTimer(significantEventTimer, &seDueTime, 0, NULL, NULL, FALSE)) {
+            ConsoleWriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
+        }
+
+        EndTurnActions();
+    } while (TRUE);
 }
 
 #pragma endregion

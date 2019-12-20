@@ -5,6 +5,8 @@
 
 #define IS_LIST_EMPTY(listHead) ((listHead)->Blink == (listHead))
 
+#define TIMER_SECONDS 10000000
+
 typedef struct NodeEntry {
     struct NodeEntry* Flink;
     struct NodeEntry* Blink;
@@ -22,5 +24,7 @@ NodeEntry* animalListHead;
 NodeEntry* visitorListHead;
 
 int g_Score;
+
+void EndTurnActions();
 
 #endif
