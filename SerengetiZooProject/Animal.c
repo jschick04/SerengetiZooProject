@@ -4,7 +4,7 @@
 #include <tchar.h>
 #include <ConsoleColors.h>
 
-#pragma region Declarations
+#pragma region Function Declarations
 
 void SetHealthEvent(ZooAnimal* animal);
 DWORD WINAPI AnimalHealth(LPVOID lpParam);
@@ -297,6 +297,32 @@ void SetHealthEvent(ZooAnimal* animal) {
 #pragma endregion
 
 #pragma region Cage Get Functions
+
+BOOL IsCageEmpty(LPTSTR cageName) {
+    if (IS_LIST_EMPTY(animalListHead)) {
+        return TRUE;
+    }
+
+    int count = 0;
+
+    EnterCriticalSection(&AnimalListCrit);
+
+    NodeEntry* temp = animalListHead->Blink;
+
+    while (temp != animalListHead) {
+        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+        if (_tcscmp(tempAnimal.CageName, cageName) == 0) {
+            count++;
+        }
+
+        temp = temp->Blink;
+    };
+
+    LeaveCriticalSection(&AnimalListCrit);
+
+    return count > 0 ? FALSE : TRUE;
+}
 
 DWORD GetCageTotalInteractiveLevel(LPTSTR cageName) {
     DWORD total = 0;
