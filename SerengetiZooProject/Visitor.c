@@ -78,6 +78,10 @@ hThreadHandles[VisitorTID] = CreateThread(
     0,
     dwThreadId[VisitorTID]
 );
+if (hThreadHandles[VisitorTID] == NULL) {
+    ConsoleWriteLine(_T("%cFailed to spawn thread\n"), RED, GetLastError());
+    return NULL;
+}
 VisitorTID++;
 return NewVisitor;
 }
@@ -89,12 +93,36 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
     EnterCriticalSection(&VisitorListCrit);
 
     NodeEntry* RemovedNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    if (RemovedNode == NULL) {
+        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        return NULL;
+    }
     NodeEntry* TempNodePrev = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    if (TempNodePrev == NULL) {
+        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        return NULL;
+    }
     NodeEntry* TempNodeNext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    if (TempNodeNext == NULL) {
+        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        return NULL;
+    }
     RemovedNode = VisitorListHead->Flink;
     Visitor* RemovedVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+    if (RemovedVisitor == NULL) {
+        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        return NULL;
+    }
     Visitor* PreviousVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+    if (PreviousVisitor == NULL) {
+        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        return NULL;
+    }
     Visitor* NextVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+    if (NextVisitor == NULL) {
+        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        return NULL;
+    }
 
     //loop through all to find a matching uniquename.
     while (RemovedVisitor->UniqueName != Name)
@@ -240,6 +268,10 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
     EnterCriticalSection(&VisitorListCrit);
 
     NodeEntry* EnumNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    if (EnumNode == NULL) {
+        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        return NULL;
+    }
     EnumNode = VisitorListHead->Flink;
     Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
 
