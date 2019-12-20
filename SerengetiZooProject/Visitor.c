@@ -147,6 +147,9 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
         }
         else
         {
+            WaitForSingleObject(hVisitorEvent, INFINITE);
+            EnterCriticalSection(&VisitorListCrit);
+
             Params->Visitor->CageLocation = cages[i]->Name;
 
             //zookeeper should be alerted after user enterse cage.
@@ -192,6 +195,8 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
              {
                 Params->Visitor->Status = Happy;
              }
+            LeaveCriticalSection(&VisitorListCrit);
+            SetEvent(hVisitorEvent);
         }
     }
 
@@ -230,6 +235,10 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 //Function to enumerate all visitors, simply prints them forward.
 DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
 {
+
+    WaitForSingleObject(hVisitorEvent, INFINITE);
+    EnterCriticalSection(&VisitorListCrit);
+
     NodeEntry* EnumNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
     EnumNode = VisitorListHead->Flink;
     Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
@@ -260,6 +269,9 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
         if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[ %s   -  %s  -  %d  -  %s  ]\n"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status); }
         EnumNode = EnumNode->Flink;
     }
+
+    LeaveCriticalSection(&VisitorListCrit);
+    SetEvent(hVisitorEvent);
 
     //cleanup heap
     //HeapFree(GetProcessHeap(), 0, EnumNode);
