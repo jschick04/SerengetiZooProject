@@ -45,8 +45,8 @@ void InitializeMain() {
     appClose = CreateEvent(NULL, TRUE, FALSE, NULL);
 
     if (appClose == NULL) {
-        ConsoleWriteLine(_T("%cFailed to create critical event: %d"), RED, GetLastError());
-        ExitProcess(-1);
+        ConsoleWriteLine(_T("%cFailed to create critical event: %d\n"), RED, GetLastError());
+        ExitProcess(1);
     }
 
     if (InitializeListHeads() == FALSE) {
@@ -55,15 +55,22 @@ void InitializeMain() {
     }
 
     if (!InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000)) {
-        ConsoleWriteLine(_T("%cFailed to create Animal List CRITICAL_SECTION"), RED);
+        ConsoleWriteLine(_T("%cFailed to create Animal List CRITICAL_SECTION\n"), RED);
     }
 
     if (!InitializeCriticalSectionAndSpinCount(&ConsoleCrit, 4000)) {
-        ConsoleWriteLine(_T("%cFailed to create Console CRITICAL_SECTION"), RED);
+        ConsoleWriteLine(_T("%cFailed to create Console CRITICAL_SECTION\n"), RED);
     }
 
     if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
-        ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION"), RED);
+        ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION\n"), RED);
+    }
+
+    significantEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
+
+    if (significantEventTimer == NULL) {
+        ConsoleWriteLine(_T("Failed to create Significant Event Timer: %d\n"), GetLastError());
+        ExitProcess(1);
     }
 }
 
@@ -117,6 +124,10 @@ void InitializeZoo() {
     );
 }
 
+void InitializeTimers() {
+    // TODO: Initialize significantEventTimer
+}
+
 void EndTurnActions() {
     DecreaseAnimalFedTimer();
 }
@@ -128,12 +139,15 @@ void Dispose() {
     //if(ht)TerminateThread(ht,0);
     tThread = 1;
 
+    // TODO: Close SignificantEventTimer Thread
+
     for (int i = 0; i != _countof(cages); ++i) {
         WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
     }
 
     HeapFree(GetProcessHeap(), 0, animalListHead);
-    HeapFree(GetProcessHeap(), 0, visitorListHead); // TODO: Need to terminate Visitor threads or this will throw an exception
+    HeapFree(GetProcessHeap(), 0, visitorListHead);
+    // TODO: Need to terminate Visitor threads or this will throw an exception
 
     ExitProcess(0);
 }
@@ -147,6 +161,8 @@ int _tmain() {
 
     InitVisitorsEvent();
     InitializeZoo(); // TODO: Need to error handle
+
+    InitializeTimers();
 
     DWORD tid = 0;
     const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);

@@ -4,6 +4,8 @@
 #include <Windows.h>
 #include "SerengetiZooProject.h"
 
+HANDLE significantEventTimer;
+
 enum AnimalType { Antelopes, Cheetahs, Giraffes, Hyaena, Hippos, Monkeys, Mongoose, Tigers, WildeBeast, Zebras };
 
 typedef struct Cage {
@@ -44,6 +46,7 @@ void DecreaseAnimalFedTimer();
 
 Cage* NewCage(LPTSTR cageName);
 
+BOOL IsCageEmpty(LPTSTR cageName);
 DWORD GetCageTotalInteractiveLevel(LPTSTR cageName);
 DWORD GetCageAverageInteractiveLevel(LPTSTR cageName);
 
