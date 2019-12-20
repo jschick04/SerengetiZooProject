@@ -38,7 +38,7 @@ void SetHealthEvent(ZooAnimal* animal) {
         healthEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // Temporary, will be moved to NewCage
 
         if (healthEvent == NULL) {
-            ConsoleWriteLine(_T("%cFailed to create event: %d\n"), RED, GetLastError());
+            ConsoleWriteLine(_T("%cFailed to create event: %d"), RED, GetLastError());
             return;
         }
     }
@@ -111,15 +111,12 @@ void AddAnimal(ZooAnimal* animal) {
 }
 
 void RemoveAnimal(ZooAnimal* animal) {
-    if (IS_LIST_EMPTY(animalListHead)) {
-        ConsoleWriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return;
-    }
+    if (IS_LIST_EMPTY(animalListHead)) { return; }
 
     CRITICAL_SECTION animalRemovalCrit;
 
     if (!InitializeCriticalSectionAndSpinCount(&animalRemovalCrit, 4000)) {
-        ConsoleWriteLine(_T("Failed to initialize CRITICAL_SECTION: %d\n"), GetLastError());
+        ConsoleWriteLine(_T("Failed to initialize CRITICAL_SECTION: %d"), GetLastError());
         return;
     }
 
@@ -128,15 +125,14 @@ void RemoveAnimal(ZooAnimal* animal) {
     NodeEntry* temp = animalListHead->Blink;
 
     while (temp != animalListHead) {
-        AnimalList* tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList);
+        const AnimalList* tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList);
 
         if (memcmp(animal, &tempAnimal->ZooAnimal, sizeof(animal)) == 0) {
-            temp->Flink->Blink = temp->Blink;
-            temp->Blink->Flink = temp->Flink;
+            NodeEntry* node = temp;
+            NodeEntry* flink = temp->Flink;
+            temp = node->Blink;
+            flink->Blink = temp;
         }
-
-        // TODO: Re-implement
-        // HeapFree(GetProcessHeap(), 0, tempAnimal);
 
         temp = temp->Blink;
     };
@@ -151,10 +147,7 @@ void RemoveAnimal(ZooAnimal* animal) {
 #pragma region Animal Get Functions
 
 void GetAllAnimals() {
-    if (IS_LIST_EMPTY(animalListHead)) {
-        ConsoleWriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return;
-    }
+    if (IS_LIST_EMPTY(animalListHead)) { return; }
 
     EnterCriticalSection(&AnimalListCrit);
 
@@ -178,10 +171,7 @@ void GetAllAnimals() {
 }
 
 void GetAllAnimalsHealth() {
-    if (IS_LIST_EMPTY(animalListHead)) {
-        ConsoleWriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return;
-    }
+    if (IS_LIST_EMPTY(animalListHead)) { return; }
 
     EnterCriticalSection(&AnimalListCrit);
 
@@ -217,10 +207,7 @@ void GetAllAnimalsHealth() {
 #pragma region Animal Change Functions
 
 void DecreaseAnimalFedTimer() {
-    if (IS_LIST_EMPTY(animalListHead)) {
-        ConsoleWriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return;
-    }
+    if (IS_LIST_EMPTY(animalListHead)) { return; }
 
     EnterCriticalSection(&AnimalListCrit);
 
@@ -258,10 +245,7 @@ void DecreaseAnimalFedTimer() {
 DWORD GetCageTotalInteractiveLevel(LPTSTR cageName) {
     DWORD total = 0;
 
-    if (IS_LIST_EMPTY(animalListHead)) {
-        ConsoleWriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return total;
-    }
+    if (IS_LIST_EMPTY(animalListHead)) { return total; }
 
     EnterCriticalSection(&AnimalListCrit);
 
@@ -286,10 +270,7 @@ DWORD GetCageAverageInteractiveLevel(LPTSTR cageName) {
     DWORD total = 0;
     DWORD count = 0;
 
-    if (IS_LIST_EMPTY(animalListHead)) {
-        ConsoleWriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return total;
-    }
+    if (IS_LIST_EMPTY(animalListHead)) { return total; }
 
     EnterCriticalSection(&AnimalListCrit);
 
