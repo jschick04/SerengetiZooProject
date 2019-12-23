@@ -19,7 +19,7 @@ typedef struct VisitorLoopParams {
     NodeEntry* listHead;
 } VisitorLoopParams;
 
-DWORD dwThreadId[999];
+LPDWORD dwThreadId[999];
 HANDLE hThreadHandles[999];
 __declspec(selectany) int VisitorTID = 0;
 

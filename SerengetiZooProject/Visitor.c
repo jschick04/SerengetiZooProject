@@ -37,7 +37,7 @@ if (NewVisitor == 0)
 {
     LeaveCriticalSection(&VisitorListCrit);
     //Allocation failed and we need to warn
-    Visitor* failed = -1;
+    Visitor* failed = NULL;
     return failed;
 }
 
@@ -211,7 +211,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
             {
                 Params->Visitor->Status = RefundDemanded;
                 //BREAK OUT OF LOOP HERE AND IMMEDIATELY EXIT ZOO.
-                int X = 1;
+                //int X = 1;
                 break;
                 
             }
@@ -276,10 +276,10 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
         NodeEntry* EnumNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
         if (EnumNode == NULL) {
             ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-            return NULL;
+            //return NULL;
         }
         EnumNode = VisitorListHead->Flink;
-        Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+        //Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
 
         while (EnumNode->Flink != VisitorListHead->Flink)
         {
@@ -301,7 +301,7 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
     NodeEntry* EnumNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
     if (EnumNode == NULL) {
         ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-        return NULL;
+        //return NULL;
     }
     EnumNode = VisitorListHead->Flink;
     Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
