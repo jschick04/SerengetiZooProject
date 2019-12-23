@@ -5,6 +5,7 @@
 #include "SerengetiZooProject.h"
 
 #define SIGNIFICANT_EVENT_MIN 1
+#define MAX_CAGES 5
 
 HANDLE significantEventTimer;
 
@@ -34,7 +35,7 @@ typedef struct AnimalList {
 } AnimalList;
 
 // Defines the number of cages that will be in the zoo
-Cage* cages[5];
+Cage* cages[MAX_CAGES];
 
 // Defines the timer for the Significant Event Thread
 LARGE_INTEGER seDueTime;

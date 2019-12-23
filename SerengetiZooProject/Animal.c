@@ -381,6 +381,27 @@ DWORD GetCageAverageInteractiveLevel(LPTSTR cageName) {
     return total / count;
 }
 
+Cage* GetRandomCage() {
+    const int value = rand() % MAX_CAGES;
+    int animalCount = 0;
+
+    if (IS_LIST_EMPTY(animalListHead)) { return NULL; }
+
+    NodeEntry* temp = animalListHead->Blink;
+
+    while (temp != animalListHead) {
+        ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+        if (_tcscmp(cages[value]->Name, tempAnimal->CageName) == 0) {
+            animalCount++;
+        }
+
+        temp = temp->Blink;
+    }
+
+    return animalCount > 0 ? cages[value] : NULL;
+}
+
 #pragma endregion
 
 #pragma region Cage Functions
@@ -521,15 +542,26 @@ DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
 
         EnterCriticalSection(&AnimalListCrit);
 
+        Cage* randomCage;
+
+        do {
+            randomCage = GetRandomCage();
+        } while (randomCage == NULL);
+
         NodeEntry* temp = animalListHead->Blink;
 
-        while (temp != animalListHead) {
-            ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-            action = rand() % 2;
+        while (selectedAnimal == NULL) {
+            if (temp == animalListHead) { temp = temp->Blink; }
 
-            if (action) {
-                selectedAnimal = tempAnimal;
-                break;
+            ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+            if (_tcscmp(tempAnimal->CageName, randomCage->Name) == 0) {
+                action = rand() % 2;
+
+                if (action) {
+                    selectedAnimal = tempAnimal;
+                    break;
+                }
             }
 
             temp = temp->Blink;
