@@ -151,7 +151,7 @@ void InitializeMain() {
 
     if (InitializeListHeads() == FALSE) {
         ConsoleWriteLine(_T("%cFailed to create list heads\n"), RED);
-        ExitProcess(-1);
+        ExitProcess(1);
     }
 
     if (!InitializeCriticalSectionAndSpinCount(&AnimalListCrit, 4000)) {

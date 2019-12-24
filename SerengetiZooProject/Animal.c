@@ -384,6 +384,8 @@ DWORD GetCageAverageInteractiveLevel(LPTSTR cageName) {
 }
 
 Cage* GetRandomCage() {
+    srand((unsigned)time(NULL));
+
     const int value = rand() % MAX_CAGES;
     int animalCount = 0;
 
