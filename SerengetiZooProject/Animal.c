@@ -1,9 +1,9 @@
-#include "SerengetiZooProject.h"
-#include "Animals.h"
+#include <ConsoleColors.h>
 #include <tchar.h>
 #include <time.h>
-#include <ConsoleColors.h>
 #include <WriteLine.h>
+#include "Animals.h"
+#include "SerengetiZooProject.h"
 
 #pragma region Function Declarations
 
@@ -17,26 +17,26 @@ HANDLE healthEvent;
 
 LPTSTR AnimalTypeToString(enum AnimalType animalType) {
     switch (animalType) {
-        case Antelopes :
-            return _T("Antelopes");
-        case Cheetahs :
-            return _T("Cheetahs");
-        case Giraffes :
-            return _T("Giraffes");
+        case Antelope :
+            return _T("Antelope");
+        case Cheetah :
+            return _T("Cheetah");
+        case Giraffe :
+            return _T("Giraffe");
         case Hyaena :
             return _T("Hyaena");
-        case Hippos :
-            return _T("Hippos");
-        case Monkeys :
-            return _T("Monkeys");
+        case Hippo :
+            return _T("Hippo");
+        case Monkey :
+            return _T("Monkey");
         case Mongoose :
             return _T("Mongoose");
-        case Tigers :
-            return _T("Tigers");
+        case Tiger :
+            return _T("Tiger");
         case WildeBeast :
             return _T("WildeBeast");
-        case Zebras :
-            return _T("Zebras");
+        case Zebra :
+            return _T("Zebra");
         default :
             return _T("Invalid Animal");
     }
@@ -114,6 +114,8 @@ void RemoveAnimal(ZooAnimal* animal) {
         if (_tcscmp(animal->UniqueName, tempAnimal->ZooAnimal.UniqueName) == 0) {
             temp->Flink->Blink = temp->Blink;
             temp->Blink->Flink = temp->Flink;
+
+            AddRandomName(animal->UniqueName);
         }
 
         // TODO: Re-implement
@@ -595,7 +597,12 @@ DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
                 g_Score += 3;
 
                 // TODO: Need to get a random name and interactive level
-                NewAnimal(selectedAnimal->AnimalType, _T("BabyAnimal"), selectedAnimal->CageName, 5);
+                NewAnimal(
+                    selectedAnimal->AnimalType,
+                    GetRandomName(),
+                    selectedAnimal->CageName,
+                    GetRandomInteractiveLevel()
+                );
             }
         }
 

@@ -9,7 +9,7 @@
 
 HANDLE significantEventTimer;
 
-enum AnimalType { Antelopes, Cheetahs, Giraffes, Hyaena, Hippos, Monkeys, Mongoose, Tigers, WildeBeast, Zebras };
+enum AnimalType { Antelope, Cheetah, Giraffe, Hyaena, Hippo, Monkey, Mongoose, Tiger, WildeBeast, Zebra };
 
 typedef struct Cage {
     LPTSTR Name;

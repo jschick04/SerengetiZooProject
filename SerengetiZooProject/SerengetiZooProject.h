@@ -13,6 +13,7 @@ typedef struct NodeEntry {
 } NodeEntry;
 
 CRITICAL_SECTION AnimalListCrit;
+CRITICAL_SECTION NameListCrit;
 CRITICAL_SECTION VisitorListCrit;
 CRITICAL_SECTION ConsoleCrit;
 CRITICAL_SECTION cScore;
@@ -25,6 +26,9 @@ NodeEntry* visitorListHead;
 
 int g_Score;
 
+int GetRandomInteractiveLevel();
+LPTSTR GetRandomName();
+void AddRandomName(LPTSTR name);
 void EndTurnActions();
 
 #endif

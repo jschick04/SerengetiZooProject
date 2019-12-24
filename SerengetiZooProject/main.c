@@ -1,16 +1,71 @@
-#include "SerengetiZooProject.h"
-#include "Animals.h"
-#include "Visitor.h"
-#include <Windows.h>
-#include <tchar.h>
+#include <ConsoleColors.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strsafe.h>
+#include <tchar.h>
+#include <time.h>
+#include <Windows.h>
 #include <WriteLine.h>
-#include <ConsoleColors.h>
+#include "Animals.h"
+#include "SerengetiZooProject.h"
+#include "Visitor.h"
 
 #define MAXS 20
 #define MAXA 5
+
+LPTSTR uniqueNames[] = {
+    _T("Julien"),
+    _T("Melman"),
+    _T("Maurice"),
+    _T("Gloria"),
+    _T("Mason"),
+    _T("Ron"),
+    _T("Deveroux"),
+    _T("Felicio"),
+    _T("Gary"),
+    _T("Jorge"),
+    _T("Joseph"),
+    _T("Travis"),
+    _T("Ryan"),
+    _T("Tony"),
+    _T("Leonardo"),
+    _T("Barry"),
+    _T("David"),
+    _T("Bruce"),
+    _T("Cliff"),
+    _T("Jack"),
+    _T("Emma"),
+    _T("Taylor"),
+    _T("Alex"),
+    _T("Sophia"),
+    _T("James"),
+    _T("Diego"),
+    _T("Samuel"),
+    _T("Maria"),
+    _T("Richard"),
+    _T("Logan"),
+    _T("Brianna"),
+    _T("Martin"),
+    _T("Jessica"),
+    _T("Patricia"),
+    _T("Linda"),
+    _T("Caroline"),
+    _T("Liam"),
+    _T("Oliver"),
+    _T("Ben"),
+    _T("Dorothy"),
+    _T("Mabel"),
+    _T("Ariel"),
+    _T("Louis"),
+    _T("Nathan"),
+    _T("Nicole"),
+    _T("Adam"),
+    _T("Felix"),
+    _T("Jon"),
+    _T("Marco"),
+    _T("Harry"),
+    _T("Anna"),
+};
 
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
@@ -28,6 +83,49 @@ void printScore();
 
 //void printvHappinessLevel();
 //void NextTurn();
+
+#pragma region Helpers
+
+int GetRandomInteractiveLevel() {
+    srand((unsigned)time(NULL));
+
+    return (rand() % 10) + 1;
+}
+
+LPTSTR GetRandomName() {
+    unsigned int index;
+    LPTSTR selectedName;
+
+    EnterCriticalSection(&NameListCrit);
+
+    srand((unsigned)time(NULL));
+
+    do {
+        index = rand() % _countof(uniqueNames);
+        selectedName = uniqueNames[index];
+    } while (selectedName == NULL);
+
+    uniqueNames[index] = NULL;
+
+    LeaveCriticalSection(&NameListCrit);
+
+    return selectedName;
+}
+
+void AddRandomName(LPTSTR name) {
+    EnterCriticalSection(&NameListCrit);
+
+    for (int i = 0; i != _countof(uniqueNames); ++i) {
+        if (uniqueNames[i] == NULL) {
+            uniqueNames[i] = name;
+            break;
+        }
+    }
+
+    LeaveCriticalSection(&NameListCrit);
+}
+
+#pragma endregion
 
 BOOL InitializeListHeads() {
     animalListHead = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
@@ -60,6 +158,10 @@ void InitializeMain() {
         ConsoleWriteLine(_T("%cFailed to create Animal List CRITICAL_SECTION\n"), RED);
     }
 
+    if (!InitializeCriticalSectionAndSpinCount(&NameListCrit, 4000)) {
+        ConsoleWriteLine(_T("%cFailed to create Name List CRITICAL_SECTION\n"), RED);
+    }
+
     if (!InitializeCriticalSectionAndSpinCount(&ConsoleCrit, 4000)) {
         ConsoleWriteLine(_T("%cFailed to create Console CRITICAL_SECTION\n"), RED);
     }
@@ -79,18 +181,7 @@ void InitializeMain() {
 void InitializeZoo() {
     g_Score = 0;
 
-    // Initialize animals structs
-    LPTSTR uniqueName[] = {
-        _T("Julien"),
-        _T("Melman"),
-        _T("Maurice"),
-        _T("Gloria"),
-        _T("Mason"),
-    };
-
     for (int i = 0; i != _countof(cages); ++i) {
-        const DWORD interactiveLevel = (rand() % (6 - 4 + 1)) + 4;
-
         const LPTSTR cageName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10);
         const LPTSTR prepend = _T("Cage");
 
@@ -102,7 +193,7 @@ void InitializeZoo() {
 
         cages[i] = NewCage(cageName);
 
-        NewAnimal(i, uniqueName[i], cageName, interactiveLevel);
+        NewAnimal(i, GetRandomName(), cageName, GetRandomInteractiveLevel());
 
         // Breaks cage name but need to cleanup at some point
         //HeapFree(GetProcessHeap(), 0, cageName);
@@ -142,6 +233,7 @@ void InitializeTimers() {
 }
 
 void EndTurnActions() {
+    printScore();
     DecreaseAnimalFedTimer();
 }
 
@@ -193,7 +285,7 @@ GAMELOOP:
     ConsoleWriteLine(_T("3 - Display Current Disposition of visitors\n"));
     ConsoleWriteLine(_T("4 - Show Case Animal\n"));
     ConsoleWriteLine(_T("5 - Check Visitors Happiness Level\n"));
-    ConsoleWriteLine(_T("6 - Turn\n"));
+    ConsoleWriteLine(_T("6 - End Turn\n"));
     ConsoleWriteLine(_T("0 - Exit\n"));
 
     LeaveCriticalSection(&ConsoleCrit);
@@ -205,16 +297,17 @@ GAMELOOP:
     }
 
     switch (menuOption) {
-        case 1 : // Feed Animal
-            /*Call a function from Animal.c that prints all the animals within the list and their respective health level.
-            Call a function from Animal.c that triggers the feeding of a particular animal within the list. This functions should accept a string that would be compared to Animal->UniqueName
-            In order to be compliant with the code requirements, this function should also check if the feedevent has been set, I will set the event and then call the feed function passing the animal name as a string.
-            */
+        case 1 :
             EnterCriticalSection(&ConsoleCrit);
 
             ConsoleWriteLine(_T("%cYou selected - Feed Animals\n"),BLUE);
 
             GetAllAnimalsHealth();
+
+            if (IS_LIST_EMPTY(animalListHead)) {
+                LeaveCriticalSection(&ConsoleCrit);
+                break;
+            }
 
             ConsoleWriteLine(_T("Which cage number would you like to feed?\n"));
             _fgetts(buffer, _countof(buffer), stdin);
@@ -230,9 +323,7 @@ GAMELOOP:
             LeaveCriticalSection(&ConsoleCrit);
 
             break;
-        case 2 : // Check Animal Interactivity Levels
-            /*Call a function from Animal.c that prints all the animals within the list and their respective Interactivity Levels.
-            */
+        case 2 :
             EnterCriticalSection(&ConsoleCrit);
 
             ConsoleWriteLine(_T("%cYou selected - Check Animal Int Levels\n"),BLUE);
@@ -257,9 +348,7 @@ GAMELOOP:
             ConsoleWriteLine(_T("%cYou selected - Check Visitors Happ Level\n"),BLUE);
             EnumVisitors(visitorListHead, TRUE);
             break;
-        case 6 : //Next Turn
-            //Calls NextTurn() function which signal Visitors and Animals that they can move one step forward.
-            //Print current score and Happiness Level.
+        case 6 :
             ConsoleWriteLine(_T("%cYou selected - Next Turn\n"),BLUE);
             EndTurnActions();
             break;
