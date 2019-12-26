@@ -162,13 +162,6 @@ void InitializeMain() {
     if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
         ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION\n"), RED);
     }
-
-    significantEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
-
-    if (significantEventTimer == NULL) {
-        ConsoleWriteLine(_T("Failed to create Significant Event Timer: %d\n"), GetLastError());
-        ExitProcess(1);
-    }
 }
 
 void InitializeZoo() {
@@ -211,14 +204,22 @@ void InitializeZoo() {
 }
 
 void InitializeTimers() {
-    significantEventThread = CreateThread(NULL, 0, SignificantEventTimer, NULL, 0, NULL);
+    significantEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
 
     if (significantEventTimer == NULL) {
-        ConsoleWriteLine(_T("Failed to create Significant Event Timer Thread: %d\n"), GetLastError());
-        return;
+        ConsoleWriteLine(_T("Failed to create Significant Event Timer: %d\n"), GetLastError());
+        ExitProcess(1);
+    }
+
+    significantEventThread = CreateThread(NULL, 0, SignificantEventTimer, NULL, 0, NULL);
+
+    if (significantEventThread == NULL) {
+        ConsoleWriteLine(_T("Failed to create Event Timer Threads: %d\n"), GetLastError());
+        ExitProcess(1);
     }
 
     seDueTime.QuadPart = ((SIGNIFICANT_EVENT_MIN * 60) * TIMER_SECONDS) * -1;
+    feedDueTime.QuadPart = ((FEED_EVENT_MIN * 60) * TIMER_SECONDS) * -1;
 
     if (!SetWaitableTimer(significantEventTimer, &seDueTime, 0, NULL, NULL, FALSE)) {
         ConsoleWriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
@@ -234,7 +235,6 @@ void PrintScore() {
 void EndTurnActions() {
     ConsoleWriteLine(_T("%cZoo is closing for the rest of the day...\n"), PINK);
     PrintScore();
-    DecreaseAnimalFedTimer();
 }
 
 void Dispose() {
@@ -244,11 +244,16 @@ void Dispose() {
     ////if(ht)TerminateThread(ht,0);
     //tThread = 1;
 
-    WaitForSingleObject(significantEventThread, INFINITE);
     CancelWaitableTimer(significantEventTimer);
+    WaitForSingleObject(significantEventThread, INFINITE);
+
+    // TODO: Need to close visitor threads before cages
 
     for (int i = 0; i != _countof(cages); ++i) {
+        CancelWaitableTimer(cages[i]->FeedEventTimer);
         WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
+        WaitForSingleObject(cages[i]->AnimalInteractivityThread, INFINITE);
+        CloseHandle(cages[i]->FeedEvent);
     }
 
     HeapFree(GetProcessHeap(), 0, animalListHead);
@@ -260,6 +265,7 @@ void Dispose() {
 int _tmain() {
     srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
 
+    InitializeTimers();
     InitializeMain();
 
     TCHAR buffer[MAX_PATH];
@@ -268,8 +274,6 @@ int _tmain() {
 
     InitVisitorsEvent();
     InitializeZoo(); // TODO: Need to error handle
-
-    InitializeTimers();
 
     /*DWORD tid = 0;
     const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
@@ -311,7 +315,7 @@ GAMELOOP:
                 break;
             }
 
-            ConsoleWriteLine(_T("Which cage number would you like to feed?\n"));
+            ConsoleWriteLine(_T("\nWhich cage number would you like to feed?\n"));
             _fgetts(buffer, _countof(buffer), stdin);
             if (_stscanf_s(buffer, _T("%d"), &cageNumber) == 1) {
                 if (cageNumber < 1 || cageNumber > (int)_countof(cages)) {
@@ -374,6 +378,7 @@ GAMELOOP:
             break;
         case 0 :
             ConsoleWriteLine(_T("\n%cYou selected - Quit\n\n"), SKYBLUE);
+            EndTurnActions();
             Dispose();
         default :
             ConsoleWriteLine(_T("Invalid Selection...\n"));
