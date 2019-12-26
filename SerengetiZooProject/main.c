@@ -10,8 +10,8 @@
 #include "SerengetiZooProject.h"
 #include "Visitor.h"
 
-#define MAXS 20
-#define MAXA 5
+//#define MAXS 20
+//#define MAXA 5
 
 LPTSTR uniqueNames[] = {
     _T("Julien"),
@@ -79,7 +79,6 @@ HANDLE significantEventThread;
 //int tThread = 0;
 
 //DWORD WINAPI mTimer(LPVOID lpParam);
-void PrintScore();
 
 #pragma region Helpers
 
@@ -303,7 +302,7 @@ GAMELOOP:
     }
 
     switch (menuOption) {
-        case 1 :
+        case 1 : // Feed Animals
             EnterCriticalSection(&ConsoleCrit);
 
             ConsoleWriteLine(_T("\n%cYou selected - Feed Animals\n\n"), SKYBLUE);
@@ -330,7 +329,7 @@ GAMELOOP:
             LeaveCriticalSection(&ConsoleCrit);
 
             break;
-        case 2 :
+        case 2 : // Check Animal Interactivity Levels
             EnterCriticalSection(&ConsoleCrit);
 
             ConsoleWriteLine(_T("\n%cYou selected - Check Animal Int Levels\n\n"), SKYBLUE);
@@ -341,6 +340,8 @@ GAMELOOP:
         case 3 : // Display Current Disposition of visitors
             /*Call a function from Vistor.c that prints all the visitors within the list and their respective CageLocation.
             */
+
+            // TODO: Finish Case 3
 
             EnterCriticalSection(&ConsoleCrit);
 
@@ -354,17 +355,18 @@ GAMELOOP:
             */
             //Call NextTurn()
 
+            // TODO: Finish Case 4
+
             EnterCriticalSection(&ConsoleCrit);
 
             ConsoleWriteLine(_T("\n%cYou selected - Show Case Animal\n\n"), SKYBLUE);
+
+            EndTurnActions();
 
             LeaveCriticalSection(&ConsoleCrit);
 
             break;
         case 5 : // Check Visitors Happiness Level
-            /*Call a function from Vistor.c that prints all the visitors within the list and their respective HappinessLevel.
-            */
-
             EnterCriticalSection(&ConsoleCrit);
 
             ConsoleWriteLine(_T("\n%cYou selected - Check Visitors Happ Level\n\n"), SKYBLUE);
