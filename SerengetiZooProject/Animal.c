@@ -579,12 +579,12 @@ DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
                     selectedAnimal->UniqueName,
                     AnimalTypeToString(selectedAnimal->AnimalType)
                 );
-                // Replace 1 with method to call number of visitors
                 ConsoleWriteLine(
-                    _T("You have lost %d points because all visitors left the zoo...\n"),
+                    _T("You have %clost%r %d points because all visitors left the zoo...\n"),
+                    PINK,
                     GetVisitorCount(visitorListHead)
                 );
-                g_Score += 1 * (int)GetVisitorCount(visitorListHead);
+                g_Score += GetVisitorCount(visitorListHead);
 
                 RemoveAnimal(selectedAnimal);
             } else {
@@ -595,10 +595,10 @@ DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
                     AnimalTypeToString(selectedAnimal->AnimalType),
                     AnimalTypeToString(selectedAnimal->AnimalType)
                 );
-                // Replace 1 with method to call number of visitors
                 ConsoleWriteLine(
-                    _T("All visitors have left for the day and you earned %d points...\n"),
-                    GetVisitorCount(visitorListHead)
+                    _T("All visitors have left for the day and you %cearned%r %d points...\n"),
+                    LIME,
+                    3 * GetVisitorCount(visitorListHead)
                 );
                 g_Score += 3 * (int)GetVisitorCount(visitorListHead);
 
