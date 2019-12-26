@@ -378,8 +378,6 @@ DWORD GetCageAverageInteractiveLevel(LPTSTR cageName) {
 }
 
 Cage* GetRandomCage() {
-    srand((unsigned)time(NULL));
-
     const int value = rand() % MAX_CAGES;
     int animalCount = 0;
 
@@ -542,8 +540,6 @@ DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
         if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == 1) {
             return 0;
         }
-
-        srand((unsigned)time(NULL));
 
         BOOL action;
         ZooAnimal* selectedAnimal = NULL;

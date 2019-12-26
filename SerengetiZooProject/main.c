@@ -84,9 +84,6 @@ void printScore();
 #pragma region Helpers
 
 int GetRandomInteractiveLevel() {
-    // TODO: Add more randomness
-    srand((unsigned)time(NULL));
-
     return (rand() % 10) + 1;
 }
 
@@ -95,8 +92,6 @@ LPTSTR GetRandomName() {
     LPTSTR selectedName;
 
     EnterCriticalSection(&NameListCrit);
-
-    srand((unsigned)time(NULL));
 
     do {
         index = rand() % _countof(uniqueNames);
@@ -257,6 +252,8 @@ void Dispose() {
 }
 
 int _tmain() {
+    srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
+
     InitializeMain();
 
     TCHAR buffer[MAX_PATH];
