@@ -105,23 +105,14 @@ void RemoveAnimal(ZooAnimal* animal) {
 
     EnterCriticalSection(&animalRemovalCrit);
 
-    NodeEntry* temp = animalListHead->Blink;
+    AnimalList* tempAnimal = CONTAINING_RECORD(animal, AnimalList, ZooAnimal);
 
-    while (temp != animalListHead) {
-        AnimalList* tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList);
+    tempAnimal->LinkedList.Flink->Blink = tempAnimal->LinkedList.Blink;
+    tempAnimal->LinkedList.Blink->Flink = tempAnimal->LinkedList.Flink;
 
-        if (_tcscmp(animal->UniqueName, tempAnimal->ZooAnimal.UniqueName) == 0) {
-            temp->Flink->Blink = temp->Blink;
-            temp->Blink->Flink = temp->Flink;
+    AddRandomName(animal->UniqueName);
 
-            AddRandomName(animal->UniqueName);
-        }
-
-        // TODO: Re-implement
-        // HeapFree(GetProcessHeap(), 0, tempAnimal);
-
-        temp = temp->Blink;
-    };
+    HeapFree(GetProcessHeap(), 0, tempAnimal);
 
     LeaveCriticalSection(&animalRemovalCrit);
 
@@ -234,7 +225,7 @@ void GetAllAnimalsInteractivity() {
 #pragma region Animal Change Functions
 
 void SetHealthEvent(ZooAnimal* animal) {
-    if (animal->HealthLevel <= 0) {
+    if (animal->HealthLevel < 1) {
         ConsoleWriteLine(
             _T("%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n"),
             YELLOW,
@@ -404,7 +395,6 @@ Cage* NewCage(LPTSTR cageName) {
 
     cage->AnimalHealthThread = CreateThread(NULL, 0, &AnimalHealth, cage, 0, NULL);
     cage->AnimalInteractivityThread = CreateThread(NULL, 0, &AnimalInteractivity, NULL, 0, NULL);
-
 
     return cage;
 }

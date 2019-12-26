@@ -217,8 +217,8 @@ void InitializeTimers() {
         ExitProcess(1);
     }
 
-    seDueTime.QuadPart = ((SIGNIFICANT_EVENT_MIN * 60) * TIMER_SECONDS) * -1;
-    feedDueTime.QuadPart = ((FEED_EVENT_MIN * 60) * TIMER_SECONDS) * -1;
+    seDueTime.QuadPart = - ((SIGNIFICANT_EVENT_MIN * 60) * TIMER_SECONDS);
+    feedDueTime.QuadPart = - ((FEED_EVENT_MIN * 60) * TIMER_SECONDS);
 
     if (!SetWaitableTimer(significantEventTimer, &seDueTime, 0, NULL, NULL, FALSE)) {
         ConsoleWriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
@@ -253,6 +253,7 @@ void Dispose() {
         WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
         WaitForSingleObject(cages[i]->AnimalInteractivityThread, INFINITE);
         CloseHandle(cages[i]->FeedEvent);
+        HeapFree(GetProcessHeap(), 0, cages[i]);
     }
 
     HeapFree(GetProcessHeap(), 0, animalListHead);
