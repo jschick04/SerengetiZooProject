@@ -228,8 +228,8 @@ void GetAllAnimalsInteractivity() {
 void SetHealthEvent(ZooAnimal* animal) {
     if (animal->HealthLevel < 1) {
         ConsoleWriteLine(
-            _T("%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n"),
-            YELLOW,
+            _T("\n%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n\n"),
+            PINK,
             animal->UniqueName,
             AnimalTypeToString(animal->AnimalType)
         );
@@ -574,7 +574,7 @@ DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
         if (selectedAnimal != NULL) {
             if (action) {
                 ConsoleWriteLine(
-                    _T("%c%s the %s has escaped!\n"),
+                    _T("\n%c%s the %s has escaped!\n\n"),
                     YELLOW,
                     selectedAnimal->UniqueName,
                     AnimalTypeToString(selectedAnimal->AnimalType)
@@ -584,12 +584,12 @@ DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
                     PINK,
                     GetVisitorCount(visitorListHead)
                 );
-                g_Score += GetVisitorCount(visitorListHead);
+                g_Score -= GetVisitorCount(visitorListHead);
 
                 RemoveAnimal(selectedAnimal);
             } else {
                 ConsoleWriteLine(
-                    _T("%c%s the %s has given birth to a baby %s!\n"),
+                    _T("\n%c%s the %s has given birth to a baby %s!\n\n"),
                     LIME,
                     selectedAnimal->UniqueName,
                     AnimalTypeToString(selectedAnimal->AnimalType),

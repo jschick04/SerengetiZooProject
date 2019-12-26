@@ -226,11 +226,11 @@ void InitializeTimers() {
 void PrintScore() {
     ConsoleWriteLine(_T("\n%c-------------------------\n"), YELLOW);
     ConsoleWriteLine(_T("%c Score = %d\n"), YELLOW, g_Score);
-    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
+    ConsoleWriteLine(_T("%c-------------------------\n\n"), YELLOW);
 }
 
 void EndTurnActions() {
-    ConsoleWriteLine(_T("%cZoo is closing for the rest of the day...\n"), PINK);
+    ConsoleWriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
     PrintScore();
 }
 
