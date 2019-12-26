@@ -1,6 +1,5 @@
 #include <ConsoleColors.h>
 #include <tchar.h>
-#include <time.h>
 #include <WriteLine.h>
 #include "Animals.h"
 #include "SerengetiZooProject.h"
