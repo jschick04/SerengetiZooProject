@@ -4,7 +4,8 @@
 #include <Windows.h>
 #include "SerengetiZooProject.h"
 
-#define SIGNIFICANT_EVENT_MIN 1
+#define SIGNIFICANT_EVENT_MIN 2
+#define FEED_EVENT_MIN 1
 #define MAX_CAGES 5
 
 HANDLE significantEventTimer;
@@ -14,6 +15,7 @@ enum AnimalType { Antelope, Cheetah, Giraffe, Hyaena, Hippo, Monkey, Mongoose, T
 typedef struct Cage {
     LPTSTR Name;
     HANDLE FeedEvent;
+    HANDLE FeedEventTimer;
     HANDLE AnimalHealthThread;
     HANDLE AnimalInteractivityThread;
 } Cage;
@@ -24,9 +26,9 @@ typedef struct ZooAnimal {
     LPTSTR CageName;
     DWORD HealthLevel;
     BOOL HealthLevelChange;
+    BOOL HealthLevelIncrease;
     DWORD InteractiveLevel;
     BOOL InteractivityPrompted;
-    DWORD FeedTimer;
 } ZooAnimal;
 
 typedef struct AnimalList {
@@ -39,6 +41,7 @@ Cage* cages[MAX_CAGES];
 
 // Defines the timer for the Significant Event Thread
 LARGE_INTEGER seDueTime;
+LARGE_INTEGER feedDueTime;
 
 ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel);
 void AddAnimal(ZooAnimal* animal);
@@ -47,8 +50,6 @@ void RemoveAnimal(ZooAnimal* animal);
 void GetAllAnimals();
 void GetAllAnimalsHealth();
 void GetAllAnimalsInteractivity();
-
-void DecreaseAnimalFedTimer();
 
 Cage* NewCage(LPTSTR cageName);
 

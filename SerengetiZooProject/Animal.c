@@ -1,6 +1,5 @@
 #include <ConsoleColors.h>
 #include <tchar.h>
-#include <time.h>
 #include <WriteLine.h>
 #include "Animals.h"
 #include "SerengetiZooProject.h"
@@ -8,6 +7,7 @@
 #pragma region Function Declarations
 
 void SetHealthEvent(ZooAnimal* animal);
+BOOL ResetFeedTimer(HANDLE eventTimer);
 DWORD WINAPI AnimalHealth(LPVOID lpParam);
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam);
 
@@ -59,10 +59,9 @@ ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageN
 
     newAnimal->HealthLevel = 5;
     newAnimal->HealthLevelChange = FALSE;
+    newAnimal->HealthLevelIncrease = FALSE;
 
     newAnimal->InteractivityPrompted = FALSE;
-
-    newAnimal->FeedTimer = 10;
 
     AddAnimal(newAnimal);
 
@@ -106,23 +105,14 @@ void RemoveAnimal(ZooAnimal* animal) {
 
     EnterCriticalSection(&animalRemovalCrit);
 
-    NodeEntry* temp = animalListHead->Blink;
+    AnimalList* tempAnimal = CONTAINING_RECORD(animal, AnimalList, ZooAnimal);
 
-    while (temp != animalListHead) {
-        AnimalList* tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList);
+    tempAnimal->LinkedList.Flink->Blink = tempAnimal->LinkedList.Blink;
+    tempAnimal->LinkedList.Blink->Flink = tempAnimal->LinkedList.Flink;
 
-        if (_tcscmp(animal->UniqueName, tempAnimal->ZooAnimal.UniqueName) == 0) {
-            temp->Flink->Blink = temp->Blink;
-            temp->Blink->Flink = temp->Flink;
+    AddRandomName(animal->UniqueName);
 
-            AddRandomName(animal->UniqueName);
-        }
-
-        // TODO: Re-implement
-        // HeapFree(GetProcessHeap(), 0, tempAnimal);
-
-        temp = temp->Blink;
-    };
+    HeapFree(GetProcessHeap(), 0, tempAnimal);
 
     LeaveCriticalSection(&animalRemovalCrit);
 
@@ -234,52 +224,8 @@ void GetAllAnimalsInteractivity() {
 
 #pragma region Animal Change Functions
 
-void DecreaseAnimalFedTimer() {
-    if (IS_LIST_EMPTY(animalListHead)) {
-        ConsoleWriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return;
-    }
-
-    EnterCriticalSection(&AnimalListCrit);
-
-    NodeEntry* temp = animalListHead->Blink;
-
-    while (temp != animalListHead) {
-        ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-        if (tempAnimal->FeedTimer <= 0) {
-            tempAnimal->HealthLevel--;
-            tempAnimal->FeedTimer = 10;
-
-            ConsoleWriteLine(
-                _T("%c%s the %s is hungry\n"),
-                YELLOW,
-                tempAnimal->UniqueName,
-                AnimalTypeToString(tempAnimal->AnimalType)
-            );
-
-            SetHealthEvent(tempAnimal);
-        } else {
-            tempAnimal->FeedTimer--;
-        }
-
-        temp = temp->Blink;
-    };
-
-    LeaveCriticalSection(&AnimalListCrit);
-}
-
 void SetHealthEvent(ZooAnimal* animal) {
-    if (healthEvent == NULL) {
-        healthEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // Temporary, will be moved to NewCage
-
-        if (healthEvent == NULL) {
-            ConsoleWriteLine(_T("%cFailed to create event: %d\n"), RED, GetLastError());
-            return;
-        }
-    }
-
-    if (animal->HealthLevel <= 0) {
+    if (animal->HealthLevel < 1) {
         ConsoleWriteLine(
             _T("%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n"),
             YELLOW,
@@ -384,8 +330,6 @@ DWORD GetCageAverageInteractiveLevel(LPTSTR cageName) {
 }
 
 Cage* GetRandomCage() {
-    srand((unsigned)time(NULL));
-
     const int value = rand() % MAX_CAGES;
     int animalCount = 0;
 
@@ -411,6 +355,15 @@ Cage* GetRandomCage() {
 #pragma region Cage Functions
 
 Cage* NewCage(LPTSTR cageName) {
+    if (healthEvent == NULL) {
+        healthEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // Temporary, will be moved to NewCage
+
+        if (healthEvent == NULL) {
+            ConsoleWriteLine(_T("%cFailed to create event: %d\n"), RED, GetLastError());
+            return NULL;
+        }
+    }
+
     Cage* cage = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Cage));
 
     if (cage == 0) {
@@ -425,12 +378,35 @@ Cage* NewCage(LPTSTR cageName) {
         return NULL;
     }
 
+    HANDLE feedEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
+
+    if (feedEventTimer == NULL) {
+        ConsoleWriteLine(_T("%cFailed to create feed event timer: %d"), GetLastError());
+        return NULL;
+    }
+
     cage->Name = cageName;
     cage->FeedEvent = feedEvent;
+    cage->FeedEventTimer = feedEventTimer;
+
+    if (!ResetFeedTimer(feedEventTimer)) {
+        return NULL;
+    }
+
     cage->AnimalHealthThread = CreateThread(NULL, 0, &AnimalHealth, cage, 0, NULL);
     cage->AnimalInteractivityThread = CreateThread(NULL, 0, &AnimalInteractivity, NULL, 0, NULL);
 
     return cage;
+}
+
+BOOL ResetFeedTimer(HANDLE eventTimer) {
+    if (SetWaitableTimer(eventTimer, &feedDueTime, 0, NULL, NULL, FALSE)) {
+        return TRUE;
+    }
+
+    ConsoleWriteLine(_T("Failed to set Feed Event Timer: %d\n"), GetLastError());
+
+    return FALSE;
 }
 
 #pragma endregion
@@ -439,7 +415,7 @@ Cage* NewCage(LPTSTR cageName) {
 
 DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     Cage* cage = lpParam;
-    HANDLE events[2];
+    HANDLE events[3];
 
     if (cage->FeedEvent == NULL) {
         ConsoleWriteLine(_T("%cFeed Event is NULL\n"), RED);
@@ -447,10 +423,13 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     }
 
     events[0] = cage->FeedEvent;
-    events[1] = appClose;
+    events[1] = cage->FeedEventTimer;
+    events[2] = appClose;
 
     do {
-        if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == 1) {
+        const DWORD waitResult = WaitForMultipleObjects(3, events, FALSE, INFINITE);
+
+        if (waitResult == 2) {
             return 0;
         }
 
@@ -464,17 +443,35 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
             ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
 
             if (_tcscmp(tempAnimal->CageName, cage->Name) == 0) {
-                if (tempAnimal->HealthLevel < 10) {
-                    tempAnimal->HealthLevel++;
+                if (waitResult == 0) {
+                    if (tempAnimal->HealthLevel < 10) {
+                        tempAnimal->HealthLevel++;
+                        tempAnimal->HealthLevelIncrease = TRUE;
+                        tempAnimal->HealthLevelChange = TRUE;
+                    }
+
+                    ConsoleWriteLine(
+                        _T("%c%s the %s has been fed\n"),
+                        LIME,
+                        tempAnimal->UniqueName,
+                        AnimalTypeToString(tempAnimal->AnimalType)
+                    );
+                } else if (waitResult == 1) {
+                    tempAnimal->HealthLevel--;
+                    tempAnimal->HealthLevelIncrease = FALSE;
                     tempAnimal->HealthLevelChange = TRUE;
+
+                    if (tempAnimal->HealthLevel < 5) {
+                        ConsoleWriteLine(
+                            _T("%c%s the %s is hungry\n"),
+                            YELLOW,
+                            tempAnimal->UniqueName,
+                            AnimalTypeToString(tempAnimal->AnimalType)
+                        );
+                    }
                 }
 
-                ConsoleWriteLine(
-                    _T("%c%s the %s has been fed\n"),
-                    LIME,
-                    tempAnimal->UniqueName,
-                    AnimalTypeToString(tempAnimal->AnimalType)
-                );
+                ResetFeedTimer(cage->FeedEventTimer);
 
                 SetHealthEvent(tempAnimal);
             }
@@ -494,7 +491,6 @@ DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
     events[1] = appClose;
 
     do {
-        // TODO: Why is this using so much CPU?
         if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == 1) {
             return 0;
         }
@@ -510,8 +506,11 @@ DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
 
             if (tempAnimal->HealthLevelChange) {
                 if (tempAnimal->InteractiveLevel < 10) {
-                    tempAnimal->InteractiveLevel++;
-                    // TODO: Need to determine if HealthLevel went up or down
+                    if (tempAnimal->HealthLevelIncrease) {
+                        tempAnimal->InteractiveLevel++;
+                    } else if (tempAnimal->InteractiveLevel > 0) {
+                        tempAnimal->InteractiveLevel--;
+                    }
                 }
 
                 tempAnimal->HealthLevelChange = FALSE;
@@ -536,8 +535,6 @@ DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
         if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == 1) {
             return 0;
         }
-
-        srand((unsigned)time(NULL));
 
         BOOL action;
         ZooAnimal* selectedAnimal = NULL;

@@ -10,8 +10,8 @@
 #include "SerengetiZooProject.h"
 #include "Visitor.h"
 
-#define MAXS 20
-#define MAXA 5
+//#define MAXS 20
+//#define MAXA 5
 
 LPTSTR uniqueNames[] = {
     _T("Julien"),
@@ -72,23 +72,17 @@ NodeEntry* visitorListHead = 0;
 
 HANDLE significantEventThread;
 
-int mTurns = 15;
-HANDLE hTimer = NULL;
-LARGE_INTEGER liDueTime;
-HANDLE tEvent;
-int tThread = 0;
+//int mTurns = 15;
+//HANDLE hTimer = NULL;
+//LARGE_INTEGER liDueTime;
+//HANDLE tEvent;
+//int tThread = 0;
 
-DWORD WINAPI mTimer(LPVOID lpParam);
-void printScore();
-
-//void printvHappinessLevel();
-//void NextTurn();
+//DWORD WINAPI mTimer(LPVOID lpParam);
 
 #pragma region Helpers
 
 int GetRandomInteractiveLevel() {
-    srand((unsigned)time(NULL));
-
     return (rand() % 10) + 1;
 }
 
@@ -97,8 +91,6 @@ LPTSTR GetRandomName() {
     LPTSTR selectedName;
 
     EnterCriticalSection(&NameListCrit);
-
-    srand((unsigned)time(NULL));
 
     do {
         index = rand() % _countof(uniqueNames);
@@ -169,13 +161,6 @@ void InitializeMain() {
     if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
         ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION\n"), RED);
     }
-
-    significantEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
-
-    if (significantEventTimer == NULL) {
-        ConsoleWriteLine(_T("Failed to create Significant Event Timer: %d\n"), GetLastError());
-        ExitProcess(1);
-    }
 }
 
 void InitializeZoo() {
@@ -218,47 +203,69 @@ void InitializeZoo() {
 }
 
 void InitializeTimers() {
-    significantEventThread = CreateThread(NULL, 0, SignificantEventTimer, NULL, 0, NULL);
+    significantEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
 
     if (significantEventTimer == NULL) {
-        ConsoleWriteLine(_T("Failed to create Significant Event Timer Thread: %d\n"), GetLastError());
-        return;
+        ConsoleWriteLine(_T("Failed to create Significant Event Timer: %d\n"), GetLastError());
+        ExitProcess(1);
     }
 
-    seDueTime.QuadPart = ((SIGNIFICANT_EVENT_MIN * 60) * TIMER_SECONDS) * -1;
+    significantEventThread = CreateThread(NULL, 0, SignificantEventTimer, NULL, 0, NULL);
+
+    if (significantEventThread == NULL) {
+        ConsoleWriteLine(_T("Failed to create Event Timer Threads: %d\n"), GetLastError());
+        ExitProcess(1);
+    }
+
+    seDueTime.QuadPart = - ((SIGNIFICANT_EVENT_MIN * 60) * TIMER_SECONDS);
+    feedDueTime.QuadPart = - ((FEED_EVENT_MIN * 60) * TIMER_SECONDS);
 
     if (!SetWaitableTimer(significantEventTimer, &seDueTime, 0, NULL, NULL, FALSE)) {
         ConsoleWriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
     }
 }
 
+void PrintScore() {
+    ConsoleWriteLine(_T("\n%c-------------------------\n"), YELLOW);
+    ConsoleWriteLine(_T("%c Score = %d\n"), YELLOW, g_Score);
+    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
+}
+
 void EndTurnActions() {
-    printScore();
-    DecreaseAnimalFedTimer();
+    ConsoleWriteLine(_T("%cZoo is closing for the rest of the day...\n"), PINK);
+    PrintScore();
 }
 
 void Dispose() {
     SetEvent(appClose);
 
-    CancelWaitableTimer(hTimer);
-    //if(ht)TerminateThread(ht,0);
-    tThread = 1;
+    //CancelWaitableTimer(hTimer);
+    ////if(ht)TerminateThread(ht,0);
+    //tThread = 1;
 
-    WaitForSingleObject(significantEventThread, INFINITE);
     CancelWaitableTimer(significantEventTimer);
+    WaitForSingleObject(significantEventThread, INFINITE);
+
+    // TODO: Need to close visitor threads before cages
 
     for (int i = 0; i != _countof(cages); ++i) {
+        CancelWaitableTimer(cages[i]->FeedEventTimer);
         WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
+        WaitForSingleObject(cages[i]->AnimalInteractivityThread, INFINITE);
+        CloseHandle(cages[i]->FeedEvent);
+        HeapFree(GetProcessHeap(), 0, cages[i]);
     }
 
     HeapFree(GetProcessHeap(), 0, animalListHead);
     HeapFree(GetProcessHeap(), 0, visitorListHead);
-    // TODO: Need to terminate Visitor threads or this will throw an exception
 
     ExitProcess(0);
 }
 
 int _tmain() {
+    srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
+
+    InitializeTimers();
     InitializeMain();
 
     TCHAR buffer[MAX_PATH];
@@ -268,25 +275,24 @@ int _tmain() {
     InitVisitorsEvent();
     InitializeZoo(); // TODO: Need to error handle
 
-    InitializeTimers();
-
-    DWORD tid = 0;
+    /*DWORD tid = 0;
     const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
     if (ht == NULL) {
         ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
-    }
+    }*/
 GAMELOOP:
     LeaveCriticalSection(&ConsoleCrit);
 
-    ConsoleWriteLine(_T("Please select your action\n"));
-    ConsoleWriteLine(_T("-------------------------\n"));
-    ConsoleWriteLine(_T("1 - Feed Animals\n"));
-    ConsoleWriteLine(_T("2 - Check Animal Interactivity Levels\n"));
-    ConsoleWriteLine(_T("3 - Display Current Disposition of visitors\n"));
-    ConsoleWriteLine(_T("4 - Show Case Animal\n"));
-    ConsoleWriteLine(_T("5 - Check Visitors Happiness Level\n"));
-    ConsoleWriteLine(_T("6 - End Turn\n"));
-    ConsoleWriteLine(_T("0 - Exit\n"));
+    ConsoleWriteLine(_T("\n%cPlease select your action\n"), LIME);
+    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
+    ConsoleWriteLine(_T("%c1%r - Feed Animals\n"), LIME);
+    ConsoleWriteLine(_T("%c2%r - Check Animal Interactivity Levels\n"), LIME);
+    ConsoleWriteLine(_T("%c3%r - Display Current Disposition of visitors\n"), LIME);
+    ConsoleWriteLine(_T("%c4%r - Show Case Animal\n"), LIME);
+    ConsoleWriteLine(_T("%c5%r - Check Visitors Happiness Level\n"), LIME);
+    ConsoleWriteLine(_T("%c6%r - Close zoo for the day\n"), LIME);
+    ConsoleWriteLine(_T("%c0%r - Exit\n"), PINK);
+    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
 
     LeaveCriticalSection(&ConsoleCrit);
 
@@ -297,10 +303,10 @@ GAMELOOP:
     }
 
     switch (menuOption) {
-        case 1 :
+        case 1 : // Feed Animals
             EnterCriticalSection(&ConsoleCrit);
 
-            ConsoleWriteLine(_T("%cYou selected - Feed Animals\n"),BLUE);
+            ConsoleWriteLine(_T("\n%cYou selected - Feed Animals\n\n"), SKYBLUE);
 
             GetAllAnimalsHealth();
 
@@ -309,24 +315,25 @@ GAMELOOP:
                 break;
             }
 
-            ConsoleWriteLine(_T("Which cage number would you like to feed?\n"));
+            ConsoleWriteLine(_T("\nWhich cage number would you like to feed?\n"));
             _fgetts(buffer, _countof(buffer), stdin);
             if (_stscanf_s(buffer, _T("%d"), &cageNumber) == 1) {
                 if (cageNumber < 1 || cageNumber > (int)_countof(cages)) {
                     ConsoleWriteLine(_T("Invalid Selection...\n"));
-                    goto GAMELOOP;
+                } else {
+                    SetEvent(cages[cageNumber - 1]->FeedEvent);
                 }
-
-                SetEvent(cages[cageNumber - 1]->FeedEvent);
+            } else {
+                ConsoleWriteLine(_T("Invalid Selection...\n"));
             }
 
             LeaveCriticalSection(&ConsoleCrit);
 
             break;
-        case 2 :
+        case 2 : // Check Animal Interactivity Levels
             EnterCriticalSection(&ConsoleCrit);
 
-            ConsoleWriteLine(_T("%cYou selected - Check Animal Int Levels\n"),BLUE);
+            ConsoleWriteLine(_T("\n%cYou selected - Check Animal Int Levels\n\n"), SKYBLUE);
             GetAllAnimalsInteractivity();
 
             LeaveCriticalSection(&ConsoleCrit);
@@ -334,68 +341,83 @@ GAMELOOP:
         case 3 : // Display Current Disposition of visitors
             /*Call a function from Vistor.c that prints all the visitors within the list and their respective CageLocation.
             */
-            ConsoleWriteLine(_T("%cYou selected - Display Current Disp of Visitors\n"),BLUE);
+
+            // TODO: Finish Case 3
+
+            EnterCriticalSection(&ConsoleCrit);
+
+            ConsoleWriteLine(_T("\n%cYou selected - Display Current Disp of Visitors\n\n"), SKYBLUE);
+
+            LeaveCriticalSection(&ConsoleCrit);
+
             break;
         case 4 : // Show Case Animal
             /*Call a function from Visitor.c that increases the HappinessLevel of all visitors that are currently at a specific cage. This functions should accept a string to be compared with each visitor Visitor->CageLocation. 
             */
             //Call NextTurn()
-            ConsoleWriteLine(_T("%cYou selected - Show Case Animal\n"),BLUE);
+
+            // TODO: Finish Case 4
+
+            EnterCriticalSection(&ConsoleCrit);
+
+            ConsoleWriteLine(_T("\n%cYou selected - Show Case Animal\n\n"), SKYBLUE);
+
+            EndTurnActions();
+
+            LeaveCriticalSection(&ConsoleCrit);
+
             break;
         case 5 : // Check Visitors Happiness Level
-            /*Call a function from Vistor.c that prints all the visitors within the list and their respective HappinessLevel.
-            */
-            ConsoleWriteLine(_T("%cYou selected - Check Visitors Happ Level\n"),BLUE);
+            EnterCriticalSection(&ConsoleCrit);
+
+            ConsoleWriteLine(_T("\n%cYou selected - Check Visitors Happ Level\n\n"), SKYBLUE);
             EnumVisitors(visitorListHead, TRUE);
+
+            LeaveCriticalSection(&ConsoleCrit);
+
             break;
         case 6 :
-            ConsoleWriteLine(_T("%cYou selected - Next Turn\n"),BLUE);
             EndTurnActions();
             break;
         case 0 :
-            ConsoleWriteLine(_T("%cYou selected - Quit\n"),BLUE);
+            ConsoleWriteLine(_T("\n%cYou selected - Quit\n\n"), SKYBLUE);
+            EndTurnActions();
             Dispose();
         default :
             ConsoleWriteLine(_T("Invalid Selection...\n"));
             break;
     }
-    CancelWaitableTimer(hTimer);
-    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
-    printScore();
+    /*CancelWaitableTimer(hTimer);
+    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);*/
+
     goto GAMELOOP;
 }
 
-DWORD WINAPI mTimer(LPVOID lpParam) {
-    lpParam = "10";
-    liDueTime.QuadPart = -100000000LL;
-    // Create an unnamed waitable timer.
-    hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
-    if (NULL == hTimer) {
-        ConsoleWriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
-        return 1;
-    }
-    // Set a timer to wait for 60 seconds.
-    if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
-        ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
-        return 2;
-    }
-    // Wait for the timer.
-mtimerloop:
-    if (tThread != 0)return 0;
-    if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
-        ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
-    else {
-        ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
-        ConsoleWriteLine(_T("%cYou took too long to select your option\nPlease select an option from the menu.\n"),RED);
-
-    }
-    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
-    goto mtimerloop;
-
-}
-
-void printScore() {
-    ConsoleWriteLine(_T("%c-------------------------\n"),YELLOW);
-    ConsoleWriteLine(_T("%c Score = %d\n"),YELLOW, g_Score);
-    ConsoleWriteLine(_T("%c-------------------------\n"),YELLOW);
-}
+//DWORD WINAPI mTimer(LPVOID lpParam) {
+//    lpParam = "10";
+//    liDueTime.QuadPart = -100000000LL;
+//    // Create an unnamed waitable timer.
+//    hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+//    if (NULL == hTimer) {
+//        ConsoleWriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
+//        return 1;
+//    }
+//    // Set a timer to wait for 60 seconds.
+//    if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
+//        ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
+//        return 2;
+//    }
+//    // Wait for the timer.
+//mtimerloop:
+//    if (tThread != 0)return 0;
+//    if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
+//        ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
+//    else {
+//        ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
+//        ConsoleWriteLine(_T("%cYou took too long to select your option\nPlease select an option from the menu.\n"),RED);
+//
+//    }
+//    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
+//    goto mtimerloop;
+//
+//}
