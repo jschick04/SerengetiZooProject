@@ -24,6 +24,7 @@ typedef struct ZooAnimal {
     LPTSTR CageName;
     DWORD HealthLevel;
     BOOL HealthLevelChange;
+    BOOL HealthLevelIncrease;
     DWORD InteractiveLevel;
     BOOL InteractivityPrompted;
     DWORD FeedTimer;

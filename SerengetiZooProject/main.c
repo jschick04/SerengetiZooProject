@@ -81,12 +81,10 @@ int tThread = 0;
 DWORD WINAPI mTimer(LPVOID lpParam);
 void printScore();
 
-//void printvHappinessLevel();
-//void NextTurn();
-
 #pragma region Helpers
 
 int GetRandomInteractiveLevel() {
+    // TODO: Add more randomness
     srand((unsigned)time(NULL));
 
     return (rand() % 10) + 1;
