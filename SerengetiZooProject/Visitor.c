@@ -96,32 +96,44 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
     NodeEntry* RemovedNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
     if (RemovedNode == NULL) {
         ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        LeaveCriticalSection(&VisitorListCrit);
+        SetEvent(hVisitorEvent);
         return NULL;
     }
     NodeEntry* TempNodePrev = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
     if (TempNodePrev == NULL) {
         ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        LeaveCriticalSection(&VisitorListCrit);
+        SetEvent(hVisitorEvent);
         return NULL;
     }
     NodeEntry* TempNodeNext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
     if (TempNodeNext == NULL) {
         ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        LeaveCriticalSection(&VisitorListCrit);
+        SetEvent(hVisitorEvent);
         return NULL;
     }
     RemovedNode = VisitorListHead->Flink;
     Visitor* RemovedVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
     if (RemovedVisitor == NULL) {
         ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        LeaveCriticalSection(&VisitorListCrit);
+        SetEvent(hVisitorEvent);
         return NULL;
     }
     Visitor* PreviousVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
     if (PreviousVisitor == NULL) {
         ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        LeaveCriticalSection(&VisitorListCrit);
+        SetEvent(hVisitorEvent);
         return NULL;
     }
     Visitor* NextVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
     if (NextVisitor == NULL) {
         ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        LeaveCriticalSection(&VisitorListCrit);
+        SetEvent(hVisitorEvent);
         return NULL;
     }
 
@@ -267,7 +279,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 }
 
      //Function to enumerate all visitors, simply prints them forward.
-    DWORD WINAPI ExitZoo(NodeEntry * VisitorListHead)
+    DWORD WINAPI GetVisitorCount(NodeEntry * VisitorListHead)
     {
         DWORD Count = 0;
         WaitForSingleObject(hVisitorEvent, INFINITE);
@@ -286,9 +298,17 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
             Count++;
             EnumNode = EnumNode->Flink;
         }
-        
-        bExitZoo = TRUE;
+
+        LeaveCriticalSection(&VisitorListCrit);
+        SetEvent(hVisitorEvent);
+
         return Count;
+    }
+
+    DWORD WINAPI ExitZoo()
+    {
+        bExitZoo = TRUE;
+        return 1;
     }
 
     //Function to enumerate all visitors, simply prints them forward.
