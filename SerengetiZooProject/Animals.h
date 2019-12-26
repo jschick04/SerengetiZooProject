@@ -6,7 +6,7 @@
 
 #define SIGNIFICANT_EVENT_MIN 2
 #define FEED_EVENT_MIN 1
-#define MAX_CAGES 5
+#define MAX_CAGES 6
 
 HANDLE significantEventTimer;
 
@@ -33,7 +33,7 @@ typedef struct ZooAnimal {
 
 typedef struct AnimalList {
     ZooAnimal ZooAnimal;
-    struct NodeEntry LinkedList;
+    NodeEntry LinkedList;
 } AnimalList;
 
 // Defines the number of cages that will be in the zoo
@@ -43,7 +43,7 @@ Cage* cages[MAX_CAGES];
 LARGE_INTEGER seDueTime;
 LARGE_INTEGER feedDueTime;
 
-ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel);
+void NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel);
 void AddAnimal(ZooAnimal* animal);
 void RemoveAnimal(ZooAnimal* animal);
 

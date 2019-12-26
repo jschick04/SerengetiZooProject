@@ -171,7 +171,8 @@ void InitializeZoo() {
         const LPTSTR prepend = _T("Cage");
 
         if (cageName == NULL) {
-            continue; // TODO: Add better handling if we can't assign a name
+            ConsoleWriteLine(_T("Failed to generate cage name: %d"), GetLastError());
+            continue;
         }
 
         StringCchPrintf(cageName, 10, _T("%s%d"), prepend, i + 1);
@@ -179,9 +180,6 @@ void InitializeZoo() {
         cages[i] = NewCage(cageName);
 
         NewAnimal(i, GetRandomName(), cageName, GetRandomInteractiveLevel());
-
-        // Breaks cage name but need to cleanup at some point
-        //HeapFree(GetProcessHeap(), 0, cageName);
     }
 
     // Initialize visitor structs
@@ -189,7 +187,7 @@ void InitializeZoo() {
     AddVisitor(visitorListHead, _T("Jerry"));
     AddVisitor(visitorListHead, _T("Cornelius"));
     AddVisitor(visitorListHead, _T("Fred"));
-    EnumVisitors(visitorListHead, TRUE);
+    //EnumVisitors(visitorListHead, TRUE);
 
     //BareBones Entry to test the random visitor entering simulation test.
     CreateThread(
@@ -253,6 +251,7 @@ void Dispose() {
         WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
         WaitForSingleObject(cages[i]->AnimalInteractivityThread, INFINITE);
         CloseHandle(cages[i]->FeedEvent);
+        HeapFree(GetProcessHeap(), 0, cages[i]->Name);
         HeapFree(GetProcessHeap(), 0, cages[i]);
     }
 
@@ -273,7 +272,7 @@ int _tmain() {
     int cageNumber;
 
     InitVisitorsEvent();
-    InitializeZoo(); // TODO: Need to error handle
+    InitializeZoo();
 
     /*DWORD tid = 0;
     const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
