@@ -179,22 +179,22 @@ void InitializeZoo() {
 
     IsOpen = TRUE;
 
-    // Initialize visitor structs
-    AddVisitor(visitorListHead, _T("Tom"));
-    AddVisitor(visitorListHead, _T("Jerry"));
-    AddVisitor(visitorListHead, _T("Cornelius"));
-    AddVisitor(visitorListHead, _T("Fred"));
-    //EnumVisitors(visitorListHead, TRUE);
-
     //BareBones Entry to test the random visitor entering simulation test.
-    CreateThread(
+    HANDLE hvisitorcreationthread = NULL;
+    BOOL go = TRUE;
+    hvisitorcreationthread = CreateThread(
         NULL,
         0,
         AddVisitorsThread,
-        NULL,
+        &go,
         0,
         NULL
     );
+    if (hvisitorcreationthread == NULL)
+    {
+        ConsoleWriteLine(_T("Failed to create visitor creation thread"), GetLastError());
+        ExitProcess(1);
+    }
 }
 
 void InitializeTimers() {

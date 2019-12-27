@@ -396,7 +396,7 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
 }
 
 //Thread to simulate a random amount of visitors being added periodically.
-DWORD WINAPI AddVisitorsThread()
+DWORD WINAPI AddVisitorsThread(BOOL* go)
 {
     LPTSTR VisitorName[] = {
     _T("Ron"),
@@ -457,7 +457,7 @@ DWORD WINAPI AddVisitorsThread()
         Sleep(SleepRand);
 
         //Determine number of visitors to add
-        while(1)
+        while(go)
         {
             WaitForSingleObject(&VisitorEnterEvent, INFINITE);
             numVisitorsRand = (rand() % 3);
