@@ -32,7 +32,6 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole);
 Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name);
 DWORD WINAPI AddVisitorsThread();
 DWORD WINAPI GetVisitorCount(NodeEntry* VisitorListHead);
-DWORD WINAPI EnterZoo();
 DWORD WINAPI ExitZoo();
 
 #endif
