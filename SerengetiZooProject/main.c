@@ -77,14 +77,10 @@ HANDLE hTimer = NULL;
 LARGE_INTEGER liDueTime;
 HANDLE tEvent;
 int tThread = 0;
-DWORD tid = 0;
+
 DWORD WINAPI mTimer(LPVOID lpParam);
 
 #pragma region Helpers
-
-int GetRandomInteractiveLevel() {
-    return (rand() % 10) + 1;
-}
 
 LPTSTR GetRandomName() {
     unsigned int index;
@@ -175,7 +171,7 @@ void InitializeZoo() {
 
         cages[i] = NewCage(cageName);
 
-        NewAnimal(i, GetRandomName(), cageName, GetRandomInteractiveLevel());
+        NewAnimal(i, GetRandomName(), cageName);
     }
 
     // Initialize visitor structs
@@ -225,17 +221,22 @@ void PrintScore() {
     ConsoleWriteLine(_T("%c-------------------------\n\n"), YELLOW);
 }
 
-void EndTurnActions() {
-    ConsoleWriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
-    const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
-    if (ht == NULL) {
-        ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
-    }
-    //liDueTime.QuadPart = -600000000LL;
-    /*if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
+DWORD ResetZooClosedTimer() {
+    liDueTime.QuadPart = - (30 * TIMER_SECONDS);
+
+    if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
         ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
         return 2;
-    }*/
+    }
+
+    return 0;
+}
+
+void EndTurnActions() {
+    ConsoleWriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
+
+    ResetZooClosedTimer();
+
     PrintScore();
 }
 
@@ -279,18 +280,18 @@ int _tmain() {
     InitVisitorsEvent();
     InitializeZoo();
 
-    /*DWORD tid = 0;
+    DWORD tid = 0;
     const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
     if (ht == NULL) {
         ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
     }
-    liDueTime.QuadPart = -300000000LL;
+    liDueTime.QuadPart = - (30 * TIMER_SECONDS);
     // Create an unnamed waitable timer.
-    hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+    hTimer = CreateWaitableTimer(NULL, FALSE, NULL);
     if (NULL == hTimer) {
         ConsoleWriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
         return 1;
-    }*/
+    }
 GAMELOOP:
     ConsoleWriteLine(_T("\n%cPlease select your action\n"), LIME);
     ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
@@ -362,17 +363,15 @@ GAMELOOP:
             ConsoleWriteLine(_T("Invalid Selection...\n"));
             break;
     }
-    CancelWaitableTimer(hTimer);
-    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
 
     goto GAMELOOP;
 }
 
 DWORD WINAPI mTimer(LPVOID lpParam) {
     lpParam = "10";
-    liDueTime.QuadPart = -100000000LL;
+    //liDueTime.QuadPart = -600000000LL;
     // Create an unnamed waitable timer.
-    hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+    /*hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
     if (NULL == hTimer) {
         ConsoleWriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
         return 1;
@@ -381,19 +380,19 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
     if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
         ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
         return 2;
-    }
+    }*/
     // Wait for the timer.
-//mtimerloop:
-    if (tThread != 0)return 0;
-    if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0) {
-        ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
-    } else {
-        ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
-        ConsoleWriteLine(_T("%cThe Zoo has been re-opened after the significant event.\n"), RED);
-        EnterZoo();
-    }
-    CancelWaitableTimer(hTimer);
-    return 0;
-    //goto mtimerloop;
+    do {
+        if (tThread != 0)return 0;
+        if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
+            ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
+        else {
+            ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
+            EnterZoo();
+            ConsoleWriteLine(_T("%cThe Zoo has been re-opened after the significant event.\n"), RED);
+            // TODO: Call open zoo here
+
+        }
+    } while (TRUE);
 
 }
