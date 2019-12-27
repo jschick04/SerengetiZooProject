@@ -71,6 +71,7 @@ NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
 
 HANDLE significantEventThread;
+HANDLE ht;
 
 int mTurns = 15;
 HANDLE hTimer = NULL;
@@ -235,6 +236,8 @@ DWORD ResetZooClosedTimer() {
 void EndTurnActions() {
     ConsoleWriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
 
+    ExitZoo();
+
     ResetZooClosedTimer();
 
     PrintScore();
@@ -244,8 +247,7 @@ void Dispose() {
     SetEvent(appClose);
 
     CancelWaitableTimer(hTimer);
-    //if(ht)TerminateThread(ht,0);
-    tThread = 1;
+    WaitForSingleObject(ht, INFINITE);
 
     CancelWaitableTimer(significantEventTimer);
     WaitForSingleObject(significantEventThread, INFINITE);
@@ -281,7 +283,7 @@ int _tmain() {
     InitializeZoo();
 
     DWORD tid = 0;
-    const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
+    ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
     if (ht == NULL) {
         ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
     }
@@ -384,14 +386,20 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
     // Wait for the timer.
     do {
         if (tThread != 0)return 0;
-        if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
-            ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
-        else {
+
+        HANDLE events[2];
+        events[0] = hTimer;
+        events[1] = appClose;
+
+        if (WaitForMultipleObjects(_countof(events), events, FALSE, INFINITE) == 0) {
             ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
             EnterZoo();
             ConsoleWriteLine(_T("%cThe Zoo has been re-opened after the significant event.\n"), RED);
-            // TODO: Call open zoo here
 
+            EnterZoo();
+
+        } else {
+            return 0;
         }
     } while (TRUE);
 
