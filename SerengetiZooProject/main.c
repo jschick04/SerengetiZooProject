@@ -10,8 +10,8 @@
 #include "SerengetiZooProject.h"
 #include "Visitor.h"
 
-//#define MAXS 20
-//#define MAXA 5
+#define MAXS 20
+#define MAXA 5
 
 LPTSTR uniqueNames[] = {
     _T("Julien"),
@@ -72,13 +72,13 @@ NodeEntry* visitorListHead = 0;
 
 HANDLE significantEventThread;
 
-//int mTurns = 15;
-//HANDLE hTimer = NULL;
-//LARGE_INTEGER liDueTime;
-//HANDLE tEvent;
-//int tThread = 0;
+int mTurns = 15;
+HANDLE hTimer = NULL;
+LARGE_INTEGER liDueTime;
+HANDLE tEvent;
+int tThread = 0;
 
-//DWORD WINAPI mTimer(LPVOID lpParam);
+DWORD WINAPI mTimer(LPVOID lpParam);
 
 #pragma region Helpers
 
@@ -227,15 +227,20 @@ void PrintScore() {
 
 void EndTurnActions() {
     ConsoleWriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
+    liDueTime.QuadPart = -600000000LL;
+    if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
+        ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
+        return 2;
+    }
     PrintScore();
 }
 
 void Dispose() {
     SetEvent(appClose);
 
-    //CancelWaitableTimer(hTimer);
-    ////if(ht)TerminateThread(ht,0);
-    //tThread = 1;
+    CancelWaitableTimer(hTimer);
+    //if(ht)TerminateThread(ht,0);
+    tThread = 1;
 
     CancelWaitableTimer(significantEventTimer);
     WaitForSingleObject(significantEventThread, INFINITE);
@@ -270,11 +275,18 @@ int _tmain() {
     InitVisitorsEvent();
     InitializeZoo();
 
-    /*DWORD tid = 0;
+    DWORD tid = 0;
     const HANDLE ht = CreateThread(NULL, 0, mTimer, 0, 0, &tid);
     if (ht == NULL) {
         ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
-    }*/
+    }
+    liDueTime.QuadPart = -600000000LL;
+    // Create an unnamed waitable timer.
+    hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+    if (NULL == hTimer) {
+        ConsoleWriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
+        return 1;
+    }
 GAMELOOP:
     ConsoleWriteLine(_T("\n%cPlease select your action\n"), LIME);
     ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
@@ -346,37 +358,38 @@ GAMELOOP:
             ConsoleWriteLine(_T("Invalid Selection...\n"));
             break;
     }
-    /*CancelWaitableTimer(hTimer);
-    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);*/
+    CancelWaitableTimer(hTimer);
+    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
 
     goto GAMELOOP;
 }
 
-//DWORD WINAPI mTimer(LPVOID lpParam) {
-//    lpParam = "10";
-//    liDueTime.QuadPart = -100000000LL;
-//    // Create an unnamed waitable timer.
-//    hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
-//    if (NULL == hTimer) {
-//        ConsoleWriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
-//        return 1;
-//    }
-//    // Set a timer to wait for 60 seconds.
-//    if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
-//        ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
-//        return 2;
-//    }
-//    // Wait for the timer.
-//mtimerloop:
-//    if (tThread != 0)return 0;
-//    if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
-//        ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
-//    else {
-//        ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
-//        ConsoleWriteLine(_T("%cYou took too long to select your option\nPlease select an option from the menu.\n"),RED);
-//
-//    }
-//    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
-//    goto mtimerloop;
-//
-//}
+DWORD WINAPI mTimer(LPVOID lpParam) {
+    lpParam = "10";
+    //liDueTime.QuadPart = -600000000LL;
+    // Create an unnamed waitable timer.
+    /*hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+    if (NULL == hTimer) {
+        ConsoleWriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
+        return 1;
+    }
+    // Set a timer to wait for 60 seconds.
+    if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
+        ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
+        return 2;
+    }*/
+    // Wait for the timer.
+mtimerloop:
+    if (tThread != 0)return 0;
+    if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
+        ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
+    else {
+        ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
+        EnterZoo();
+        ConsoleWriteLine(_T("%cThe Zoo has been re-opened after the significant event.\n"), RED);
+
+    }
+    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
+    goto mtimerloop;
+
+}
