@@ -259,9 +259,6 @@ void AddHealthLevel(ZooAnimal* animal) {
     const DWORD healthChange = rand() % (FEED_LEVEL_MAX - 1) + FEED_LEVEL_MIN;
     const DWORD newValue = animal->HealthLevel + healthChange;
 
-    // TODO: REMOVE
-    ConsoleWriteLine(_T("AddHealthLevel: %d - NewValue: %d"), healthChange, newValue);
-
     if (animal->HealthLevel >= 10) {
         ConsoleWriteLine(
             _T("%c%s the %s is already full...\n"),
@@ -314,9 +311,6 @@ void RemoveHealthLevel(ZooAnimal* animal) {
 void AddInteractiveLevel(ZooAnimal* animal) {
     const DWORD interactiveChange = rand() % (FEED_LEVEL_MAX - 1) + FEED_LEVEL_MIN;
     const DWORD newValue = animal->InteractiveLevel + interactiveChange;
-
-    // TODO: REMOVE
-    ConsoleWriteLine(_T("AddInteractiveLevel: %d - NewValue: %d"), interactiveChange, newValue);
 
     if (animal->InteractiveLevel >= 10) { return; }
 

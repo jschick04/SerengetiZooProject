@@ -221,8 +221,8 @@ void PrintScore() {
     ConsoleWriteLine(_T("%c-------------------------\n\n"), YELLOW);
 }
 
-DWORD ResetTimer() {
-    liDueTime.QuadPart = -600000000LL;
+DWORD ResetZooClosedTimer() {
+    liDueTime.QuadPart = - (30 * TIMER_SECONDS);
 
     if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
         ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
@@ -235,7 +235,7 @@ DWORD ResetTimer() {
 void EndTurnActions() {
     ConsoleWriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
 
-    ResetTimer();
+    ResetZooClosedTimer();
 
     PrintScore();
 }
@@ -285,9 +285,9 @@ int _tmain() {
     if (ht == NULL) {
         ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
     }
-    liDueTime.QuadPart = -300000000LL;
+    liDueTime.QuadPart = - (30 * TIMER_SECONDS);
     // Create an unnamed waitable timer.
-    hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+    hTimer = CreateWaitableTimer(NULL, FALSE, NULL);
     if (NULL == hTimer) {
         ConsoleWriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
         return 1;
@@ -363,8 +363,6 @@ GAMELOOP:
             ConsoleWriteLine(_T("Invalid Selection...\n"));
             break;
     }
-    CancelWaitableTimer(hTimer);
-    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
 
     goto GAMELOOP;
 }
@@ -384,17 +382,17 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
         return 2;
     }*/
     // Wait for the timer.
-mtimerloop:
-    if (tThread != 0)return 0;
-    if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
-        ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
-    else {
-        ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
-        EnterZoo();
-        ConsoleWriteLine(_T("%cThe Zoo has been re-opened after the significant event.\n"), RED);
+    do {
+        if (tThread != 0)return 0;
+        if (WaitForSingleObject(hTimer, INFINITE) != WAIT_OBJECT_0)
+            ConsoleWriteLine(_T("WaitForSingleObject failed (%d)\n"), GetLastError());
+        else {
+            ConsoleWriteLine(_T("\n%c------------------------------------\n"),RED);
+            EnterZoo();
+            ConsoleWriteLine(_T("%cThe Zoo has been re-opened after the significant event.\n"), RED);
+            // TODO: Call open zoo here
 
-    }
-    SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0);
-    goto mtimerloop;
+        }
+    } while (TRUE);
 
 }
