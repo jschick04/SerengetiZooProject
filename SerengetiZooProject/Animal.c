@@ -3,6 +3,7 @@
 #include <WriteLine.h>
 #include "Animals.h"
 #include "SerengetiZooProject.h"
+#include "Visitor.h"
 
 #pragma region Function Declarations
 
@@ -44,12 +45,12 @@ LPTSTR AnimalTypeToString(enum AnimalType animalType) {
 
 #pragma region Animal Functions
 
-ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel) {
+void NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel) {
     ZooAnimal* newAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
 
     if (newAnimal == NULL) {
         ConsoleWriteLine(_T("%cFailed to allocate memory for new animal: %d\n"), RED, GetLastError());
-        return NULL;
+        return;
     }
 
     newAnimal->AnimalType = animalType;
@@ -57,7 +58,7 @@ ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageN
     newAnimal->CageName = cageName;
     newAnimal->InteractiveLevel = interactiveLevel;
 
-    newAnimal->HealthLevel = 5;
+    newAnimal->HealthLevel = 6;
     newAnimal->HealthLevelChange = FALSE;
     newAnimal->HealthLevelIncrease = FALSE;
 
@@ -65,7 +66,7 @@ ZooAnimal* NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageN
 
     AddAnimal(newAnimal);
 
-    return newAnimal;
+    HeapFree(GetProcessHeap(), 0, newAnimal);
 }
 
 void AddAnimal(ZooAnimal* animal) {
@@ -227,8 +228,8 @@ void GetAllAnimalsInteractivity() {
 void SetHealthEvent(ZooAnimal* animal) {
     if (animal->HealthLevel < 1) {
         ConsoleWriteLine(
-            _T("%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n"),
-            YELLOW,
+            _T("\n%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n\n"),
+            PINK,
             animal->UniqueName,
             AnimalTypeToString(animal->AnimalType)
         );
@@ -573,29 +574,34 @@ DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
         if (selectedAnimal != NULL) {
             if (action) {
                 ConsoleWriteLine(
-                    _T("%c%s the %s has escaped!\n"),
+                    _T("\n%c%s the %s has escaped!\n\n"),
                     YELLOW,
                     selectedAnimal->UniqueName,
                     AnimalTypeToString(selectedAnimal->AnimalType)
                 );
-                // Replace 1 with method to call number of visitors
-                ConsoleWriteLine(_T("You have lost %d points because all visitors left the zoo...\n"), 1);
-                g_Score += 1;
+                ConsoleWriteLine(
+                    _T("You have %clost%r %d points because all visitors left the zoo...\n"),
+                    PINK,
+                    GetVisitorCount(visitorListHead)
+                );
+                g_Score -= GetVisitorCount(visitorListHead);
 
                 RemoveAnimal(selectedAnimal);
             } else {
                 ConsoleWriteLine(
-                    _T("%c%s the %s has given birth to a baby %s!\n"),
+                    _T("\n%c%s the %s has given birth to a baby %s!\n\n"),
                     LIME,
                     selectedAnimal->UniqueName,
                     AnimalTypeToString(selectedAnimal->AnimalType),
                     AnimalTypeToString(selectedAnimal->AnimalType)
                 );
-                // Replace 1 with method to call number of visitors
-                ConsoleWriteLine(_T("All visitors have left for the day and you earned %d points...\n"), 3);
-                g_Score += 3;
+                ConsoleWriteLine(
+                    _T("All visitors have left for the day and you %cearned%r %d points...\n"),
+                    LIME,
+                    3 * GetVisitorCount(visitorListHead)
+                );
+                g_Score += 3 * (int)GetVisitorCount(visitorListHead);
 
-                // TODO: Need to get a random name and interactive level
                 NewAnimal(
                     selectedAnimal->AnimalType,
                     GetRandomName(),

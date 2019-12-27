@@ -177,7 +177,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
         Sleep(sleeparray[selector]);
 
         //handle error if the cage name is NULL. Something is very wrong, there are no animals.
-        if (cages[i]->Name == NULL)
+        if (IsCageEmpty(cages[i]->Name))
         {
            //WriteConsoleOutput(_T("There are no animals in the zoo left!"),RED);
             ConsoleWriteLine(_T("There are no animals left in the Zoo!\n"));

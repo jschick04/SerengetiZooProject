@@ -15,7 +15,6 @@ typedef struct NodeEntry {
 CRITICAL_SECTION AnimalListCrit;
 CRITICAL_SECTION NameListCrit;
 CRITICAL_SECTION VisitorListCrit;
-CRITICAL_SECTION ConsoleCrit;
 CRITICAL_SECTION cScore;
 
 HANDLE appClose;
