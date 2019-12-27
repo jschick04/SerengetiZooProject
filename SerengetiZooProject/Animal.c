@@ -4,10 +4,10 @@
 #include "Animals.h"
 #include "SerengetiZooProject.h"
 #include "Visitor.h"
+#include <time.h>
 
 #pragma region Function Declarations
 
-void SetHealthEvent(ZooAnimal* animal);
 BOOL ResetFeedTimer(HANDLE eventTimer);
 DWORD WINAPI AnimalHealth(LPVOID lpParam);
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam);
@@ -15,6 +15,8 @@ DWORD WINAPI AnimalInteractivity(LPVOID lpParam);
 #pragma endregion
 
 HANDLE healthEvent;
+
+#pragma region Helpers
 
 LPTSTR AnimalTypeToString(enum AnimalType animalType) {
     switch (animalType) {
@@ -43,31 +45,17 @@ LPTSTR AnimalTypeToString(enum AnimalType animalType) {
     }
 }
 
-#pragma region Animal Functions
-
-void NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel) {
-    ZooAnimal* newAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
-
-    if (newAnimal == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory for new animal: %d\n"), RED, GetLastError());
-        return;
-    }
-
-    newAnimal->AnimalType = animalType;
-    newAnimal->UniqueName = uniqueName;
-    newAnimal->CageName = cageName;
-    newAnimal->InteractiveLevel = interactiveLevel;
-
-    newAnimal->HealthLevel = 6;
-    newAnimal->HealthLevelChange = FALSE;
-    newAnimal->HealthLevelIncrease = FALSE;
-
-    newAnimal->InteractivityPrompted = FALSE;
-
-    AddAnimal(newAnimal);
-
-    HeapFree(GetProcessHeap(), 0, newAnimal);
+int GetRandomHealthLevel() {
+    return rand() % 5 + 4;
 }
+
+int GetRandomInteractiveLevel() {
+    return rand() % 5 + 4;
+}
+
+#pragma endregion
+
+#pragma region Animal Functions
 
 void AddAnimal(ZooAnimal* animal) {
     AnimalList* newListItem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(AnimalList));
@@ -89,6 +77,29 @@ void AddAnimal(ZooAnimal* animal) {
     newListItem->ZooAnimal = *animal;
 
     LeaveCriticalSection(&AnimalListCrit);
+}
+
+void NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName) {
+    ZooAnimal* newAnimal = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ZooAnimal));
+
+    if (newAnimal == NULL) {
+        ConsoleWriteLine(_T("%cFailed to allocate memory for new animal: %d\n"), RED, GetLastError());
+        return;
+    }
+
+    newAnimal->AnimalType = animalType;
+    newAnimal->UniqueName = uniqueName;
+    newAnimal->CageName = cageName;
+
+    newAnimal->HealthLevel = GetRandomHealthLevel();
+    newAnimal->HealthLevelChange = FALSE;
+
+    newAnimal->InteractiveLevel = GetRandomInteractiveLevel();
+    newAnimal->InteractivityPrompted = FALSE;
+
+    AddAnimal(newAnimal);
+
+    HeapFree(GetProcessHeap(), 0, newAnimal);
 }
 
 void RemoveAnimal(ZooAnimal* animal) {
@@ -242,6 +253,90 @@ void SetHealthEvent(ZooAnimal* animal) {
     }
 
     SetEvent(healthEvent);
+}
+
+void AddHealthLevel(ZooAnimal* animal) {
+    const DWORD healthChange = rand() % (FEED_LEVEL_MAX - 1) + FEED_LEVEL_MIN;
+    const DWORD newValue = animal->HealthLevel + healthChange;
+
+    // TODO: REMOVE
+    ConsoleWriteLine(_T("AddHealthLevel: %d - NewValue: %d"), healthChange, newValue);
+
+    if (animal->HealthLevel >= 10) {
+        ConsoleWriteLine(
+            _T("%c%s the %s is already full...\n"),
+            LIME,
+            animal->UniqueName,
+            AnimalTypeToString(animal->AnimalType)
+        );
+        return;
+    }
+
+    if (newValue >= 10) {
+        animal->HealthLevel = 10;
+    } else {
+        animal->HealthLevel = newValue;
+    }
+
+    animal->HealthLevelChange = TRUE;
+    animal->InteractivityPrompted = TRUE;
+
+    ConsoleWriteLine(
+        _T("%c%s the %s has been fed\n"),
+        LIME,
+        animal->UniqueName,
+        AnimalTypeToString(animal->AnimalType)
+    );
+}
+
+void RemoveHealthLevel(ZooAnimal* animal) {
+    const DWORD newValue = animal->HealthLevel - HUNGER_LEVEL;
+
+    if (newValue <= 0) {
+        animal->HealthLevel = 0;
+    } else {
+        animal->HealthLevel = newValue;
+    }
+
+    animal->HealthLevelChange = TRUE;
+    animal->InteractivityPrompted = FALSE;
+
+    if (animal->HealthLevel < 5) {
+        ConsoleWriteLine(
+            _T("%c%s the %s is hungry\n"),
+            YELLOW,
+            animal->UniqueName,
+            AnimalTypeToString(animal->AnimalType)
+        );
+    }
+}
+
+void AddInteractiveLevel(ZooAnimal* animal) {
+    const DWORD interactiveChange = rand() % (FEED_LEVEL_MAX - 1) + FEED_LEVEL_MIN;
+    const DWORD newValue = animal->InteractiveLevel + interactiveChange;
+
+    // TODO: REMOVE
+    ConsoleWriteLine(_T("AddInteractiveLevel: %d - NewValue: %d"), interactiveChange, newValue);
+
+    if (animal->InteractiveLevel >= 10) { return; }
+
+    if (newValue >= 10) {
+        animal->InteractiveLevel = 10;
+    } else {
+        animal->InteractiveLevel = newValue;
+    }
+}
+
+void RemoveInteractiveLevel(ZooAnimal* animal) {
+    const DWORD newValue = animal->InteractiveLevel + HUNGER_LEVEL;
+
+    if (animal->InteractiveLevel <= 0) { return; }
+
+    if (newValue <= 0) {
+        animal->InteractiveLevel = 0;
+    } else {
+        animal->InteractiveLevel = newValue;
+    }
 }
 
 #pragma endregion
@@ -418,6 +513,8 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
     Cage* cage = lpParam;
     HANDLE events[3];
 
+    srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
+
     if (cage->FeedEvent == NULL) {
         ConsoleWriteLine(_T("%cFeed Event is NULL\n"), RED);
         return 1;
@@ -445,31 +542,9 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
 
             if (_tcscmp(tempAnimal->CageName, cage->Name) == 0) {
                 if (waitResult == 0) {
-                    if (tempAnimal->HealthLevel < 10) {
-                        tempAnimal->HealthLevel++;
-                        tempAnimal->HealthLevelIncrease = TRUE;
-                        tempAnimal->HealthLevelChange = TRUE;
-                    }
-
-                    ConsoleWriteLine(
-                        _T("%c%s the %s has been fed\n"),
-                        LIME,
-                        tempAnimal->UniqueName,
-                        AnimalTypeToString(tempAnimal->AnimalType)
-                    );
+                    AddHealthLevel(tempAnimal);
                 } else if (waitResult == 1) {
-                    tempAnimal->HealthLevel--;
-                    tempAnimal->HealthLevelIncrease = FALSE;
-                    tempAnimal->HealthLevelChange = TRUE;
-
-                    if (tempAnimal->HealthLevel < 5) {
-                        ConsoleWriteLine(
-                            _T("%c%s the %s is hungry\n"),
-                            YELLOW,
-                            tempAnimal->UniqueName,
-                            AnimalTypeToString(tempAnimal->AnimalType)
-                        );
-                    }
+                    RemoveHealthLevel(tempAnimal);
                 }
 
                 ResetFeedTimer(cage->FeedEventTimer);
@@ -487,6 +562,8 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
     lpParam = NULL; // Clears W4 warning
     HANDLE events[2];
+
+    srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
 
     events[0] = healthEvent;
     events[1] = appClose;
@@ -506,12 +583,11 @@ DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
             ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
 
             if (tempAnimal->HealthLevelChange) {
-                if (tempAnimal->InteractiveLevel < 10) {
-                    if (tempAnimal->HealthLevelIncrease) {
-                        tempAnimal->InteractiveLevel++;
-                    } else if (tempAnimal->InteractiveLevel > 0) {
-                        tempAnimal->InteractiveLevel--;
-                    }
+
+                if (tempAnimal->InteractivityPrompted) {
+                    AddInteractiveLevel(tempAnimal);
+                } else {
+                    RemoveInteractiveLevel(tempAnimal);
                 }
 
                 tempAnimal->HealthLevelChange = FALSE;
@@ -526,6 +602,8 @@ DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
 
 DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
     lpParam = NULL;
+
+    srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
 
     HANDLE events[2];
 
@@ -605,8 +683,7 @@ DWORD WINAPI SignificantEventTimer(LPVOID lpParam) {
                 NewAnimal(
                     selectedAnimal->AnimalType,
                     GetRandomName(),
-                    selectedAnimal->CageName,
-                    GetRandomInteractiveLevel()
+                    selectedAnimal->CageName
                 );
             }
         }

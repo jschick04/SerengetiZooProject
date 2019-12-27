@@ -82,10 +82,6 @@ DWORD WINAPI mTimer(LPVOID lpParam);
 
 #pragma region Helpers
 
-int GetRandomInteractiveLevel() {
-    return (rand() % 10) + 1;
-}
-
 LPTSTR GetRandomName() {
     unsigned int index;
     LPTSTR selectedName;
@@ -175,7 +171,7 @@ void InitializeZoo() {
 
         cages[i] = NewCage(cageName);
 
-        NewAnimal(i, GetRandomName(), cageName, GetRandomInteractiveLevel());
+        NewAnimal(i, GetRandomName(), cageName);
     }
 
     // Initialize visitor structs
@@ -225,13 +221,22 @@ void PrintScore() {
     ConsoleWriteLine(_T("%c-------------------------\n\n"), YELLOW);
 }
 
-void EndTurnActions() {
-    ConsoleWriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
+DWORD ResetTimer() {
     liDueTime.QuadPart = -600000000LL;
+
     if (!SetWaitableTimer(hTimer, &liDueTime, 0, NULL, NULL, 0)) {
         ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
         return 2;
     }
+
+    return 0;
+}
+
+void EndTurnActions() {
+    ConsoleWriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
+
+    ResetTimer();
+
     PrintScore();
 }
 

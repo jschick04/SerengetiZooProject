@@ -6,6 +6,11 @@
 
 #define SIGNIFICANT_EVENT_MIN 2
 #define FEED_EVENT_MIN 1
+
+#define FEED_LEVEL_MAX 4
+#define FEED_LEVEL_MIN 2
+#define HUNGER_LEVEL 1
+
 #define MAX_CAGES 6
 
 HANDLE significantEventTimer;
@@ -26,7 +31,6 @@ typedef struct ZooAnimal {
     LPTSTR CageName;
     DWORD HealthLevel;
     BOOL HealthLevelChange;
-    BOOL HealthLevelIncrease;
     DWORD InteractiveLevel;
     BOOL InteractivityPrompted;
 } ZooAnimal;
@@ -43,9 +47,7 @@ Cage* cages[MAX_CAGES];
 LARGE_INTEGER seDueTime;
 LARGE_INTEGER feedDueTime;
 
-void NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName, DWORD interactiveLevel);
-void AddAnimal(ZooAnimal* animal);
-void RemoveAnimal(ZooAnimal* animal);
+void NewAnimal(enum AnimalType animalType, LPTSTR uniqueName, LPTSTR cageName);
 
 void GetAllAnimals();
 void GetAllAnimalsHealth();
