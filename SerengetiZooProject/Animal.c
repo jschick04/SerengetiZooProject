@@ -45,10 +45,12 @@ LPTSTR AnimalTypeToString(enum AnimalType animalType) {
     }
 }
 
+// Generates a random number between 4 and 8
 int GetRandomHealthLevel() {
     return rand() % 5 + 4;
 }
 
+// Generates a random number between 4 and 8
 int GetRandomInteractiveLevel() {
     return rand() % 5 + 4;
 }
@@ -236,6 +238,7 @@ void GetAllAnimalsInteractivity() {
 
 #pragma region Animal Change Functions
 
+// Sets the health event after checking HeathLevel
 void SetHealthEvent(ZooAnimal* animal) {
     if (animal->HealthLevel < 1) {
         ConsoleWriteLine(
@@ -255,6 +258,7 @@ void SetHealthEvent(ZooAnimal* animal) {
     SetEvent(healthEvent);
 }
 
+// Increments HealthLevel by a number between FEED_LEVEL_MAX and FEED_LEVEL_MIN
 void AddHealthLevel(ZooAnimal* animal) {
     const DWORD healthChange = rand() % (FEED_LEVEL_MAX - 1) + FEED_LEVEL_MIN;
     const DWORD newValue = animal->HealthLevel + healthChange;
@@ -286,6 +290,7 @@ void AddHealthLevel(ZooAnimal* animal) {
     );
 }
 
+// Decrements HealthLevel by HUNGER_LEVEL
 void RemoveHealthLevel(ZooAnimal* animal) {
     const DWORD newValue = animal->HealthLevel - HUNGER_LEVEL;
 
@@ -308,6 +313,7 @@ void RemoveHealthLevel(ZooAnimal* animal) {
     }
 }
 
+// Increments InteractiveLevel by a number between FEED_LEVEL_MAX and FEED_LEVEL_MIN
 void AddInteractiveLevel(ZooAnimal* animal) {
     const DWORD interactiveChange = rand() % (FEED_LEVEL_MAX - 1) + FEED_LEVEL_MIN;
     const DWORD newValue = animal->InteractiveLevel + interactiveChange;
@@ -321,8 +327,9 @@ void AddInteractiveLevel(ZooAnimal* animal) {
     }
 }
 
+// Decrements InteractiveLevel by HUNGER_LEVEL
 void RemoveInteractiveLevel(ZooAnimal* animal) {
-    const DWORD newValue = animal->InteractiveLevel + HUNGER_LEVEL;
+    const DWORD newValue = animal->InteractiveLevel - HUNGER_LEVEL;
 
     if (animal->InteractiveLevel <= 0) { return; }
 
@@ -419,6 +426,7 @@ DWORD GetCageAverageInteractiveLevel(LPTSTR cageName) {
     return total / count;
 }
 
+// Gets a random cage and returns the cage pointer or returns NULL if the random cage is empty
 Cage* GetRandomCage() {
     const int value = rand() % MAX_CAGES;
     int animalCount = 0;
@@ -554,7 +562,8 @@ DWORD WINAPI AnimalHealth(LPVOID lpParam) {
 }
 
 DWORD WINAPI AnimalInteractivity(LPVOID lpParam) {
-    lpParam = NULL; // Clears W4 warning
+    lpParam = NULL;
+
     HANDLE events[2];
 
     srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
