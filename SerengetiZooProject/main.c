@@ -10,9 +10,6 @@
 #include "SerengetiZooProject.h"
 #include "Visitor.h"
 
-#define MAXS 20
-#define MAXA 5
-
 LPTSTR uniqueNames[] = {
     _T("Julien"),
     _T("Melman"),
@@ -265,7 +262,6 @@ void PrintCurrentZooStatus() {
 }
 
 void PrintMenu() {
-    /*
     ConsoleWriteLine(_T("%cPlease select your action\n"), LIME);
     ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
     ConsoleWriteLine(_T("%c1%r - Feed Animals\n"), LIME);
@@ -275,22 +271,6 @@ void PrintMenu() {
     ConsoleWriteLine(_T("%c5%r - Close zoo for the day\n"), LIME);
     ConsoleWriteLine(_T("%c0%r - Exit\n"), PINK);
     ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
-    */
-    ConsoleWriteLine(
-        _T(
-            "%cPlease select your action\n%c-------------------------\n%c1%r - Feed Animals\n%c2%r - Check Animal Interactivity Levels\n%c3%r - Show Case Animal\n%c4%r - Check Visitors Happiness Level\n%c5%r - Close zoo for the day\n%c0%r - Exit\n%c-------------------------\n"
-        ),
-        LIME,
-        YELLOW,
-        LIME,
-        LIME,
-        LIME,
-        LIME,
-        LIME,
-        PINK,
-        YELLOW
-    );
-
 }
 
 void PrintScore() {
@@ -364,6 +344,8 @@ int _tmain() {
     InitializeZoo();
 
     do {
+        Sleep(100);
+
         PrintCurrentZooStatus();
         PrintMenu();
 
@@ -402,13 +384,19 @@ int _tmain() {
 
                 break;
             case 3 : // Show Case Animal
-                /*Call a function from Visitor.c that increases the HappinessLevel of all visitors that are currently at a specific cage. This functions should accept a string to be compared with each visitor Visitor->CageLocation.
-                */
-                //Call NextTurn()
-
-                // TODO: Finish Case 3
-
                 ConsoleWriteLine(_T("\n%cYou selected - Show Case Animal\n\n"), SKYBLUE);
+
+                ConsoleWriteLine(_T("Which cage number would you like to showcase?\n"));
+                _fgetts(buffer, _countof(buffer), stdin);
+                if (_stscanf_s(buffer, _T("%d"), &cageNumber) == 1) {
+                    if (cageNumber < 1 || cageNumber > (int)_countof(cages)) {
+                        ConsoleWriteLine(_T("Invalid Selection...\n"));
+                    } else {
+                        // TODO: ShowCase(cageNumber[i - 1]);
+                    }
+                } else {
+                    ConsoleWriteLine(_T("Invalid Selection...\n"));
+                }
 
                 break;
             case 4 : // Check Visitors Happiness Level
@@ -428,7 +416,5 @@ int _tmain() {
                 break;
 
         }
-
-        Sleep(100);
     } while (TRUE);
 }
