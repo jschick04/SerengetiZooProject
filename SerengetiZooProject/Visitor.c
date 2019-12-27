@@ -21,6 +21,7 @@ HANDLE InitVisitorsEvent()
 {
     InitializeCriticalSection(&VisitorListCrit);
     hVisitorEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    VisitorEnterEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     SetEvent(hVisitorEvent);
     return hVisitorEvent;
 }
@@ -180,7 +181,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
         if (IsCageEmpty(cages[i]->Name))
         {
            //WriteConsoleOutput(_T("There are no animals in the zoo left!"),RED);
-            ConsoleWriteLine(_T("There are no animals left in the Zoo!\n"));
+            //ConsoleWriteLine(_T("There are no animals left in the Zoo!\n"));
         }
         else
         {
@@ -317,6 +318,14 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
     DWORD WINAPI ExitZoo()
     {
         bExitZoo = TRUE;
+        ResetEvent(VisitorEnterEvent);
+        return 1;
+    }
+
+    DWORD WINAPI EnterZoo()
+    {
+        bExitZoo = FALSE;
+        SetEvent(VisitorEnterEvent);
         return 1;
     }
 
@@ -432,6 +441,7 @@ DWORD WINAPI AddVisitorsThread()
         //Determine number of visitors to add
         while(1)
         {
+            WaitForSingleObject(&VisitorEnterEvent, INFINITE);
             numVisitorsRand = (rand() % 3);
             for (num = 0; num != numVisitorsRand; ++num)
             {
