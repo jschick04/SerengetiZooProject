@@ -37,6 +37,7 @@ Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 if (NewVisitor == NULL)
 {
     LeaveCriticalSection(&VisitorListCrit);
+    SetEvent(hVisitorEvent);
     //Allocation failed and we need to warn
     Visitor* failed = NULL;
     return failed;
@@ -172,10 +173,25 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
         int sleeparray[5];
         for (int s = 0; s != 5; ++s)
         {
-            sleeparray[s] = SleepTimeRand = (rand() % (180000 - 60000 + 1)) + 60000;
+            sleeparray[s] = SleepTimeRand = (rand() % (1800 - 600)) + 600;
         }       
         int selector = (rand() % 5);
-        Sleep(sleeparray[selector]);
+
+        //sleep while waking to check if exit zoo is true.
+        for (int t = 0; t != 10; ++t)
+        {
+            if (bExitZoo == TRUE)
+            {
+                //LeaveCriticalSection(&VisitorListCrit);
+                break;
+            }
+            else
+            {
+                Sleep(sleeparray[selector]);
+            }
+
+        }
+        
 
         //handle error if the cage name is NULL. Something is very wrong, there are no animals.
         if (IsCageEmpty(cages[i]->Name))
@@ -247,10 +263,12 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 
              if (bExitZoo == TRUE)
             {
-                i = _countof(cages);
+                 LeaveCriticalSection(&VisitorListCrit);
+                 SetEvent(hVisitorEvent);
+                 break;
             }
-            LeaveCriticalSection(&VisitorListCrit);
-            SetEvent(hVisitorEvent);
+             LeaveCriticalSection(&VisitorListCrit);
+             SetEvent(hVisitorEvent);
         }
     }
 
@@ -453,7 +471,7 @@ DWORD WINAPI AddVisitorsThread()
                 // go back to the beginning of the name list.
                 i = 0;
             }
-            SleepRand = (rand() % (300000 - 80000 + 1)) + 80000;
+            SleepRand = (rand() % (30000 - 8000 + 1)) + 8000;
             Sleep(SleepRand);
         }
 

@@ -426,7 +426,6 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
 
             IsOpen = TRUE;
 
-            EnterZoo();
         } else {
             return 0;
         }
