@@ -154,10 +154,6 @@ void InitializeMain() {
         ConsoleWriteLine(_T("%cFailed to create Name List CRITICAL_SECTION\n"), RED);
     }
 
-    if (!InitializeCriticalSectionAndSpinCount(&ConsoleCrit, 4000)) {
-        ConsoleWriteLine(_T("%cFailed to create Console CRITICAL_SECTION\n"), RED);
-    }
-
     if (!InitializeCriticalSectionAndSpinCount(&cScore, 4000)) {
         ConsoleWriteLine(_T("%cFailed to create Score CRITICAL_SECTION\n"), RED);
     }
@@ -280,20 +276,15 @@ int _tmain() {
         ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
     }*/
 GAMELOOP:
-    LeaveCriticalSection(&ConsoleCrit);
-
     ConsoleWriteLine(_T("\n%cPlease select your action\n"), LIME);
     ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
     ConsoleWriteLine(_T("%c1%r - Feed Animals\n"), LIME);
     ConsoleWriteLine(_T("%c2%r - Check Animal Interactivity Levels\n"), LIME);
-    ConsoleWriteLine(_T("%c3%r - Display Current Disposition of visitors\n"), LIME);
-    ConsoleWriteLine(_T("%c4%r - Show Case Animal\n"), LIME);
-    ConsoleWriteLine(_T("%c5%r - Check Visitors Happiness Level\n"), LIME);
-    ConsoleWriteLine(_T("%c6%r - Close zoo for the day\n"), LIME);
+    ConsoleWriteLine(_T("%c3%r - Show Case Animal\n"), LIME);
+    ConsoleWriteLine(_T("%c4%r - Check Visitors Happiness Level\n"), LIME);
+    ConsoleWriteLine(_T("%c5%r - Close zoo for the day\n"), LIME);
     ConsoleWriteLine(_T("%c0%r - Exit\n"), PINK);
     ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
-
-    LeaveCriticalSection(&ConsoleCrit);
 
     _fgetts(buffer, _countof(buffer), stdin);
     if (_stscanf_s(buffer, _T("%d"), &menuOption) != 1) {
@@ -303,14 +294,11 @@ GAMELOOP:
 
     switch (menuOption) {
         case 1 : // Feed Animals
-            EnterCriticalSection(&ConsoleCrit);
-
             ConsoleWriteLine(_T("\n%cYou selected - Feed Animals\n\n"), SKYBLUE);
 
             GetAllAnimalsHealth();
 
             if (IS_LIST_EMPTY(animalListHead)) {
-                LeaveCriticalSection(&ConsoleCrit);
                 break;
             }
 
@@ -326,56 +314,28 @@ GAMELOOP:
                 ConsoleWriteLine(_T("Invalid Selection...\n"));
             }
 
-            LeaveCriticalSection(&ConsoleCrit);
-
             break;
         case 2 : // Check Animal Interactivity Levels
-            EnterCriticalSection(&ConsoleCrit);
-
             ConsoleWriteLine(_T("\n%cYou selected - Check Animal Int Levels\n\n"), SKYBLUE);
             GetAllAnimalsInteractivity();
 
-            LeaveCriticalSection(&ConsoleCrit);
             break;
-        case 3 : // Display Current Disposition of visitors
-            /*Call a function from Vistor.c that prints all the visitors within the list and their respective CageLocation.
-            */
-
-            // TODO: Finish Case 3
-
-            EnterCriticalSection(&ConsoleCrit);
-
-            ConsoleWriteLine(_T("\n%cYou selected - Display Current Disp of Visitors\n\n"), SKYBLUE);
-
-            LeaveCriticalSection(&ConsoleCrit);
-
-            break;
-        case 4 : // Show Case Animal
+        case 3 : // Show Case Animal
             /*Call a function from Visitor.c that increases the HappinessLevel of all visitors that are currently at a specific cage. This functions should accept a string to be compared with each visitor Visitor->CageLocation. 
             */
             //Call NextTurn()
 
-            // TODO: Finish Case 4
-
-            EnterCriticalSection(&ConsoleCrit);
+            // TODO: Finish Case 3
 
             ConsoleWriteLine(_T("\n%cYou selected - Show Case Animal\n\n"), SKYBLUE);
 
-            EndTurnActions();
-
-            LeaveCriticalSection(&ConsoleCrit);
-
             break;
-        case 5 : // Check Visitors Happiness Level
-            EnterCriticalSection(&ConsoleCrit);
-
+        case 4 : // Check Visitors Happiness Level
             ConsoleWriteLine(_T("\n%cYou selected - Check Visitors Happ Level\n\n"), SKYBLUE);
             EnumVisitors(visitorListHead, TRUE);
 
-            LeaveCriticalSection(&ConsoleCrit);
-
             break;
-        case 6 :
+        case 5 : // Close the zoo for the day
             EndTurnActions();
             break;
         case 0 :
