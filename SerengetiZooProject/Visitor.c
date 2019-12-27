@@ -455,9 +455,10 @@ DWORD WINAPI AddVisitorsThread(BOOL* go)
         //Sleep at the begginning to delay after initial seed.
         SleepRand = (rand() % (300000 - 80000 + 1)) + 80000;
         Sleep(SleepRand);
+        *go = TRUE;
 
         //Determine number of visitors to add
-        while(go)
+        while(1)
         {
             WaitForSingleObject(&VisitorEnterEvent, INFINITE);
             numVisitorsRand = (rand() % 3);
