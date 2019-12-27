@@ -233,6 +233,18 @@ void PrintCurrentZooStatus() {
     ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
 }
 
+void PrintMenu() {
+    ConsoleWriteLine(_T("%cPlease select your action\n"), LIME);
+    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
+    ConsoleWriteLine(_T("%c1%r - Feed Animals\n"), LIME);
+    ConsoleWriteLine(_T("%c2%r - Check Animal Interactivity Levels\n"), LIME);
+    ConsoleWriteLine(_T("%c3%r - Show Case Animal\n"), LIME);
+    ConsoleWriteLine(_T("%c4%r - Check Visitors Happiness Level\n"), LIME);
+    ConsoleWriteLine(_T("%c5%r - Close zoo for the day\n"), LIME);
+    ConsoleWriteLine(_T("%c0%r - Exit\n"), PINK);
+    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
+}
+
 void PrintScore() {
     ConsoleWriteLine(_T("\n%c-------------------------\n"), YELLOW);
     ConsoleWriteLine(_T("%c Score = %d\n"), YELLOW, g_Score);
@@ -315,15 +327,7 @@ int _tmain() {
     }
 GAMELOOP:
     PrintCurrentZooStatus();
-    ConsoleWriteLine(_T("%cPlease select your action\n"), LIME);
-    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
-    ConsoleWriteLine(_T("%c1%r - Feed Animals\n"), LIME);
-    ConsoleWriteLine(_T("%c2%r - Check Animal Interactivity Levels\n"), LIME);
-    ConsoleWriteLine(_T("%c3%r - Show Case Animal\n"), LIME);
-    ConsoleWriteLine(_T("%c4%r - Check Visitors Happiness Level\n"), LIME);
-    ConsoleWriteLine(_T("%c5%r - Close zoo for the day\n"), LIME);
-    ConsoleWriteLine(_T("%c0%r - Exit\n"), PINK);
-    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
+    PrintMenu();
 
     _fgetts(buffer, _countof(buffer), stdin);
     if (_stscanf_s(buffer, _T("%d"), &menuOption) != 1) {
