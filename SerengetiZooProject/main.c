@@ -73,6 +73,8 @@ NodeEntry* visitorListHead = 0;
 HANDLE significantEventThread;
 HANDLE ht;
 
+BOOL IsOpen = FALSE;
+
 int mTurns = 15;
 HANDLE hTimer = NULL;
 LARGE_INTEGER liDueTime;
@@ -175,6 +177,8 @@ void InitializeZoo() {
         NewAnimal(i, GetRandomName(), cageName);
     }
 
+    IsOpen = TRUE;
+
     // Initialize visitor structs
     AddVisitor(visitorListHead, _T("Tom"));
     AddVisitor(visitorListHead, _T("Jerry"));
@@ -216,6 +220,19 @@ void InitializeTimers() {
     }
 }
 
+void PrintCurrentZooStatus() {
+    ConsoleWriteLine(_T("\n%c-------------------------\n"), YELLOW);
+    ConsoleWriteLine(_T("%cZoo Status: "), YELLOW);
+
+    if (IsOpen) {
+        ConsoleWriteLine(_T("%cOpen\n"), LIME);
+    } else {
+        ConsoleWriteLine(_T("%cClosed\n"), PINK);
+    }
+
+    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
+}
+
 void PrintScore() {
     ConsoleWriteLine(_T("\n%c-------------------------\n"), YELLOW);
     ConsoleWriteLine(_T("%c Score = %d\n"), YELLOW, g_Score);
@@ -237,6 +254,8 @@ void EndTurnActions() {
     ConsoleWriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
 
     ExitZoo();
+
+    IsOpen = FALSE;
 
     ResetZooClosedTimer();
 
@@ -295,7 +314,8 @@ int _tmain() {
         return 1;
     }
 GAMELOOP:
-    ConsoleWriteLine(_T("\n%cPlease select your action\n"), LIME);
+    PrintCurrentZooStatus();
+    ConsoleWriteLine(_T("%cPlease select your action\n"), LIME);
     ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
     ConsoleWriteLine(_T("%c1%r - Feed Animals\n"), LIME);
     ConsoleWriteLine(_T("%c2%r - Check Animal Interactivity Levels\n"), LIME);
@@ -396,8 +416,9 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
             EnterZoo();
             ConsoleWriteLine(_T("%cThe Zoo has been re-opened after the significant event.\n"), RED);
 
-            EnterZoo();
+            IsOpen = TRUE;
 
+            EnterZoo();
         } else {
             return 0;
         }
