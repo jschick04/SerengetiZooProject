@@ -280,7 +280,7 @@ int _tmain() {
     if (ht == NULL) {
         ConsoleWriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
     }
-    liDueTime.QuadPart = -600000000LL;
+    liDueTime.QuadPart = -300000000LL;
     // Create an unnamed waitable timer.
     hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
     if (NULL == hTimer) {
