@@ -333,7 +333,7 @@ void Dispose() {
     CancelWaitableTimer(significantEventTimer);
     WaitForSingleObject(significantEventThread, INFINITE);
 
-    // TODO: Need to close visitor threads before cages
+    WaitForMultipleObjects(999, hThreadHandles, TRUE, INFINITE);
 
     for (int i = 0; i != _countof(cages); ++i) {
         CancelWaitableTimer(cages[i]->FeedEventTimer);

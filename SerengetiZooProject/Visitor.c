@@ -21,8 +21,16 @@ HANDLE InitVisitorsEvent()
 {
     InitializeCriticalSection(&VisitorListCrit);
     hVisitorEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (hVisitorEvent != NULL)
+    {
+       SetEvent(hVisitorEvent);
+    }
     VisitorEnterEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    SetEvent(hVisitorEvent);
+    if (VisitorEnterEvent != NULL)
+    {
+        SetEvent(VisitorEnterEvent);
+    }
+    
     return hVisitorEvent;
 }
 
@@ -66,8 +74,11 @@ NewVisitor->HappinessLevel = 8;
 NewVisitor->Status = Happy;
 
 VisitorLoopParams* Params = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VisitorLoopParams));;
-Params->Visitor = NewVisitor;
-Params->listHead = animalListHead;
+    if (Params != NULL)
+    {
+    Params->Visitor = NewVisitor;
+    Params->listHead = animalListHead;
+    }
 
 LeaveCriticalSection(&VisitorListCrit);
 SetEvent(hVisitorEvent);
@@ -454,7 +465,10 @@ DWORD WINAPI AddVisitorsThread(BOOL* go)
 
         //Sleep at the begginning to delay after initial seed.
         SleepRand = (rand() % (300000 - 80000 + 1)) + 80000;
+        if (i != 0)
+        { 
         Sleep(SleepRand);
+        }
         *go = TRUE;
 
         //Determine number of visitors to add
