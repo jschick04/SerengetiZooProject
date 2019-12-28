@@ -392,7 +392,7 @@ int _tmain() {
                     if (cageNumber < 1 || cageNumber > (int)_countof(cages)) {
                         ConsoleWriteLine(_T("Invalid Selection...\n"));
                     } else {
-                        // TODO: ShowCase(cageNumber[i - 1]);
+                        ShowCaseAnimal(visitorListHead, cageNumber);
                     }
                 } else {
                     ConsoleWriteLine(_T("Invalid Selection...\n"));

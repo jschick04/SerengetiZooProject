@@ -7,6 +7,7 @@
 #include "Animals.h"
 #include <WriteLine.h>
 #include <time.h>
+#include <strsafe.h>
 
 //GLOBALS
 CRITICAL_SECTION VisitorListCS;
@@ -489,6 +490,42 @@ DWORD WINAPI AddVisitorsThread(BOOL* go)
             SleepRand = (rand() % (30000 - 8000 + 1)) + 8000;
             Sleep(SleepRand);
         }
+
+    return 0;
+}
+
+//Function to enumerate all visitors, simply prints them forward.
+DWORD WINAPI ShowCaseAnimal(NodeEntry* VisitorListHead, int cagenum)
+{
+    const LPTSTR cageName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10);
+    const LPTSTR prepend = _T("Cage");
+    StringCchPrintf(cageName, 10, _T("%s%d"), prepend, cagenum);
+
+    WaitForSingleObject(hVisitorEvent, INFINITE);
+    EnterCriticalSection(&VisitorListCrit);
+
+    NodeEntry* EnumNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    if (EnumNode == NULL) {
+        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        //return NULL;
+    }
+    EnumNode = VisitorListHead->Flink;
+    Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+
+    while (EnumNode->Flink != VisitorListHead->Flink)
+    {
+        eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
+        if (eVisitor->CageLocation == cageName)
+        {
+            eVisitor->HappinessLevel = eVisitor->HappinessLevel + 1;
+        }
+
+        EnumNode = EnumNode->Flink;
+    }
+
+    LeaveCriticalSection(&VisitorListCrit);
+    SetEvent(hVisitorEvent);
+
 
     return 0;
 }
