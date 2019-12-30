@@ -475,6 +475,8 @@ DWORD WINAPI AddVisitorsThread(BOOL* go)
         //Determine number of visitors to add
         while(1)
         {
+            if (bExitZoo != TRUE)
+            { 
             WaitForSingleObject(&VisitorEnterEvent, INFINITE);
             numVisitorsRand = (rand() % 3);
             for (num = 0; num != numVisitorsRand; ++num)
@@ -489,6 +491,11 @@ DWORD WINAPI AddVisitorsThread(BOOL* go)
             }
             SleepRand = (rand() % (30000 - 8000 + 1)) + 8000;
             Sleep(SleepRand);
+            }
+            else
+            {
+                Sleep(1000);
+            }
         }
 
     return 0;
