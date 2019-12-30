@@ -140,7 +140,7 @@ void PrintMenu() {
 void PrintScore() {
     ConsoleWriteLine(_T("\n%c-------------------------\n"), YELLOW);
     ConsoleWriteLine(_T("%c Score = %d\n"), YELLOW, g_Score);
-    ConsoleWriteLine(_T("%c-------------------------\n\n"), YELLOW);
+    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
 }
 
 DWORD WINAPI mTimer(LPVOID lpParam) {
@@ -390,7 +390,7 @@ int _tmain() {
 
                 break;
             case 2 : // Check Animal Interactivity Levels
-                ConsoleWriteLine(_T("\n%cYou selected - Check Animal Int Levels\n\n"), SKYBLUE);
+                ConsoleWriteLine(_T("\n%cYou selected - Check Animal Interactivity Levels\n\n"), SKYBLUE);
                 GetAllAnimalsInteractivity();
 
                 break;
@@ -411,7 +411,7 @@ int _tmain() {
 
                 break;
             case 4 : // Check Visitors Happiness Level
-                ConsoleWriteLine(_T("\n%cYou selected - Check Visitors Happ Level\n\n"), SKYBLUE);
+                ConsoleWriteLine(_T("\n%cYou selected - Check Visitors Happiness Level\n\n"), SKYBLUE);
                 EnumVisitors(visitorListHead, TRUE);
 
                 break;
