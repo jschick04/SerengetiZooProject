@@ -227,7 +227,7 @@ void PrintCurrentZooStatus() {
 }
 
 void PrintMenu() {
-    ConsoleWriteLine(_T("%cPlease select your action\n"), LIME);
+    /*ConsoleWriteLine(_T("%cPlease select your action\n"), LIME);
     ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
     ConsoleWriteLine(_T("%c1%r - Feed Animals\n"), LIME);
     ConsoleWriteLine(_T("%c2%r - Check Animal Interactivity Levels\n"), LIME);
@@ -235,7 +235,23 @@ void PrintMenu() {
     ConsoleWriteLine(_T("%c4%r - Check Visitors Happiness Level\n"), LIME);
     ConsoleWriteLine(_T("%c5%r - Close zoo for the day\n"), LIME);
     ConsoleWriteLine(_T("%c0%r - Exit\n"), PINK);
-    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);
+    ConsoleWriteLine(_T("%c-------------------------\n"), YELLOW);*/
+
+    ConsoleWriteLine(
+        _T(
+            "%cPlease select your action\n%c-------------------------\n%c1%r - Feed Animals\n%c2%r - Check Animal Interactivity Levels\n%c3%r - Show Case Animal\n%c4%r - Check Visitors Happiness Level\n%c5%r - Close zoo for the day\n%c0%r - Exit\n%c-------------------------\n"
+        ),
+        LIME,
+        YELLOW,
+        LIME,
+        LIME,
+        LIME,
+        LIME,
+        LIME,
+        PINK,
+        YELLOW
+    );
+
 }
 
 void PrintScore() {
