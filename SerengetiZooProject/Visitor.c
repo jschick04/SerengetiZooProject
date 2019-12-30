@@ -235,7 +235,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
                     if (Params->Visitor->HappinessLevel != 0)
                     {
                     Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel - 1;
-                    ConsoleWriteLine(_T("%s lost a happiness point after visiting %s!\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
+                    ConsoleWriteLine(_T("%s %clost%r a happiness point after visiting %s!\n"), Params->Visitor->UniqueName, RED, Params->Visitor->CageLocation);
                     }
 
                 }
@@ -248,7 +248,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
                     if (Params->Visitor->HappinessLevel != 10)
                     { 
                     Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel + 1;
-                    ConsoleWriteLine(_T("%s gained a happiness point after visiting %s!\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
+                    ConsoleWriteLine(_T("%s %cgained%r a happiness point after visiting %s!\n"), Params->Visitor->UniqueName, GREEN,  Params->Visitor->CageLocation);
                     }
                 }
             }
@@ -293,20 +293,20 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
     {
         Params->Visitor->HappinessLevel = RefundDemanded;
         ExitStatus = _T("Demanded a Refund");
-        ConsoleWriteLine(_T("%s %s\n"), Params->Visitor->UniqueName, ExitStatus);
+        ConsoleWriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, RED, ExitStatus);
     }
     else if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7)
     {
         Params->Visitor->HappinessLevel = LeavingAngry;
         ExitStatus = _T("Left Angry");
-        ConsoleWriteLine(_T("%s %s\n"), Params->Visitor->UniqueName, ExitStatus);
+        ConsoleWriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, RED, ExitStatus);
         g_Score = g_Score - 10;
     }
     else
     {
         Params->Visitor->HappinessLevel = LeavingHappy;
         ExitStatus = _T("Left Happy");
-        ConsoleWriteLine(_T("%s %s\n"), Params->Visitor->UniqueName, ExitStatus);
+        ConsoleWriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, GREEN, ExitStatus);
         g_Score = g_Score + 10;
         
     }
@@ -396,7 +396,20 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
             status = _T("RefundDemanded");
         }
 
-        if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[ %s   -  %s  -  %d  -  %s  ]\n"),eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status); }
+        //perform the console print.
+        if (PrintToConsole == TRUE && eVisitor->HappinessLevel <= 5) 
+        { 
+            ConsoleWriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),RED, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status); 
+        }
+        else if (PrintToConsole == TRUE && eVisitor->HappinessLevel >= 8)
+        {
+            ConsoleWriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),GREEN, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status);
+        }
+        else
+        {
+            ConsoleWriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),YELLOW, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status);
+        }
+
         EnumNode = EnumNode->Flink;
     }
 
@@ -477,7 +490,7 @@ DWORD WINAPI AddVisitorsThread(BOOL* go)
         {
             if (bExitZoo != TRUE)
             { 
-            WaitForSingleObject(&VisitorEnterEvent, INFINITE);
+            WaitForSingleObject(VisitorEnterEvent, INFINITE);
             numVisitorsRand = (rand() % 3);
             for (num = 0; num != numVisitorsRand; ++num)
             {

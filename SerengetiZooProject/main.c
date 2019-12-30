@@ -303,7 +303,7 @@ void EndTurnActions() {
     if (ret == 0xFFFFFFFF)
     {
         DWORD returnstring = GetLastError();
-        ConsoleWriteLine(_T("Visitor Wait failed with %s"), returnstring);
+        ConsoleWriteLine(_T("Visitor Wait failed with %d"), returnstring);
     }
     IsOpen = FALSE;
 
