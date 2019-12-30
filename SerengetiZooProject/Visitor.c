@@ -12,7 +12,6 @@
 //GLOBALS
 CRITICAL_SECTION VisitorListCS;
 HANDLE hVisitorEvent;
-HANDLE hThreadHandles[999];
 BOOL bExitZoo;
 
 //FUNCTIONS
@@ -294,20 +293,20 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
     {
         Params->Visitor->HappinessLevel = RefundDemanded;
         ExitStatus = _T("Demanded a Refund");
-        ConsoleWriteLine(_T("%s visited all cages and %s\n"), Params->Visitor->UniqueName, ExitStatus);
+        ConsoleWriteLine(_T("%s %s\n"), Params->Visitor->UniqueName, ExitStatus);
     }
     else if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7)
     {
         Params->Visitor->HappinessLevel = LeavingAngry;
         ExitStatus = _T("Left Angry");
-        ConsoleWriteLine(_T("%s visited all cages and %s\n"), Params->Visitor->UniqueName, ExitStatus);
+        ConsoleWriteLine(_T("%s %s\n"), Params->Visitor->UniqueName, ExitStatus);
         g_Score = g_Score - 10;
     }
     else
     {
         Params->Visitor->HappinessLevel = LeavingHappy;
         ExitStatus = _T("Left Happy");
-        ConsoleWriteLine(_T("%s visited all cages and %s\n"), Params->Visitor->UniqueName, ExitStatus);
+        ConsoleWriteLine(_T("%s %s\n"), Params->Visitor->UniqueName, ExitStatus);
         g_Score = g_Score + 10;
         
     }
@@ -349,7 +348,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
     {
         bExitZoo = TRUE;
         ResetEvent(VisitorEnterEvent);
-        WaitForMultipleObjects(999, hThreadHandles, TRUE, INFINITE);
+        
         return 1;
     }
 

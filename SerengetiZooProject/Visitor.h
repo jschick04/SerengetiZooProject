@@ -22,7 +22,7 @@ typedef struct VisitorLoopParams {
 LPDWORD dwThreadId[999];
 HANDLE hThreadHandles[999];
 HANDLE VisitorEnterEvent;
-__declspec(selectany) int VisitorTID = 0;
+int VisitorTID;
 
 
 Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name);

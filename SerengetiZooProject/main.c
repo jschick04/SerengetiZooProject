@@ -298,7 +298,13 @@ void EndTurnActions() {
     ConsoleWriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
 
     ExitZoo();
-
+    int ThreadHandleCount = VisitorTID;
+    DWORD ret = WaitForMultipleObjects(ThreadHandleCount, hThreadHandles, TRUE, INFINITE);
+    if (ret == 0xFFFFFFFF)
+    {
+        DWORD returnstring = GetLastError();
+        ConsoleWriteLine(_T("Visitor Wait failed with %s"), returnstring);
+    }
     IsOpen = FALSE;
 
     ResetZooClosedTimer();
@@ -338,8 +344,8 @@ void Dispose() {
 int _tmain() {
     srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
 
-    InitializeTimers();
     InitializeMain();
+    InitializeTimers();
 
     TCHAR buffer[MAX_PATH];
     int menuOption;
