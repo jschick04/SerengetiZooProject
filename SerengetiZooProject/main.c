@@ -66,14 +66,114 @@ LPTSTR uniqueNames[] = {
 
 NodeEntry* animalListHead = 0;
 NodeEntry* visitorListHead = 0;
-
 HANDLE significantEventThread;
 HANDLE zooOpenEventThread;
 HANDLE zooOpenEventTimer = NULL;
-
 BOOL IsOpen = FALSE;
-
 LARGE_INTEGER liDueTime;
+
+LPTSTR GetRandomName();
+void AddRandomName(LPTSTR name);
+void PrintCurrentZooStatus();
+void PrintMenu();
+void PrintScore();
+DWORD WINAPI mTimer(LPVOID lpParam);
+BOOL InitializeListHeads();
+void InitializeMain();
+void InitializeZoo();
+void InitializeTimers();
+DWORD ResetZooClosedTimer();
+void EndTurnActions();
+void Dispose();
+
+int _tmain() {
+    srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
+
+    InitializeMain();
+    InitializeTimers();
+
+    TCHAR buffer[MAX_PATH];
+    int menuOption;
+    int cageNumber;
+
+    InitVisitorsEvent();
+    InitializeZoo();
+
+    do {
+        Sleep(100);
+
+        PrintCurrentZooStatus();
+        PrintMenu();
+
+        _fgetts(buffer, _countof(buffer), stdin);
+        if (_stscanf_s(buffer, _T("%d"), &menuOption) != 1) {
+            ConsoleWriteLine(_T("Invalid Selection...\n"));
+            continue;
+        }
+
+        switch (menuOption) {
+            case 1 : // Feed Animals
+                ConsoleWriteLine(_T("\n%cYou selected - Feed Animals\n\n"), SKYBLUE);
+
+                GetAllAnimalsHealth();
+
+                if (IS_LIST_EMPTY(animalListHead)) {
+                    break;
+                }
+
+                ConsoleWriteLine(_T("\nWhich cage number would you like to feed?\n"));
+                _fgetts(buffer, _countof(buffer), stdin);
+                if (_stscanf_s(buffer, _T("%d"), &cageNumber) == 1) {
+                    if (cageNumber < 1 || cageNumber > (int)_countof(cages)) {
+                        ConsoleWriteLine(_T("Invalid Selection...\n"));
+                    } else {
+                        SetEvent(cages[cageNumber - 1]->FeedEvent);
+                    }
+                } else {
+                    ConsoleWriteLine(_T("Invalid Selection...\n"));
+                }
+
+                break;
+            case 2 : // Check Animal Interactivity Levels
+                ConsoleWriteLine(_T("\n%cYou selected - Check Animal Interactivity Levels\n\n"), SKYBLUE);
+                GetAllAnimalsInteractivity();
+
+                break;
+            case 3 : // Show Case Animal
+                ConsoleWriteLine(_T("\n%cYou selected - Show Case Animal\n\n"), SKYBLUE);
+
+                ConsoleWriteLine(_T("Which cage number would you like to showcase?\n"));
+                _fgetts(buffer, _countof(buffer), stdin);
+                if (_stscanf_s(buffer, _T("%d"), &cageNumber) == 1) {
+                    if (cageNumber < 1 || cageNumber > (int)_countof(cages)) {
+                        ConsoleWriteLine(_T("Invalid Selection...\n"));
+                    } else {
+                        ShowCaseAnimal(visitorListHead, cageNumber);
+                    }
+                } else {
+                    ConsoleWriteLine(_T("Invalid Selection...\n"));
+                }
+
+                break;
+            case 4 : // Check Visitors Happiness Level
+                ConsoleWriteLine(_T("\n%cYou selected - Check Visitors Happiness Level\n\n"), SKYBLUE);
+                EnumVisitors(visitorListHead, TRUE);
+
+                break;
+            case 5 : // Close the zoo for the day
+                EndTurnActions();
+                break;
+            case 0 :
+                ConsoleWriteLine(_T("\n%cYou selected - Quit\n\n"), SKYBLUE);
+                EndTurnActions();
+                Dispose();
+            default :
+                ConsoleWriteLine(_T("Invalid Selection...\n"));
+                break;
+
+        }
+    } while (TRUE);
+}
 
 #pragma region Helpers
 
@@ -118,7 +218,8 @@ void PrintCurrentZooStatus() {
 
     if (IsOpen) {
         ConsoleWriteLine(_T("%cOpen\n"), LIME);
-    } else {
+    }
+    else {
         ConsoleWriteLine(_T("%cClosed\n"), PINK);
     }
 
@@ -161,7 +262,8 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
 
             PrintCurrentZooStatus();
             PrintMenu();
-        } else {
+        }
+        else {
             return 0;
         }
     } while (TRUE);
@@ -273,9 +375,9 @@ void InitializeTimers() {
         ExitProcess(1);
     }
 
-    seDueTime.QuadPart = - ((SIGNIFICANT_EVENT_MIN * 60) * TIMER_SECONDS);
-    feedDueTime.QuadPart = - ((FEED_EVENT_MIN * 60) * TIMER_SECONDS);
-    liDueTime.QuadPart = - (30 * TIMER_SECONDS);
+    seDueTime.QuadPart = -((SIGNIFICANT_EVENT_MIN * 60) * TIMER_SECONDS);
+    feedDueTime.QuadPart = -((FEED_EVENT_MIN * 60) * TIMER_SECONDS);
+    liDueTime.QuadPart = -(30 * TIMER_SECONDS);
 
     if (!SetWaitableTimer(significantEventTimer, &seDueTime, 0, NULL, NULL, FALSE)) {
         ConsoleWriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
@@ -283,7 +385,7 @@ void InitializeTimers() {
 }
 
 DWORD ResetZooClosedTimer() {
-    liDueTime.QuadPart = - (30 * TIMER_SECONDS);
+    liDueTime.QuadPart = -(30 * TIMER_SECONDS);
 
     if (!SetWaitableTimer(zooOpenEventTimer, &liDueTime, 0, NULL, NULL, 0)) {
         ConsoleWriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
@@ -339,93 +441,4 @@ void Dispose() {
     HeapFree(GetProcessHeap(), 0, visitorListHead);
 
     ExitProcess(0);
-}
-
-int _tmain() {
-    srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
-
-    InitializeMain();
-    InitializeTimers();
-
-    TCHAR buffer[MAX_PATH];
-    int menuOption;
-    int cageNumber;
-
-    InitVisitorsEvent();
-    InitializeZoo();
-
-    do {
-        Sleep(100);
-
-        PrintCurrentZooStatus();
-        PrintMenu();
-
-        _fgetts(buffer, _countof(buffer), stdin);
-        if (_stscanf_s(buffer, _T("%d"), &menuOption) != 1) {
-            ConsoleWriteLine(_T("Invalid Selection...\n"));
-            continue;
-        }
-
-        switch (menuOption) {
-            case 1 : // Feed Animals
-                ConsoleWriteLine(_T("\n%cYou selected - Feed Animals\n\n"), SKYBLUE);
-
-                GetAllAnimalsHealth();
-
-                if (IS_LIST_EMPTY(animalListHead)) {
-                    break;
-                }
-
-                ConsoleWriteLine(_T("\nWhich cage number would you like to feed?\n"));
-                _fgetts(buffer, _countof(buffer), stdin);
-                if (_stscanf_s(buffer, _T("%d"), &cageNumber) == 1) {
-                    if (cageNumber < 1 || cageNumber > (int)_countof(cages)) {
-                        ConsoleWriteLine(_T("Invalid Selection...\n"));
-                    } else {
-                        SetEvent(cages[cageNumber - 1]->FeedEvent);
-                    }
-                } else {
-                    ConsoleWriteLine(_T("Invalid Selection...\n"));
-                }
-
-                break;
-            case 2 : // Check Animal Interactivity Levels
-                ConsoleWriteLine(_T("\n%cYou selected - Check Animal Interactivity Levels\n\n"), SKYBLUE);
-                GetAllAnimalsInteractivity();
-
-                break;
-            case 3 : // Show Case Animal
-                ConsoleWriteLine(_T("\n%cYou selected - Show Case Animal\n\n"), SKYBLUE);
-
-                ConsoleWriteLine(_T("Which cage number would you like to showcase?\n"));
-                _fgetts(buffer, _countof(buffer), stdin);
-                if (_stscanf_s(buffer, _T("%d"), &cageNumber) == 1) {
-                    if (cageNumber < 1 || cageNumber > (int)_countof(cages)) {
-                        ConsoleWriteLine(_T("Invalid Selection...\n"));
-                    } else {
-                        ShowCaseAnimal(visitorListHead, cageNumber);
-                    }
-                } else {
-                    ConsoleWriteLine(_T("Invalid Selection...\n"));
-                }
-
-                break;
-            case 4 : // Check Visitors Happiness Level
-                ConsoleWriteLine(_T("\n%cYou selected - Check Visitors Happiness Level\n\n"), SKYBLUE);
-                EnumVisitors(visitorListHead, TRUE);
-
-                break;
-            case 5 : // Close the zoo for the day
-                EndTurnActions();
-                break;
-            case 0 :
-                ConsoleWriteLine(_T("\n%cYou selected - Quit\n\n"), SKYBLUE);
-                EndTurnActions();
-                Dispose();
-            default :
-                ConsoleWriteLine(_T("Invalid Selection...\n"));
-                break;
-
-        }
-    } while (TRUE);
 }
