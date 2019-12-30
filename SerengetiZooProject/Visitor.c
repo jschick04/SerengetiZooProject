@@ -477,7 +477,7 @@ DWORD WINAPI AddVisitorsThread(BOOL* go)
         {
             if (bExitZoo != TRUE)
             { 
-            WaitForSingleObject(&VisitorEnterEvent, INFINITE);
+            WaitForSingleObject(VisitorEnterEvent, INFINITE);
             numVisitorsRand = (rand() % 3);
             for (num = 0; num != numVisitorsRand; ++num)
             {
