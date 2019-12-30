@@ -10,7 +10,6 @@
 #include <strsafe.h>
 
 //GLOBALS
-CRITICAL_SECTION VisitorListCS;
 HANDLE hVisitorEvent;
 BOOL bExitZoo;
 

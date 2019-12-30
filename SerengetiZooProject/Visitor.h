@@ -24,7 +24,7 @@ HANDLE hThreadHandles[999];
 HANDLE VisitorEnterEvent;
 int VisitorTID;
 
-
+CRITICAL_SECTION VisitorListCS;
 Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name);
 DWORD WINAPI VisitorLoop(VisitorLoopParams* Params);
 HANDLE InitVisitorsEvent();
