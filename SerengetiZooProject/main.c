@@ -10,6 +10,21 @@
 #include "SerengetiZooProject.h"
 #include "Visitor.h"
 
+#pragma region Function Declarations
+
+void PrintCurrentZooStatus();
+void PrintMenu();
+void PrintScore();
+DWORD WINAPI mTimer(LPVOID lpParam);
+BOOL InitializeListHeads();
+void InitializeMain();
+void InitializeZoo();
+void InitializeTimers();
+DWORD ResetZooClosedTimer();
+void Dispose();
+
+#pragma endregion
+
 LPTSTR uniqueNames[] = {
     _T("Julien"),
     _T("Melman"),
@@ -71,20 +86,6 @@ HANDLE zooOpenEventThread;
 HANDLE zooOpenEventTimer = NULL;
 BOOL IsOpen = FALSE;
 LARGE_INTEGER liDueTime;
-
-LPTSTR GetRandomName();
-void AddRandomName(LPTSTR name);
-void PrintCurrentZooStatus();
-void PrintMenu();
-void PrintScore();
-DWORD WINAPI mTimer(LPVOID lpParam);
-BOOL InitializeListHeads();
-void InitializeMain();
-void InitializeZoo();
-void InitializeTimers();
-DWORD ResetZooClosedTimer();
-void EndTurnActions();
-void Dispose();
 
 int _tmain() {
     srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
@@ -218,8 +219,7 @@ void PrintCurrentZooStatus() {
 
     if (IsOpen) {
         ConsoleWriteLine(_T("%cOpen\n"), LIME);
-    }
-    else {
+    } else {
         ConsoleWriteLine(_T("%cClosed\n"), PINK);
     }
 
@@ -262,8 +262,7 @@ DWORD WINAPI mTimer(LPVOID lpParam) {
 
             PrintCurrentZooStatus();
             PrintMenu();
-        }
-        else {
+        } else {
             return 0;
         }
     } while (TRUE);
@@ -402,8 +401,7 @@ void EndTurnActions() {
     ExitZoo();
     int ThreadHandleCount = VisitorTID;
     DWORD ret = WaitForMultipleObjects(ThreadHandleCount, hThreadHandles, TRUE, INFINITE);
-    if (ret == 0xFFFFFFFF)
-    {
+    if (ret == 0xFFFFFFFF) {
         DWORD returnstring = GetLastError();
         ConsoleWriteLine(_T("Visitor Wait failed with %d"), returnstring);
     }
@@ -428,6 +426,9 @@ void Dispose() {
 
     WaitForMultipleObjects(999, hThreadHandles, TRUE, INFINITE);
 
+    CloseHandle(VisitorEnterEvent);
+    CloseHandle(InitVisitorsEvent);
+
     for (int i = 0; i != _countof(cages); ++i) {
         CancelWaitableTimer(cages[i]->FeedEventTimer);
         WaitForSingleObject(cages[i]->AnimalHealthThread, INFINITE);
@@ -439,6 +440,13 @@ void Dispose() {
 
     HeapFree(GetProcessHeap(), 0, animalListHead);
     HeapFree(GetProcessHeap(), 0, visitorListHead);
+
+    DeleteCriticalSection(&AnimalListCrit);
+    DeleteCriticalSection(&NameListCrit);
+    DeleteCriticalSection(&VisitorListCrit);
+    DeleteCriticalSection(&cScore);
+
+    CloseHandle(appClose);
 
     ExitProcess(0);
 }
