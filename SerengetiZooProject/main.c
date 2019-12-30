@@ -427,7 +427,6 @@ void Dispose() {
     WaitForMultipleObjects(999, hThreadHandles, TRUE, INFINITE);
 
     CloseHandle(VisitorEnterEvent);
-    CloseHandle(InitVisitorsEvent);
 
     for (int i = 0; i != _countof(cages); ++i) {
         CancelWaitableTimer(cages[i]->FeedEventTimer);
