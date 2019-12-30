@@ -349,6 +349,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
     {
         bExitZoo = TRUE;
         ResetEvent(VisitorEnterEvent);
+        WaitForMultipleObjects(999, hThreadHandles, TRUE, INFINITE);
         return 1;
     }
 
@@ -499,7 +500,10 @@ DWORD WINAPI ShowCaseAnimal(NodeEntry* VisitorListHead, int cagenum)
 {
     const LPTSTR cageName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10);
     const LPTSTR prepend = _T("Cage");
-    StringCchPrintf(cageName, 10, _T("%s%d"), prepend, cagenum);
+    if (cageName != 0)
+    {
+        StringCchPrintf(cageName, 10, _T("%s%d"), prepend, cagenum);
+    }
 
     WaitForSingleObject(hVisitorEvent, INFINITE);
     EnterCriticalSection(&VisitorListCrit);
