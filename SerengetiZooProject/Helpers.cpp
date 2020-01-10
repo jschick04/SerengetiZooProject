@@ -2,16 +2,14 @@
 #include <tchar.h>
 
 void Helpers::AddRandomName(LPCTSTR name) {
-    EnterCriticalSection(&NameListCrit);
+    auto guard = m_cs.lock();
 
-    for (int i = 0; i != _countof(uniqueNames); ++i) {
-        if (uniqueNames[i] == NULL) {
-            uniqueNames[i] = name;
+    for (int i = 0; i != m_uniqueNames.size(); ++i) {
+        if (m_uniqueNames[i] == nullptr) {
+            m_uniqueNames[i] = name;
             break;
         }
     }
-
-    LeaveCriticalSection(&NameListCrit);
 }
 
 LPCTSTR Helpers::GetRandomName() {
@@ -21,16 +19,16 @@ LPCTSTR Helpers::GetRandomName() {
     LPCTSTR selectedName;
 
     do {
-        index = rand() % _countof(uniqueNames);
-        selectedName = uniqueNames[index];
+        index = rand() % m_uniqueNames.size();
+        selectedName = m_uniqueNames[index];
     } while (selectedName == nullptr);
 
-    uniqueNames[index] = nullptr;
+    m_uniqueNames[index] =  nullptr;
 
     return selectedName;
 }
 
-LPCTSTR Helpers::m_uniqueNames[] = {
+std::array<LPCTSTR, 53> Helpers::m_uniqueNames{
     _T("Julien"),
     _T("Melman"),
     _T("Julien"),

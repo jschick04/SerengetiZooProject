@@ -14,6 +14,7 @@ public:
     explicit Zoo(int numberOfCages);
 
     void EndTurn();
+    void GetAllAnimals();
 private:
     wil::critical_section m_cs;
 };

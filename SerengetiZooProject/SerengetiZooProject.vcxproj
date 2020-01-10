@@ -159,7 +159,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Animal.cpp" />
-    <ClCompile Include="Animal_OLD.cpp" />
     <ClCompile Include="Cage.cpp" />
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="Helpers.cpp" />

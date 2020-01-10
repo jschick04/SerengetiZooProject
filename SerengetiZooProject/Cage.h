@@ -12,19 +12,26 @@ public:
 
     explicit Cage(LPCTSTR name);
 
-    BOOL IsCageEmpty();
+    bool IsCageEmpty();
 
-    DWORD GetCageTotalInteractiveLevel();
-    DWORD GetCageAverageInteractiveLevel();
+    DWORD GetAverageInteractiveLevel();
+    DWORD GetTotalInteractiveLevel();
+
+    Cage GetRandom();
 
     void AddAnimal();
     void GetAnimals();
     void GetAnimalsHealth();
     void GetAnimalsInteractivity();
+    void RemoveAnimal();
 
 private:
     wil::unique_event_failfast m_feedEvent;
     wil::unique_handle m_feedEventTimer;
     wil::unique_handle m_animalHealthThread;
     wil::unique_handle m_animalInteractivityThread;
+
+    DWORD WINAPI AnimalHealth(LPVOID lpParam);
+    DWORD WINAPI AnimalInteractivity(LPVOID lpParam);
+    DWORD WINAPI SignificantEventTimer(LPVOID);
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <wil/resource.h>
 #include <Windows.h>
 
@@ -11,8 +12,5 @@ public:
 
 private:
     static wil::critical_section m_cs;
-
-    LPCTSTR m_uniqueNames[];
-
-    //static std::vector<LPCTSTR> m_uniqueNames;
+    static std::array<LPCTSTR, 53> m_uniqueNames;
 };

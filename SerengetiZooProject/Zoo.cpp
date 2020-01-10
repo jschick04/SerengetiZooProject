@@ -31,3 +31,30 @@ void Zoo::EndTurn() {
     Menu::PrintCurrentZooStatus();
     Menu::PrintOptions();
 }
+
+void Zoo::GetAllAnimals() {
+    if (IS_LIST_EMPTY(animalListHead)) {
+        cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
+        return;
+    }
+
+    EnterCriticalSection(&AnimalListCrit);
+
+    NodeEntry* temp = animalListHead->Blink;
+
+    while (temp != animalListHead) {
+        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
+
+        cwl::WriteLine(
+            _T("[%c%s%r] %s the %s\n"),
+            SKYBLUE,
+            tempAnimal.CageName,
+            tempAnimal.UniqueName,
+            AnimalTypeToString(tempAnimal.AnimalType)
+        );
+
+        temp = temp->Blink;
+    };
+
+    LeaveCriticalSection(&AnimalListCrit);
+}

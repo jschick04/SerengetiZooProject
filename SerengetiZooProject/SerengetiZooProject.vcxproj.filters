@@ -18,9 +18,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Animal_OLD.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Visitor_OLD.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

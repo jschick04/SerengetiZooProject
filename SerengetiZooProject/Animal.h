@@ -16,9 +16,19 @@ public:
     BOOL InteractivityPrompted = false;
 
     Animal(::AnimalType animalType, LPCTSTR uniqueName, LPCTSTR cageName);
+
 private:
     wil::unique_event_failfast m_healthEvent;
 
     int GetRandomHealthLevel();
     int GetRandomInteractiveLevel();
+
+    void AddHealthLevel();
+    void RemoveHealthLevel();
+    void SetHealthEvent();
+
+    void AddInteractiveLevel();
+    void RemoveInteractiveLevel();
+
+    void ResetFeedTime();
 };
