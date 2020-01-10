@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "ConsoleColors.h"
-#include "Visitor.h"
-#include "Animals.h"
-#include <WriteLine.h>
+#include <cwl.h>
 #include <time.h>
 #include <strsafe.h>
+#include "Visitor.h"
+#include "Animal.h"
 
 //GLOBALS
 HANDLE hVisitorEvent;
@@ -39,7 +39,7 @@ Visitor* AddVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
     WaitForSingleObject(hVisitorEvent, INFINITE);
     EnterCriticalSection(&VisitorListCrit);
    //create struct and return values.
-    Visitor* NewVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+    Visitor* NewVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
 
 if (NewVisitor == NULL)
 {
@@ -65,14 +65,14 @@ next->Flink = &(NewVisitor->Links);
 VisitorListHead->Blink = &(NewVisitor->Links);
 
 //Add data
-LPTSTR Entry = _T("Entry");
+LPCTSTR Entry = _T("Entry");
 
 NewVisitor->UniqueName = Name;
 NewVisitor->CageLocation = Entry;
 NewVisitor->HappinessLevel = 8;
 NewVisitor->Status = Happy;
 
-VisitorLoopParams* Params = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VisitorLoopParams));;
+VisitorLoopParams* Params = static_cast<VisitorLoopParams*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VisitorLoopParams)));
     if (Params != NULL)
     {
     Params->Visitor = NewVisitor;
@@ -87,12 +87,12 @@ hThreadHandles[VisitorTID] = CreateThread(
     NULL,
     0,
     VisitorLoop,
-    Params,
+    &Params,
     0,
     dwThreadId[VisitorTID]
 );
 if (hThreadHandles[VisitorTID] == NULL) {
-    ConsoleWriteLine(_T("%cFailed to spawn thread\n"), RED, GetLastError());
+    cwl::WriteLine(_T("%cFailed to spawn thread\n"), RED, GetLastError());
     return NULL;
 }
 VisitorTID++;
@@ -105,45 +105,45 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
     WaitForSingleObject(hVisitorEvent, INFINITE);
     EnterCriticalSection(&VisitorListCrit);
 
-    NodeEntry* RemovedNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    NodeEntry* RemovedNode = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
     if (RemovedNode == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
         LeaveCriticalSection(&VisitorListCrit);
         SetEvent(hVisitorEvent);
         return NULL;
     }
-    NodeEntry* TempNodePrev = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    NodeEntry* TempNodePrev = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
     if (TempNodePrev == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
         LeaveCriticalSection(&VisitorListCrit);
         SetEvent(hVisitorEvent);
         return NULL;
     }
-    NodeEntry* TempNodeNext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    NodeEntry* TempNodeNext = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));;
     if (TempNodeNext == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
         LeaveCriticalSection(&VisitorListCrit);
         SetEvent(hVisitorEvent);
         return NULL;
     }
     RemovedNode = VisitorListHead->Flink;
-    Visitor* RemovedVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+    Visitor* RemovedVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
     if (RemovedVisitor == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
         LeaveCriticalSection(&VisitorListCrit);
         SetEvent(hVisitorEvent);
         return NULL;
     }
-    Visitor* PreviousVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+    Visitor* PreviousVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
     if (PreviousVisitor == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
         LeaveCriticalSection(&VisitorListCrit);
         SetEvent(hVisitorEvent);
         return NULL;
     }
-    Visitor* NextVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+    Visitor* NextVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
     if (NextVisitor == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
         LeaveCriticalSection(&VisitorListCrit);
         SetEvent(hVisitorEvent);
         return NULL;
@@ -174,8 +174,9 @@ Visitor* RemoveVisitor(NodeEntry* VisitorListHead, LPTSTR Name)
 
 
 //This loop is to iterate through each cage, and each animal end to end.
-DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
+DWORD WINAPI VisitorLoop(LPVOID Param)
 {
+    auto Params = static_cast<VisitorLoopParams*>(Param);
     int SleepTimeRand = 0;
     for (int i = 0; i != _countof(cages); ++i)
     {
@@ -207,7 +208,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
         if (IsCageEmpty(cages[i]->Name))
         {
            //WriteConsoleOutput(_T("There are no animals in the zoo left!"),RED);
-            //ConsoleWriteLine(_T("There are no animals left in the Zoo!\n"));
+            //cwl::WriteLine(_T("There are no animals left in the Zoo!\n"));
         }
         else
         {
@@ -215,12 +216,12 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
             EnterCriticalSection(&VisitorListCrit);
 
             Params->Visitor->CageLocation = cages[i]->Name;
-            ConsoleWriteLine(_T("%s entered cage: %s\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
+            cwl::WriteLine(_T("%s entered cage: %s\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
 
             if (IsCageEmpty(Params->Visitor->CageLocation) == TRUE)
             {
                 Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel - 2;
-                ConsoleWriteLine(_T("%s lost 2 happiness points after visiting %s due to being empty!\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
+                cwl::WriteLine(_T("%s lost 2 happiness points after visiting %s due to being empty!\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
             }
             else
             {
@@ -234,7 +235,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
                     if (Params->Visitor->HappinessLevel != 0)
                     {
                     Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel - 1;
-                    ConsoleWriteLine(_T("%s %clost%r a happiness point after visiting %s!\n"), Params->Visitor->UniqueName, RED, Params->Visitor->CageLocation);
+                    cwl::WriteLine(_T("%s %clost%r a happiness point after visiting %s!\n"), Params->Visitor->UniqueName, RED, Params->Visitor->CageLocation);
                     }
 
                 }
@@ -247,7 +248,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
                     if (Params->Visitor->HappinessLevel != 10)
                     { 
                     Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel + 1;
-                    ConsoleWriteLine(_T("%s %cgained%r a happiness point after visiting %s!\n"), Params->Visitor->UniqueName, GREEN,  Params->Visitor->CageLocation);
+                    cwl::WriteLine(_T("%s %cgained%r a happiness point after visiting %s!\n"), Params->Visitor->UniqueName, GREEN,  Params->Visitor->CageLocation);
                     }
                 }
             }
@@ -261,7 +262,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
                 break;
                 
             }
-            if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7);
+            if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7)
             {
                 Params->Visitor->Status = Disappointed;
                 
@@ -284,7 +285,7 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
 
     Sleep(SleepTimeRand);
     //visitor should have visited all locations at this point so we need to calculate if leaving happy leaving angry or demanding a refund.
-    LPTSTR ExitStatus;
+    LPCTSTR ExitStatus;
     WaitForSingleObject(hVisitorEvent, INFINITE);
     EnterCriticalSection(&VisitorListCrit);
 
@@ -292,20 +293,20 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
     {
         Params->Visitor->HappinessLevel = RefundDemanded;
         ExitStatus = _T("Demanded a Refund");
-        ConsoleWriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, RED, ExitStatus);
+        cwl::WriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, RED, ExitStatus);
     }
     else if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7)
     {
         Params->Visitor->HappinessLevel = LeavingAngry;
         ExitStatus = _T("Left Angry");
-        ConsoleWriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, RED, ExitStatus);
+        cwl::WriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, RED, ExitStatus);
         g_Score = g_Score - 10;
     }
     else
     {
         Params->Visitor->HappinessLevel = LeavingHappy;
         ExitStatus = _T("Left Happy");
-        ConsoleWriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, GREEN, ExitStatus);
+        cwl::WriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, GREEN, ExitStatus);
         g_Score = g_Score + 10;
         
     }
@@ -325,9 +326,9 @@ DWORD WINAPI VisitorLoop(VisitorLoopParams* Params)
         WaitForSingleObject(hVisitorEvent, INFINITE);
         EnterCriticalSection(&VisitorListCrit);
 
-        NodeEntry* EnumNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+        NodeEntry* EnumNode = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
         if (EnumNode == NULL) {
-            ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+            cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
         }
         EnumNode = VisitorListHead->Flink;
 
@@ -365,19 +366,19 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
     WaitForSingleObject(hVisitorEvent, INFINITE);
     EnterCriticalSection(&VisitorListCrit);
 
-    NodeEntry* EnumNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    NodeEntry* EnumNode = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
     if (EnumNode == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
         //return NULL;
     }
     EnumNode = VisitorListHead->Flink;
-    Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+    Visitor* eVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
 
-    if (PrintToConsole == TRUE) { ConsoleWriteLine(_T("[ Visitor ] [ Cage ] [ Happiness ] [ Status ]\n")); }
+    if (PrintToConsole == TRUE) { cwl::WriteLine(_T("[ Visitor ] [ Cage ] [ Happiness ] [ Status ]\n")); }
 
     while (EnumNode->Flink != VisitorListHead->Flink)
     {
-        LPTSTR status = 0;
+        LPCTSTR status = 0;
         eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
 
         if (eVisitor->Status == 0)
@@ -398,15 +399,15 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
         //perform the console print.
         if (PrintToConsole == TRUE && eVisitor->HappinessLevel <= 5) 
         { 
-            ConsoleWriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),RED, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status); 
+            cwl::WriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),RED, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status); 
         }
         else if (PrintToConsole == TRUE && eVisitor->HappinessLevel >= 8)
         {
-            ConsoleWriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),GREEN, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status);
+            cwl::WriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),GREEN, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status);
         }
         else
         {
-            ConsoleWriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),YELLOW, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status);
+            cwl::WriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),YELLOW, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status);
         }
 
         EnumNode = EnumNode->Flink;
@@ -420,9 +421,9 @@ DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
 }
 
 //Thread to simulate a random amount of visitors being added periodically.
-DWORD WINAPI AddVisitorsThread(BOOL* go)
+DWORD WINAPI AddVisitorsThread(LPVOID)
 {
-    LPTSTR VisitorName[] = {
+    LPCTSTR VisitorName[] = {
     _T("Ron"),
     _T("Deveroux"),
     _T("Felicio"),
@@ -482,7 +483,6 @@ DWORD WINAPI AddVisitorsThread(BOOL* go)
         { 
         Sleep(SleepRand);
         }
-        *go = TRUE;
 
         //Determine number of visitors to add
         while(1)
@@ -516,8 +516,8 @@ DWORD WINAPI AddVisitorsThread(BOOL* go)
 //Function to enumerate all visitors, simply prints them forward.
 DWORD WINAPI ShowCaseAnimal(NodeEntry* VisitorListHead, int cagenum)
 {
-    const LPTSTR cageName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10);
-    const LPTSTR prepend = _T("Cage");
+    auto cageName = static_cast<LPTSTR>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10));
+    const LPCTSTR prepend = _T("Cage");
     if (cageName != 0)
     {
         StringCchPrintf(cageName, 10, _T("%s%d"), prepend, cagenum);
@@ -526,13 +526,13 @@ DWORD WINAPI ShowCaseAnimal(NodeEntry* VisitorListHead, int cagenum)
     WaitForSingleObject(hVisitorEvent, INFINITE);
     EnterCriticalSection(&VisitorListCrit);
 
-    NodeEntry* EnumNode = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry));
+    NodeEntry* EnumNode = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
     if (EnumNode == NULL) {
-        ConsoleWriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
         //return NULL;
     }
     EnumNode = VisitorListHead->Flink;
-    Visitor* eVisitor = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor));
+    Visitor* eVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
 
     while (EnumNode->Flink != VisitorListHead->Flink)
     {
