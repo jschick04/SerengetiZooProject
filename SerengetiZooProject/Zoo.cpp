@@ -18,6 +18,8 @@ Zoo::Zoo(const int numberOfCages) {
         cage->AddAnimal(move(animal));
         Cages.push_back(move(cage));
     }
+
+    Event = wil::make_unique_failfast<SignificantEvent>();
 }
 
 // Closes the zoo for the day and tells visitors to leave
@@ -148,43 +150,6 @@ Cage* Zoo::GetRandomCage() {
     return availableCages.empty() ? nullptr : availableCages.at(rand() % availableCages.size());
 }
 
-
-
-//void InitializeTimers() {
-//    significantEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
-//    zooOpenEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
-//
-//    if (NULL == zooOpenEventTimer) {
-//        cwl::WriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
-//        ExitProcess(1);
-//    }
-//
-//    if (significantEventTimer == NULL) {
-//        cwl::WriteLine(_T("Failed to create Significant Event Timer: %d\n"), GetLastError());
-//        ExitProcess(1);
-//    }
-//
-//    significantEventThread = CreateThread(NULL, 0, SignificantEventTimer, NULL, 0, NULL);
-//    zooOpenEventThread = CreateThread(NULL, 0, mTimer, NULL, 0, NULL);
-//
-//    if (significantEventThread == NULL) {
-//        cwl::WriteLine(_T("Failed to create Event Timer Threads: %d\n"), GetLastError());
-//        ExitProcess(1);
-//    }
-//
-//    if (zooOpenEventThread == NULL) {
-//        cwl::WriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
-//        ExitProcess(1);
-//    }
-//
-//    seDueTime.QuadPart = -((SIGNIFICANT_EVENT_MIN * 60) * TIMER_SECONDS);
-//    feedDueTime.QuadPart = -((FEED_EVENT_MIN * 60) * TIMER_SECONDS);
-//    liDueTime.QuadPart = -(30 * TIMER_SECONDS);
-//
-//    if (!SetWaitableTimer(significantEventTimer, &seDueTime, 0, NULL, NULL, FALSE)) {
-//        cwl::WriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
-//    }
-//}
 //
 //
 ////// Move into Zoo
@@ -197,4 +162,23 @@ Cage* Zoo::GetRandomCage() {
 //    }
 //
 //    return 0;
+//}
+//
+////void InitializeTimers() {
+//    zooOpenEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
+//
+//    if (NULL == zooOpenEventTimer) {
+//        cwl::WriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
+//        ExitProcess(1);
+//    }
+//
+//    zooOpenEventThread = CreateThread(NULL, 0, mTimer, NULL, 0, NULL);
+//
+//    if (zooOpenEventThread == NULL) {
+//        cwl::WriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
+//        ExitProcess(1);
+//    }
+//
+//    liDueTime.QuadPart = -(30 * TIMER_SECONDS);
+//
 //}

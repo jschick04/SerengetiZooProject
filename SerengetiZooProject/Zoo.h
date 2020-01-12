@@ -3,12 +3,14 @@
 #include <vector>
 #include <wil/resource.h>
 #include "Cage.h"
+#include "SignificantEvent.h"
 
 class Zoo {
 public:
     static bool IsOpen;
 
     std::vector<wistd::unique_ptr<Cage>> Cages;
+    wistd::unique_ptr<SignificantEvent> Event;
 
     explicit Zoo(int numberOfCages);
 

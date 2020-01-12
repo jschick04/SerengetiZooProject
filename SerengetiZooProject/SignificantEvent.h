@@ -1,16 +1,19 @@
 #pragma once
 
+#include <wil/resource.h>
 #include <Windows.h>
 
 class SignificantEvent {
 public:
-    LARGE_INTEGER seDueTime;
-    LARGE_INTEGER feedDueTime;
+    explicit SignificantEvent();
 
-    SignificantEvent(LARGE_INTEGER EventTimer);
+    void WaitForThread() const noexcept;
 private:
-    HANDLE m_significantEventThread;
-    HANDLE m_significantEventTimer;
+    LARGE_INTEGER m_dueTime;
+    LARGE_INTEGER m_feedDueTime;
 
-    DWORD WINAPI SignificantEventTimer(LPVOID);
+    wil::unique_handle m_significantEventThread;
+    wil::unique_handle m_significantEventTimer;
+
+    static DWORD WINAPI SignificantEventTimer(LPVOID);
 };

@@ -1,4 +1,23 @@
 #include "SignificantEvent.h"
+#include "GameManager.h"
+
+SignificantEvent::SignificantEvent() {
+    m_significantEventTimer.reset(CreateWaitableTimer(nullptr, false, nullptr));
+    THROW_LAST_ERROR_IF(!m_significantEventTimer.is_valid());
+
+    m_significantEventThread.reset(CreateThread(nullptr, 0, SignificantEventTimer, nullptr, 0, nullptr));
+
+    m_dueTime.QuadPart = -((GameManager::SignificantEventMinutes * 60) * TIMER_SECONDS);
+    m_feedDueTime.QuadPart = -((GameManager::FeedEventMinutes * 60) * TIMER_SECONDS);
+
+    THROW_LAST_ERROR_IF(
+        !SetWaitableTimer(m_significantEventTimer.get(), &m_dueTime, 0, nullptr, nullptr, false)
+    );
+}
+
+void SignificantEvent::WaitForThread() const noexcept {
+    WaitForSingleObject(m_significantEventThread.get(), INFINITE);
+}
 
 DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID) {
     /*srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
