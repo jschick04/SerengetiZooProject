@@ -28,6 +28,8 @@ LPCTSTR Helpers::GetRandomName() {
     return selectedName;
 }
 
+wil::critical_section Helpers::m_cs;
+
 std::array<LPCTSTR, 53> Helpers::m_uniqueNames{
     _T("Julien"),
     _T("Melman"),

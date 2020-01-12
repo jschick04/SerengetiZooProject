@@ -1,104 +1,58 @@
 #include "Cage.h"
+#include <algorithm>
+#include <ConsoleColors.h>
+#include <cwl.h>
+#include <tchar.h>
 
-Cage::Cage(LPCTSTR name) {
+Cage::Cage(const TCHAR* name) {
     Name = name;
 
     m_feedEvent.create(wil::EventOptions::Signaled);
+    THROW_LAST_ERROR_IF(!m_feedEvent.is_valid());
+
+    /*m_feedEventTimer.reset(CreateWaitableTimer(nullptr, false, nullptr));
+    THROW_LAST_ERROR_IF_NULL(m_feedEventTimer);*/
+
+    // TODO: Add Threads back
+    //m_animalHealthThread.reset(CreateThread(nullptr, 0, &AnimalHealth, nullptr, 0, nullptr));
+    //m_animalInteractivityThread.reset(CreateThread(nullptr, 0, &AnimalInteractivity, nullptr, 0, nullptr));
 
     // OLD CODE
-    if (healthEvent == NULL) {
-        healthEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // Temporary, will be moved to NewCage
+    //if (healthEvent == NULL) {
+    //    healthEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // Temporary, will be moved to NewCage
 
-        if (healthEvent == NULL) {
-            cwl::WriteLine(_T("%cFailed to create event: %d\n"), RED, GetLastError());
-            return NULL;
-        }
-    }
+    //    if (healthEvent == NULL) {
+    //        cwl::WriteLine(_T("%cFailed to create event: %d\n"), RED, GetLastError());
+    //        return NULL;
+    //    }
+    //}
 
-    Cage* cage = static_cast<Cage*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Cage)));
-
-    if (cage == 0) {
-        cwl::WriteLine(_T("%cFailed to create cage\n"), RED);
-        return NULL;
-    }
-
-    HANDLE feedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-
-    if (feedEvent == NULL) {
-        cwl::WriteLine(_T("%cFailed to create event: %d\n"), GetLastError());
-        return NULL;
-    }
-
-    HANDLE feedEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
-
-    if (feedEventTimer == NULL) {
-        cwl::WriteLine(_T("%cFailed to create feed event timer: %d"), GetLastError());
-        return NULL;
-    }
-
-    cage->Name = cageName;
-    cage->FeedEvent = feedEvent;
-    cage->FeedEventTimer = feedEventTimer;
-
-    if (!ResetFeedTimer(feedEventTimer)) {
-        return NULL;
-    }
-
-    cage->AnimalHealthThread = CreateThread(NULL, 0, &AnimalHealth, cage, 0, NULL);
-    cage->AnimalInteractivityThread = CreateThread(NULL, 0, &AnimalInteractivity, NULL, 0, NULL);
+    //if (!ResetFeedTimer(feedEventTimer)) {
+    //    return NULL;
+    //}
 }
 
 bool Cage::IsCageEmpty() {
-    if (IS_LIST_EMPTY(animalListHead)) {
-        return TRUE;
-    }
+    auto guard = m_cs.lock();
 
-    int count = 0;
-
-    EnterCriticalSection(&AnimalListCrit);
-
-    NodeEntry* temp = animalListHead->Blink;
-
-    while (temp != animalListHead) {
-        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-        if (_tcscmp(tempAnimal.CageName, cageName) == 0) {
-            count++;
-        }
-
-        temp = temp->Blink;
-    };
-
-    LeaveCriticalSection(&AnimalListCrit);
-
-    return count > 0 ? FALSE : TRUE;
+    return Animals.empty();
 }
 
 DWORD Cage::GetAverageInteractiveLevel() {
     DWORD total = 0;
     DWORD count = 0;
 
-    if (IS_LIST_EMPTY(animalListHead)) {
+    auto guard = m_cs.lock();
+
+    if (IsCageEmpty()) {
         cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
         return total;
     }
 
-    EnterCriticalSection(&AnimalListCrit);
-
-    NodeEntry* temp = animalListHead->Blink;
-
-    while (temp != animalListHead) {
-        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-        if (_tcscmp(tempAnimal.CageName, cageName) == 0) {
-            total += tempAnimal.InteractiveLevel;
-            count++;
-        }
-
-        temp = temp->Blink;
-    };
-
-    LeaveCriticalSection(&AnimalListCrit);
+    for (const auto& animal : Animals) {
+        count++;
+        total += animal->InteractiveLevel;
+    }
 
     return total / count;
 }
@@ -106,178 +60,48 @@ DWORD Cage::GetAverageInteractiveLevel() {
 DWORD Cage::GetTotalInteractiveLevel() {
     DWORD total = 0;
 
-    if (IS_LIST_EMPTY(animalListHead)) {
+    auto guard = m_cs.lock();
+
+    if (IsCageEmpty()) {
         cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
         return total;
     }
 
-    EnterCriticalSection(&AnimalListCrit);
-
-    NodeEntry* temp = animalListHead->Blink;
-
-    while (temp != animalListHead) {
-        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-        if (_tcscmp(tempAnimal.CageName, cageName) == 0) {
-            total += tempAnimal.InteractiveLevel;
-        }
-
-        temp = temp->Blink;
-    };
-
-    LeaveCriticalSection(&AnimalListCrit);
+    for (const auto& animal : Animals) {
+        total += animal->InteractiveLevel;
+    }
 
     return total;
 }
 
-Cage Cage::GetRandom() {
-    const int value = rand() % MAX_CAGES;
-    int animalCount = 0;
+// Adds an animal to the cage list
+void Cage::AddAnimal(wistd::unique_ptr<Animal> animal) {
+    auto guard = m_cs.lock();
 
-    if (IS_LIST_EMPTY(animalListHead)) { return NULL; }
-
-    NodeEntry* temp = animalListHead->Blink;
-
-    while (temp != animalListHead) {
-        ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-        if (_tcscmp(cages[value]->Name, tempAnimal->CageName) == 0) {
-            animalCount++;
-        }
-
-        temp = temp->Blink;
-    }
-
-    return animalCount > 0 ? cages[value] : NULL;
+    Animals.push_back(move(animal));
 }
 
-void Cage::AddAnimal() {
-    AnimalList* newListItem = static_cast<AnimalList*>(HeapAlloc(
-        GetProcessHeap(),
-        HEAP_ZERO_MEMORY,
-        sizeof(AnimalList)
-    ));
+// Completely removes an animal from the cage and zoo
+void Cage::RemoveAnimal(wistd::unique_ptr<Animal> animal) {
+    /*auto guard = m_cs.lock();
 
-    if (animal == NULL || newListItem == NULL) {
-        cwl::WriteLine(_T("%cFailed to allocate memory for new list: %d\n"), RED, GetLastError());
-        return;
-    }
-
-    EnterCriticalSection(&AnimalListCrit);
-
-    NodeEntry* temp = animalListHead->Flink;
-
-    newListItem->LinkedList.Flink = temp;
-    newListItem->LinkedList.Blink = animalListHead;
-    temp->Blink = &newListItem->LinkedList;
-    animalListHead->Flink = &newListItem->LinkedList;
-
-    newListItem->ZooAnimal = *animal;
-
-    LeaveCriticalSection(&AnimalListCrit);
+    Animals.erase(
+        std::remove_if(
+            Animals.begin(),
+            Animals.end(),
+            [&](wistd::unique_ptr<Animal> cagedAnimal) { return cagedAnimal->UniqueName == animal->UniqueName; }
+        ),
+        Animals.end()
+    );*/
 }
 
-void Cage::GetAnimalsHealth() {
-    if (IS_LIST_EMPTY(animalListHead)) {
-        cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return;
-    }
-
-    EnterCriticalSection(&AnimalListCrit);
-
-    NodeEntry* temp = animalListHead->Blink;
-
-    while (temp != animalListHead) {
-        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-        cwl::WriteLine(
-            _T("[%c%s%r] %s the %s "),
-            SKYBLUE,
-            tempAnimal.CageName,
-            tempAnimal.UniqueName,
-            AnimalTypeToString(tempAnimal.AnimalType)
-        );
-
-        if (tempAnimal.HealthLevel >= 6) {
-            cwl::WriteLine(_T("(%c%d%r)\n"), LIME, tempAnimal.HealthLevel);
-        } else if (tempAnimal.HealthLevel >= 3) {
-            cwl::WriteLine(_T("(%c%d%r)\n"), YELLOW, tempAnimal.HealthLevel);
-        } else {
-            cwl::WriteLine(_T("(%c%d%r)\n"), PINK, tempAnimal.HealthLevel);
-        }
-
-        temp = temp->Blink;
-    };
-
-    LeaveCriticalSection(&AnimalListCrit);
+void Cage::WaitForThreads() const noexcept {
+    /*WaitForSingleObject(m_animalHealthThread.get(), INFINITE);
+    WaitForSingleObject(m_animalInteractivityThread.get(), INFINITE);*/
 }
 
-void Cage::GetAnimalsInteractivity() {
-    if (IS_LIST_EMPTY(animalListHead)) {
-        cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return;
-    }
-
-    EnterCriticalSection(&AnimalListCrit);
-
-    NodeEntry* temp = animalListHead->Blink;
-
-    while (temp != animalListHead) {
-        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-        cwl::WriteLine(
-            _T("[%c%s%r] %s the %s "),
-            SKYBLUE,
-            tempAnimal.CageName,
-            tempAnimal.UniqueName,
-            AnimalTypeToString(tempAnimal.AnimalType)
-        );
-
-        if (tempAnimal.InteractiveLevel >= 6) {
-            cwl::WriteLine(_T("(%c%d%r)\n"), LIME, tempAnimal.InteractiveLevel);
-        } else if (tempAnimal.InteractiveLevel >= 3) {
-            cwl::WriteLine(_T("(%c%d%r)\n"), YELLOW, tempAnimal.InteractiveLevel);
-        } else {
-            cwl::WriteLine(_T("(%c%d%r)\n"), PINK, tempAnimal.InteractiveLevel);
-        }
-
-        temp = temp->Blink;
-    };
-
-    LeaveCriticalSection(&AnimalListCrit);
-}
-
-void Cage::RemoveAnimal() {
-    if (IS_LIST_EMPTY(animalListHead)) {
-        cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return;
-    }
-
-    CRITICAL_SECTION animalRemovalCrit;
-
-    if (!InitializeCriticalSectionAndSpinCount(&animalRemovalCrit, 4000)) {
-        cwl::WriteLine(_T("Failed to initialize CRITICAL_SECTION: %d\n"), GetLastError());
-        return;
-    }
-
-    EnterCriticalSection(&animalRemovalCrit);
-
-    AnimalList* tempAnimal = CONTAINING_RECORD(animal, AnimalList, ZooAnimal);
-
-    tempAnimal->LinkedList.Flink->Blink = tempAnimal->LinkedList.Blink;
-    tempAnimal->LinkedList.Blink->Flink = tempAnimal->LinkedList.Flink;
-
-    AddRandomName(animal->UniqueName);
-
-    HeapFree(GetProcessHeap(), 0, tempAnimal);
-
-    LeaveCriticalSection(&animalRemovalCrit);
-
-    DeleteCriticalSection(&animalRemovalCrit);
-}
-
-DWORD WINAPI Cage::AnimalHealth(LPVOID lpParam) {
-    Cage* cage = static_cast<Cage*>(lpParam);
+DWORD WINAPI Cage::AnimalHealth(LPVOID) {
+    /*Cage* cage = static_cast<Cage*>(lpParam);
     HANDLE events[3];
 
     srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
@@ -323,11 +147,13 @@ DWORD WINAPI Cage::AnimalHealth(LPVOID lpParam) {
         };
 
         LeaveCriticalSection(&AnimalListCrit);
-    } while (TRUE);
+    } while (TRUE);*/
+
+    return 0;
 }
 
-DWORD WINAPI Cage::AnimalInteractivity(LPVOID lpParam) {
-    lpParam = NULL;
+DWORD WINAPI Cage::AnimalInteractivity(LPVOID) {
+    /*lpParam = NULL;
 
     HANDLE events[2];
 
@@ -365,11 +191,13 @@ DWORD WINAPI Cage::AnimalInteractivity(LPVOID lpParam) {
         };
 
         LeaveCriticalSection(&AnimalListCrit);
-    } while (TRUE);
+    } while (TRUE);*/
+
+    return 0;
 }
 
-DWORD __stdcall Cage::SignificantEventTimer(LPVOID) {
-    srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
+DWORD WINAPI Cage::SignificantEventTimer(LPVOID) {
+    /*srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
 
     HANDLE events[2];
 
@@ -391,7 +219,7 @@ DWORD __stdcall Cage::SignificantEventTimer(LPVOID) {
         Cage* randomCage;
 
         do {
-            randomCage = GetRandomCage();
+            randomCage = GetRandomCageNumber();
         } while (randomCage == NULL);
 
         NodeEntry* temp = animalListHead->Blink;
@@ -461,5 +289,7 @@ DWORD __stdcall Cage::SignificantEventTimer(LPVOID) {
         }
 
         EndTurnActions();
-    } while (TRUE);
+    } while (TRUE);*/
+
+    return 0;
 }

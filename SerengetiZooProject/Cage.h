@@ -8,30 +8,28 @@
 class Cage {
 public:
     LPCTSTR Name;
-    std::vector<Animal> Animals;
+    std::vector<wistd::unique_ptr<Animal>> Animals;
 
-    explicit Cage(LPCTSTR name);
+    explicit Cage(const TCHAR* name);
 
     bool IsCageEmpty();
 
     DWORD GetAverageInteractiveLevel();
     DWORD GetTotalInteractiveLevel();
 
-    Cage GetRandom();
+    void AddAnimal(wistd::unique_ptr<Animal> animal);
+    void RemoveAnimal(wistd::unique_ptr<Animal> animal);
 
-    void AddAnimal();
-    void GetAnimals();
-    void GetAnimalsHealth();
-    void GetAnimalsInteractivity();
-    void RemoveAnimal();
-
+    void WaitForThreads() const noexcept;
 private:
-    wil::unique_event_failfast m_feedEvent;
-    wil::unique_handle m_feedEventTimer;
-    wil::unique_handle m_animalHealthThread;
-    wil::unique_handle m_animalInteractivityThread;
+    wil::critical_section m_cs;
 
-    DWORD WINAPI AnimalHealth(LPVOID lpParam);
-    DWORD WINAPI AnimalInteractivity(LPVOID lpParam);
+    wil::unique_event_failfast m_feedEvent;
+    //wil::unique_handle m_feedEventTimer;
+    //wil::unique_handle m_animalHealthThread;
+    //wil::unique_handle m_animalInteractivityThread;
+
+    DWORD WINAPI AnimalHealth(LPVOID);
+    DWORD WINAPI AnimalInteractivity(LPVOID);
     DWORD WINAPI SignificantEventTimer(LPVOID);
 };

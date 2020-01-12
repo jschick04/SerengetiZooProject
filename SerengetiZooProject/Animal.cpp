@@ -1,6 +1,10 @@
 #include "Animal.h"
+#include <ConsoleColors.h>
+#include <cwl.h>
+#include <tchar.h>
+#include "GameManager.h"
 
-Animal::Animal(::AnimalType animalType, LPCTSTR uniqueName, LPCTSTR cageName) {
+Animal::Animal(const ::AnimalType animalType, const TCHAR* uniqueName, const TCHAR* cageName) {
     AnimalType = animalType;
     UniqueName = uniqueName;
     CageName = cageName;
@@ -18,108 +22,95 @@ int Animal::GetRandomInteractiveLevel() {
 }
 
 void Animal::AddHealthLevel() {
-    const DWORD healthChange = rand() % (FEED_LEVEL_MAX - 1) + FEED_LEVEL_MIN;
-    const DWORD newValue = animal->HealthLevel + healthChange;
+    const DWORD healthChange = rand() % (GameManager::FeedLevelMax - 1) + GameManager::FeedLevelMin;
+    const auto newValue = HealthLevel + healthChange;
 
-    if (animal->HealthLevel >= 10) {
-        cwl::WriteLine(
-            _T("%c%s the %s is already full...\n"),
-            LIME,
-            animal->UniqueName,
-            AnimalTypeToString(animal->AnimalType)
-        );
+    if (HealthLevel >= 10) {
+        cwl::WriteLine(_T("%c%s the %s is already full...\n"), LIME, UniqueName, AnimalType);
         return;
     }
 
     if (newValue >= 10) {
-        animal->HealthLevel = 10;
+        HealthLevel = 10;
     } else {
-        animal->HealthLevel = newValue;
+        HealthLevel = newValue;
     }
 
-    animal->HealthLevelChange = TRUE;
-    animal->InteractivityPrompted = TRUE;
+    HealthLevelChange = TRUE;
+    InteractivityPrompted = TRUE;
 
-    cwl::WriteLine(
-        _T("%c%s the %s has been fed\n"),
-        LIME,
-        animal->UniqueName,
-        AnimalTypeToString(animal->AnimalType)
-    );
+    cwl::WriteLine(_T("%c%s the %s has been fed\n"), LIME, UniqueName, AnimalType);
 }
 
 void Animal::RemoveHealthLevel() {
-    const DWORD newValue = animal->HealthLevel - HUNGER_LEVEL;
+    const auto newValue = HealthLevel - GameManager::HungerLevel;
 
     if (newValue <= 0) {
-        animal->HealthLevel = 0;
+        HealthLevel = 0;
     } else {
-        animal->HealthLevel = newValue;
+        HealthLevel = newValue;
     }
 
-    animal->HealthLevelChange = TRUE;
-    animal->InteractivityPrompted = FALSE;
+    HealthLevelChange = TRUE;
+    InteractivityPrompted = FALSE;
 
-    if (animal->HealthLevel < 5) {
-        cwl::WriteLine(
-            _T("%c%s the %s is hungry\n"),
-            YELLOW,
-            animal->UniqueName,
-            AnimalTypeToString(animal->AnimalType)
-        );
+    if (HealthLevel < 5) {
+        cwl::WriteLine(_T("%c%s the %s is hungry\n"), YELLOW, UniqueName, AnimalType);
     }
 }
 
 void Animal::SetHealthEvent() {
-    if (animal->HealthLevel < 1) {
+    if (HealthLevel < 1) {
         cwl::WriteLine(
             _T("\n%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n\n"),
             PINK,
-            animal->UniqueName,
-            AnimalTypeToString(animal->AnimalType)
+            UniqueName,
+            AnimalType
         );
 
-        RemoveAnimal(animal);
+        // TODO: Add this back
+        //Cage.RemoveAnimal(this);
 
-        g_Score -= 3;
-    } else if (animal->HealthLevel < 5) {
-        cwl::WriteLine(_T("%s the %s is %csick\n"), animal->UniqueName, AnimalTypeToString(animal->AnimalType), PINK);
+        GameManager::Score -= 3;
+    } else if (HealthLevel < 5) {
+        cwl::WriteLine(_T("%s the %s is %csick\n"), UniqueName, AnimalType, PINK);
     }
 
-    SetEvent(healthEvent);
+    //m_healthEvent.SetEvent();
 }
 
 void Animal::AddInteractiveLevel() {
-    const DWORD interactiveChange = rand() % (FEED_LEVEL_MAX - 1) + FEED_LEVEL_MIN;
-    const DWORD newValue = animal->InteractiveLevel + interactiveChange;
+    const DWORD interactiveChange = rand() % (GameManager::FeedLevelMax - 1) + GameManager::FeedLevelMin;
+    const auto newValue = InteractiveLevel + interactiveChange;
 
-    if (animal->InteractiveLevel >= 10) { return; }
+    if (InteractiveLevel >= 10) { return; }
 
     if (newValue >= 10) {
-        animal->InteractiveLevel = 10;
+        InteractiveLevel = 10;
     } else {
-        animal->InteractiveLevel = newValue;
+        InteractiveLevel = newValue;
     }
 }
 
 void Animal::RemoveInteractiveLevel() {
-    const DWORD newValue = animal->InteractiveLevel - HUNGER_LEVEL;
+    const auto newValue = InteractiveLevel - GameManager::HungerLevel;
 
-    if (animal->InteractiveLevel <= 0) { return; }
+    if (InteractiveLevel <= 0) { return; }
 
     if (newValue <= 0) {
-        animal->InteractiveLevel = 0;
+        InteractiveLevel = 0;
     } else {
-        animal->InteractiveLevel = newValue;
+        InteractiveLevel = newValue;
     }
 }
 
 void Animal::ResetFeedTime() {
-    if (SetWaitableTimer(eventTimer, &feedDueTime, 0, NULL, NULL, FALSE)) {
+    // TODO: Implement back
+    /*if (SetWaitableTimer(eventTimer, &feedDueTime, 0, NULL, NULL, FALSE)) {
         return TRUE;
     }
 
     cwl::WriteLine(_T("Failed to set Feed Event Timer: %d\n"), GetLastError());
 
-    return FALSE;
+    return FALSE;*/
 }

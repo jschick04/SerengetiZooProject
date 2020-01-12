@@ -165,7 +165,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="SignificantEvent.cpp" />
-    <ClCompile Include="Visitor_OLD.cpp" />
+    <ClCompile Include="Visitor.cpp" />
     <ClCompile Include="Zoo.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -175,7 +175,7 @@
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="SignificantEvent.h" />
-    <ClInclude Include="Visitor_OLD.h" />
+    <ClInclude Include="Visitor.h" />
     <ClInclude Include="Zoo.h" />
   </ItemGroup>
   <ItemGroup>

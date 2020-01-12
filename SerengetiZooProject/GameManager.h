@@ -1,18 +1,21 @@
 #pragma once
+#include <wil/resource.h>
 
 constexpr auto TIMER_SECONDS = 10000000;
 
 class GameManager {
 public:
-    static int SignificantEventMinutes = 2;
-    static int FeedEventMinutes = 1;
+    static int SignificantEventMinutes;
+    static int FeedEventMinutes;
 
-    static int FeedLevelMax = 4;
-    static int FeedLevelMin = 2;
+    static int FeedLevelMax;
+    static int FeedLevelMin;
 
-    static int HungerLevel = 1;
+    static int HungerLevel;
 
-    static int MaxCages = 6;
+    static int MaxCages;
 
-    static int Score = 0;
+    static int Score;
+
+    static wil::unique_event appClose;
 };

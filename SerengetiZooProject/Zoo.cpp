@@ -2,17 +2,29 @@
 #include <ConsoleColors.h>
 #include <cwl.h>
 #include <tchar.h>
+#include "GameManager.h"
+#include "Helpers.h"
 #include "Menu.h"
+#include <string>
+
+bool Zoo::IsOpen = false;
 
 Zoo::Zoo(const int numberOfCages) {
-    Score = 0;
+    GameManager::Score = 0;
 
     for (int i = 1; i < numberOfCages + 1; i++) {
-        auto cageName = wil::str_concat<LPCTSTR>(_T("Cage"), i);
-        Cages.push_back(wil::make_unique_failfast<Cage>(cageName));
+        _tstringstream cageName;
+        cageName << _T("Cage") << i + 1;
+
+        auto cage = wil::make_unique_failfast<Cage>(cageName.str().c_str());
+        auto animal = wil::make_unique_failfast<Animal>(AnimalType(i), Helpers::GetRandomName(), cage->Name);
+
+        cage->AddAnimal(move(animal));
+        Cages.push_back(move(cage));
     }
 }
 
+// Closes the zoo for the day and tells visitors to leave
 void Zoo::EndTurn() {
     cwl::WriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
 
@@ -32,29 +44,94 @@ void Zoo::EndTurn() {
     Menu::PrintOptions();
 }
 
+// Prints all animals
 void Zoo::GetAllAnimals() {
-    if (IS_LIST_EMPTY(animalListHead)) {
-        cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
-        return;
+    auto lock = m_cs.lock();
+
+    for (auto const& cage : Cages) {
+        for (auto const& animal : cage->Animals) {
+            cwl::WriteLine(
+                _T("[%c%s%r] %s the %s\n"),
+                SKYBLUE,
+                animal->CageName,
+                animal->UniqueName,
+                animal->AnimalType
+            );
+        }
+    }
+}
+
+// Prints all animals health values
+void Zoo::GetAllAnimalsHealth() {
+    auto lock = m_cs.lock();
+
+    for (auto const& cage : Cages) {
+        if (cage->IsCageEmpty()) {
+            cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, cage->Name);
+            continue;
+        }
+
+        for (auto const& animal : cage->Animals) {
+            cwl::WriteLine(
+                _T("[%c%s%r] %s the %s\n"),
+                SKYBLUE,
+                animal->CageName,
+                animal->UniqueName,
+                animal->AnimalType
+            );
+
+            if (animal->HealthLevel >= 6) {
+                cwl::WriteLine(_T("(%c%d%r)\n"), LIME, animal->HealthLevel);
+            } else if (animal->HealthLevel >= 3) {
+                cwl::WriteLine(_T("(%c%d%r)\n"), YELLOW, animal->HealthLevel);
+            } else {
+                cwl::WriteLine(_T("(%c%d%r)\n"), PINK, animal->HealthLevel);
+            }
+        }
+    }
+}
+
+// Prints all animals interactivity values
+void Zoo::GetAllAnimalsInteractivity() {
+    auto lock = m_cs.lock();
+
+    for (auto const& cage : Cages) {
+        if (cage->IsCageEmpty()) {
+            cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, cage->Name);
+            continue;
+        }
+
+        for (auto const& animal : cage->Animals) {
+            cwl::WriteLine(
+                _T("[%c%s%r] %s the %s "),
+                SKYBLUE,
+                animal->CageName,
+                animal->UniqueName,
+                animal->AnimalType
+            );
+
+            if (animal->InteractiveLevel >= 6) {
+                cwl::WriteLine(_T("(%c%d%r)\n"), LIME, animal->InteractiveLevel);
+            } else if (animal->InteractiveLevel >= 3) {
+                cwl::WriteLine(_T("(%c%d%r)\n"), YELLOW, animal->InteractiveLevel);
+            } else {
+                cwl::WriteLine(_T("(%c%d%r)\n"), PINK, animal->InteractiveLevel);
+            }
+        }
+    }
+}
+
+// Returns a random cage object
+Cage* Zoo::GetRandomCageNumber() {
+    std::vector<Cage*> availableCages;
+
+    auto guard = m_cs.lock();
+
+    for (auto const& cage : Cages) {
+        if (!cage->IsCageEmpty()) {
+            availableCages.push_back(cage.get());
+        }
     }
 
-    EnterCriticalSection(&AnimalListCrit);
-
-    NodeEntry* temp = animalListHead->Blink;
-
-    while (temp != animalListHead) {
-        const ZooAnimal tempAnimal = CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-        cwl::WriteLine(
-            _T("[%c%s%r] %s the %s\n"),
-            SKYBLUE,
-            tempAnimal.CageName,
-            tempAnimal.UniqueName,
-            AnimalTypeToString(tempAnimal.AnimalType)
-        );
-
-        temp = temp->Blink;
-    };
-
-    LeaveCriticalSection(&AnimalListCrit);
+    return availableCages.empty() ? nullptr : availableCages.at(rand() % availableCages.size());
 }

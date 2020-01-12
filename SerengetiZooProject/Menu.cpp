@@ -2,6 +2,7 @@
 #include <ConsoleColors.h>
 #include <cwl.h>
 #include <tchar.h>
+#include "GameManager.h"
 #include "Zoo.h"
 
 void Menu::PrintCurrentZooStatus() {
@@ -18,7 +19,7 @@ void Menu::PrintCurrentZooStatus() {
 }
 
 void Menu::PrintOptions() {
-    /*cwl::WriteLine(_T("%cPlease select your action\n"), LIME);
+    cwl::WriteLine(_T("%cPlease select your action\n"), LIME);
     cwl::WriteLine(_T("%c-------------------------\n"), YELLOW);
     cwl::WriteLine(_T("%c1%r - Feed Animals\n"), LIME);
     cwl::WriteLine(_T("%c2%r - Check Animal Interactivity Levels\n"), LIME);
@@ -26,9 +27,9 @@ void Menu::PrintOptions() {
     cwl::WriteLine(_T("%c4%r - Check Visitors Happiness Level\n"), LIME);
     cwl::WriteLine(_T("%c5%r - Close zoo for the day\n"), LIME);
     cwl::WriteLine(_T("%c0%r - Exit\n"), PINK);
-    cwl::WriteLine(_T("%c-------------------------\n"), YELLOW);*/
+    cwl::WriteLine(_T("%c-------------------------\n"), YELLOW);
 
-    cwl::WriteLine(
+    /*cwl::WriteLine(
         _T(
             "%cPlease select your action\n%c-------------------------\n%c1%r - Feed Animals\n%c2%r - Check Animal Interactivity Levels\n%c3%r - Show Case Animal\n%c4%r - Check Visitors Happiness Level\n%c5%r - Close zoo for the day\n%c0%r - Exit\n%c-------------------------\n"
         ),
@@ -41,11 +42,11 @@ void Menu::PrintOptions() {
         LIME,
         PINK,
         YELLOW
-    );
+    );*/
 }
 
 void Menu::PrintScore() {
     cwl::WriteLine(_T("\n%c-------------------------\n"), YELLOW);
-    cwl::WriteLine(_T("%c Score = %d\n"), YELLOW, Zoo::Score);
+    cwl::WriteLine(_T("%c Score = %d\n"), YELLOW, GameManager::Score);
     cwl::WriteLine(_T("%c-------------------------\n"), YELLOW);
 }
