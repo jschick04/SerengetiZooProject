@@ -16,6 +16,7 @@ class Cage {
 public:
     LPCTSTR Name;
     std::vector<wistd::unique_ptr<Animal>> Animals;
+    wil::unique_event FeedEvent;
     wil::unique_event HealthEvent;
 
     explicit Cage(int number);
@@ -32,7 +33,6 @@ public:
 private:
     wil::critical_section m_cs;
 
-    wil::unique_event m_feedEvent;
     wil::unique_handle m_feedEventTimer;
     wil::unique_handle m_animalHealthThread;
     wil::unique_handle m_animalInteractivityThread;

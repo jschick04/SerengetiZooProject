@@ -9,8 +9,8 @@
 Cage::Cage(const int number) {
     Name = GetCageName(number);
 
-    m_feedEvent.create(wil::EventOptions::Signaled);
-    THROW_LAST_ERROR_IF(!m_feedEvent.is_valid());
+    FeedEvent.create(wil::EventOptions::Signaled);
+    THROW_LAST_ERROR_IF(!FeedEvent.is_valid());
 
     m_feedEventTimer.reset(CreateWaitableTimer(nullptr, false, nullptr));
     THROW_LAST_ERROR_IF_NULL(m_feedEventTimer);
@@ -19,7 +19,7 @@ Cage::Cage(const int number) {
     m_animalInteractivityThread.reset(CreateThread(nullptr, 0, AnimalInteractivity, nullptr, 0, nullptr));
 
     HealthEvent.create(wil::EventOptions::Signaled);
-    THROW_LAST_ERROR_IF(!m_feedEvent.is_valid());
+    THROW_LAST_ERROR_IF(!HealthEvent.is_valid());
 
     //if (!ResetFeedTimer(feedEventTimer)) {
     //    return NULL;

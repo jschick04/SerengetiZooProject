@@ -22,6 +22,8 @@ int _tmain() {
         int selectedMenuNumber;
         int selectedCageNumber;
 
+        zoo->IsOpen = true;
+
         Menu::PrintCurrentZooStatus();
         Menu::PrintOptions();
 
@@ -42,11 +44,10 @@ int _tmain() {
                 cwl::WriteLine(_T("\nWhich cage number would you like to feed?\n"));
                 _fgetts(buffer, _countof(buffer), stdin);
                 if (_stscanf_s(buffer, _T("%d"), &selectedCageNumber) == 1) {
-                    if (selectedCageNumber < 1 || selectedCageNumber > zoo->Cages.size()) {
+                    if (selectedCageNumber < 1 || selectedCageNumber > static_cast<int>(zoo->Cages.size())) {
                         cwl::WriteLine(_T("Invalid Selection...\n"));
                     } else {
-                        // TODO: Reimplement Feed Event
-                        //SetEvent(zoo->Cages[selectedCageNumber - 1]->FeedEvent);
+                        zoo->Cages.at(selectedCageNumber--)->FeedEvent.SetEvent();
                     }
                 } else {
                     cwl::WriteLine(_T("Invalid Selection...\n"));
@@ -134,25 +135,8 @@ int _tmain() {
 //
 //// Move into Zoo constructor
 //void InitializeZoo() {
-//    g_Score = 0;
-//
-//    for (int i = 0; i != _countof(cages); ++i) {
-//        auto cageName = static_cast<LPTSTR>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10));
-//        LPCTSTR prepend = _T("Cage");
-//
-//        if (cageName == NULL) {
-//            cwl::WriteLine(_T("Failed to generate cage name: %d"), GetLastError());
-//            continue;
-//        }
-//
-//        StringCchPrintf(cageName, 10, _T("%s%d"), prepend, i + 1);
-//
-//        cages[i] = NewCage(cageName);
-//
-//        NewAnimal(AnimalType(i), GetRandomName(), cageName);
-//    }
-//
-//    IsOpen = TRUE;
+//    
+
 //
 //    //BareBones Entry to test the random visitor entering simulation test.
 //    HANDLE hvisitorcreationthread = NULL;
@@ -168,53 +152,4 @@ int _tmain() {
 //        cwl::WriteLine(_T("Failed to create visitor creation thread"), GetLastError());
 //        ExitProcess(1);
 //    }
-//}
-//
-//// Move Zoo event timers into Zoo
-//void InitializeTimers() {
-//    significantEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
-//    zooOpenEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
-//
-//    if (NULL == zooOpenEventTimer) {
-//        cwl::WriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
-//        ExitProcess(1);
-//    }
-//
-//    if (significantEventTimer == NULL) {
-//        cwl::WriteLine(_T("Failed to create Significant Event Timer: %d\n"), GetLastError());
-//        ExitProcess(1);
-//    }
-//
-//    significantEventThread = CreateThread(NULL, 0, SignificantEventTimer, NULL, 0, NULL);
-//    zooOpenEventThread = CreateThread(NULL, 0, mTimer, NULL, 0, NULL);
-//
-//    if (significantEventThread == NULL) {
-//        cwl::WriteLine(_T("Failed to create Event Timer Threads: %d\n"), GetLastError());
-//        ExitProcess(1);
-//    }
-//
-//    if (zooOpenEventThread == NULL) {
-//        cwl::WriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
-//        ExitProcess(1);
-//    }
-//
-//    seDueTime.QuadPart = -((SIGNIFICANT_EVENT_MIN * 60) * TIMER_SECONDS);
-//    feedDueTime.QuadPart = -((FEED_EVENT_MIN * 60) * TIMER_SECONDS);
-//    liDueTime.QuadPart = -(30 * TIMER_SECONDS);
-//
-//    if (!SetWaitableTimer(significantEventTimer, &seDueTime, 0, NULL, NULL, FALSE)) {
-//        cwl::WriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
-//    }
-//}
-//
-//// Move into Zoo
-//DWORD ResetZooClosedTimer() {
-//    liDueTime.QuadPart = -(30 * TIMER_SECONDS);
-//
-//    if (!SetWaitableTimer(zooOpenEventTimer, &liDueTime, 0, NULL, NULL, 0)) {
-//        cwl::WriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
-//        return 2;
-//    }
-//
-//    return 0;
 //}
