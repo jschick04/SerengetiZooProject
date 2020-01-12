@@ -4,13 +4,20 @@
 #include <wil/resource.h>
 #include <Windows.h>
 #include "Animal.h"
+#include <sstream>
+
+#ifdef UNICODE
+typedef std::wostringstream _tstringstream;
+#else
+typedef std::ostringstream -tstringstream;
+#endif
 
 class Cage {
 public:
     LPCTSTR Name;
     std::vector<wistd::unique_ptr<Animal>> Animals;
 
-    explicit Cage(const TCHAR* name);
+    explicit Cage(const int number);
 
     bool IsCageEmpty();
 
@@ -28,6 +35,8 @@ private:
     //wil::unique_handle m_feedEventTimer;
     //wil::unique_handle m_animalHealthThread;
     //wil::unique_handle m_animalInteractivityThread;
+
+    static LPCTSTR GetCageName(int number);
 
     DWORD WINAPI AnimalHealth(LPVOID);
     DWORD WINAPI AnimalInteractivity(LPVOID);

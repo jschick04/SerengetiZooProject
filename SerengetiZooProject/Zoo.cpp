@@ -1,7 +1,6 @@
 #include "Zoo.h"
 #include <ConsoleColors.h>
 #include <cwl.h>
-#include <string>
 #include <tchar.h>
 #include "GameManager.h"
 #include "Helpers.h"
@@ -12,11 +11,8 @@ bool Zoo::IsOpen = false;
 Zoo::Zoo(const int numberOfCages) {
     GameManager::Score = 0;
 
-    for (int i = 1; i < numberOfCages + 1; i++) {
-        _tstringstream cageName;
-        cageName << _T("Cage") << i + 1;
-
-        auto cage = wil::make_unique_failfast<Cage>(cageName.str().c_str());
+    for (int i = 1; i <= numberOfCages; i++) {
+        auto cage = wil::make_unique_failfast<Cage>(i);
         auto animal = wil::make_unique_failfast<Animal>(AnimalType(i), Helpers::GetRandomName(), cage->Name);
 
         cage->AddAnimal(move(animal));

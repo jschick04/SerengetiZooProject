@@ -2,10 +2,12 @@
 #include <algorithm>
 #include <ConsoleColors.h>
 #include <cwl.h>
+#include <string>
 #include <tchar.h>
+#include "Helpers.h"
 
-Cage::Cage(const TCHAR* name) {
-    Name = name;
+Cage::Cage(const int number) {
+    Name = GetCageName(number);
 
     m_feedEvent.create(wil::EventOptions::Signaled);
     THROW_LAST_ERROR_IF(!m_feedEvent.is_valid());
@@ -98,6 +100,41 @@ void Cage::RemoveAnimal(wistd::unique_ptr<Animal> animal) {
 void Cage::WaitForThreads() const noexcept {
     /*WaitForSingleObject(m_animalHealthThread.get(), INFINITE);
     WaitForSingleObject(m_animalInteractivityThread.get(), INFINITE);*/
+}
+
+LPCTSTR Cage::GetCageName(const int number) {
+    /*_tstringstream cageName;
+    cageName << _T("Cage") << number;
+
+    return cageName.str().c_str();*/
+    switch (number) {
+        case 1:
+            return _T("Cage1");
+        case 2:
+            return _T("Cage2");
+        case 3:
+            return _T("Cage3");
+        case 4:
+            return _T("Cage4");
+        case 5:
+            return _T("Cage5");
+        case 6:
+            return _T("Cage6");
+        case 7:
+            return _T("Cage7");
+        case 8:
+            return _T("Cage8");
+        case 9:
+            return _T("Cage9");
+        case 10:
+            return _T("Cage10");
+        case 11:
+            return _T("Cage11");
+        case 12:
+            return _T("Cage12");
+        default :
+            return _T("Invalid Cage");
+    }
 }
 
 DWORD WINAPI Cage::AnimalHealth(LPVOID) {

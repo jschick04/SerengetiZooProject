@@ -23,34 +23,34 @@ LPCTSTR Helpers::GetRandomName() {
         selectedName = m_uniqueNames[index];
     } while (selectedName == nullptr);
 
-    m_uniqueNames[index] =  nullptr;
+    m_uniqueNames[index] = nullptr;
 
     return selectedName;
 }
 
 LPCTSTR Helpers::AnimalTypeToString(const AnimalType type) {
     switch (type) {
-        case AnimalType::Antelope:
+        case AnimalType::Antelope :
             return _T("Antelope");
-        case AnimalType::Cheetah:
+        case AnimalType::Cheetah :
             return _T("Cheetah");
-        case AnimalType::Giraffe:
+        case AnimalType::Giraffe :
             return _T("Giraffe");
-        case AnimalType::Hyaena:
+        case AnimalType::Hyaena :
             return _T("Hyaena");
-        case AnimalType::Hippo:
+        case AnimalType::Hippo :
             return _T("Hippo");
-        case AnimalType::Monkey:
+        case AnimalType::Monkey :
             return _T("Monkey");
-        case AnimalType::Mongoose:
+        case AnimalType::Mongoose :
             return _T("Mongoose");
-        case AnimalType::Tiger:
+        case AnimalType::Tiger :
             return _T("Tiger");
-        case AnimalType::WildeBeast:
+        case AnimalType::WildeBeast :
             return _T("WildeBeast");
-        case AnimalType::Zebra:
+        case AnimalType::Zebra :
             return _T("Zebra");
-        default:
+        default :
             return _T("Invalid Animal");
     }
 }

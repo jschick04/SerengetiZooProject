@@ -1,15 +1,8 @@
 #pragma once
 
-#include <sstream>
 #include <vector>
 #include <wil/resource.h>
 #include "Cage.h"
-
-#ifdef UNICODE
-typedef std::wostringstream _tstringstream;
-#else
-typedef std::ostringstream tstringstream;
-#endif
 
 class Zoo {
 public:
