@@ -28,6 +28,33 @@ LPCTSTR Helpers::GetRandomName() {
     return selectedName;
 }
 
+LPCTSTR Helpers::AnimalTypeToString(const AnimalType type) {
+    switch (type) {
+        case AnimalType::Antelope:
+            return _T("Antelope");
+        case AnimalType::Cheetah:
+            return _T("Cheetah");
+        case AnimalType::Giraffe:
+            return _T("Giraffe");
+        case AnimalType::Hyaena:
+            return _T("Hyaena");
+        case AnimalType::Hippo:
+            return _T("Hippo");
+        case AnimalType::Monkey:
+            return _T("Monkey");
+        case AnimalType::Mongoose:
+            return _T("Mongoose");
+        case AnimalType::Tiger:
+            return _T("Tiger");
+        case AnimalType::WildeBeast:
+            return _T("WildeBeast");
+        case AnimalType::Zebra:
+            return _T("Zebra");
+        default:
+            return _T("Invalid Animal");
+    }
+}
+
 wil::critical_section Helpers::m_cs;
 
 std::array<LPCTSTR, 53> Helpers::m_uniqueNames{

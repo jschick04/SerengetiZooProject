@@ -1,11 +1,11 @@
 #include "Zoo.h"
 #include <ConsoleColors.h>
 #include <cwl.h>
+#include <string>
 #include <tchar.h>
 #include "GameManager.h"
 #include "Helpers.h"
 #include "Menu.h"
-#include <string>
 
 bool Zoo::IsOpen = false;
 
@@ -55,7 +55,7 @@ void Zoo::GetAllAnimals() {
                 SKYBLUE,
                 animal->CageName,
                 animal->UniqueName,
-                animal->AnimalType
+                Helpers::AnimalTypeToString(animal->AnimalType)
             );
         }
     }
@@ -77,7 +77,7 @@ void Zoo::GetAllAnimalsHealth() {
                 SKYBLUE,
                 animal->CageName,
                 animal->UniqueName,
-                animal->AnimalType
+                Helpers::AnimalTypeToString(animal->AnimalType)
             );
 
             if (animal->HealthLevel >= 6) {
@@ -107,7 +107,7 @@ void Zoo::GetAllAnimalsInteractivity() {
                 SKYBLUE,
                 animal->CageName,
                 animal->UniqueName,
-                animal->AnimalType
+                Helpers::AnimalTypeToString(animal->AnimalType)
             );
 
             if (animal->InteractiveLevel >= 6) {
