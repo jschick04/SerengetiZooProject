@@ -18,8 +18,6 @@ public:
     Animal(const ::AnimalType animalType, const TCHAR* uniqueName, const TCHAR* cageName);
 
 private:
-    wil::unique_event_failfast m_healthEvent;
-
     static int GetRandomHealthLevel();
     static int GetRandomInteractiveLevel();
 

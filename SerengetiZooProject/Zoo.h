@@ -14,11 +14,13 @@ public:
 
     static void EndTurn();
 
+    bool IsZooEmpty();
+
     void GetAllAnimals();
     void GetAllAnimalsHealth();
     void GetAllAnimalsInteractivity();
 
-    Cage* GetRandomCageNumber();
+    Cage* GetRandomCage();
 private:
     wil::critical_section m_cs;
 };

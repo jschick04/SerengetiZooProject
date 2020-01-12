@@ -12,35 +12,27 @@ Cage::Cage(const int number) {
     m_feedEvent.create(wil::EventOptions::Signaled);
     THROW_LAST_ERROR_IF(!m_feedEvent.is_valid());
 
-    /*m_feedEventTimer.reset(CreateWaitableTimer(nullptr, false, nullptr));
-    THROW_LAST_ERROR_IF_NULL(m_feedEventTimer);*/
+    m_feedEventTimer.reset(CreateWaitableTimer(nullptr, false, nullptr));
+    THROW_LAST_ERROR_IF_NULL(m_feedEventTimer);
 
-    // TODO: Add Threads back
-    //m_animalHealthThread.reset(CreateThread(nullptr, 0, &AnimalHealth, nullptr, 0, nullptr));
-    //m_animalInteractivityThread.reset(CreateThread(nullptr, 0, &AnimalInteractivity, nullptr, 0, nullptr));
+    m_animalHealthThread.reset(CreateThread(nullptr, 0, AnimalHealth, nullptr, 0, nullptr));
+    m_animalInteractivityThread.reset(CreateThread(nullptr, 0, AnimalInteractivity, nullptr, 0, nullptr));
 
-    // OLD CODE
-    //if (healthEvent == NULL) {
-    //    healthEvent = CreateEvent(NULL, FALSE, FALSE, NULL); // Temporary, will be moved to NewCage
-
-    //    if (healthEvent == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to create event: %d\n"), RED, GetLastError());
-    //        return NULL;
-    //    }
-    //}
+    HealthEvent.create(wil::EventOptions::Signaled);
+    THROW_LAST_ERROR_IF(!m_feedEvent.is_valid());
 
     //if (!ResetFeedTimer(feedEventTimer)) {
     //    return NULL;
     //}
 }
 
-bool Cage::IsCageEmpty() {
+bool Cage::IsCageEmpty() noexcept {
     auto guard = m_cs.lock();
 
     return Animals.empty();
 }
 
-DWORD Cage::GetAverageInteractiveLevel() {
+DWORD Cage::GetAverageInteractiveLevel() noexcept {
     DWORD total = 0;
     DWORD count = 0;
 
@@ -59,7 +51,7 @@ DWORD Cage::GetAverageInteractiveLevel() {
     return total / count;
 }
 
-DWORD Cage::GetTotalInteractiveLevel() {
+DWORD Cage::GetTotalInteractiveLevel() noexcept {
     DWORD total = 0;
 
     auto guard = m_cs.lock();
@@ -85,6 +77,7 @@ void Cage::AddAnimal(wistd::unique_ptr<Animal> animal) {
 
 // Completely removes an animal from the cage and zoo
 void Cage::RemoveAnimal(wistd::unique_ptr<Animal> animal) {
+    // TODO: Implement RemoveAnimal
     /*auto guard = m_cs.lock();
 
     Animals.erase(
@@ -97,9 +90,10 @@ void Cage::RemoveAnimal(wistd::unique_ptr<Animal> animal) {
     );*/
 }
 
+// Waits for Animal Health and Interactivity threads to close
 void Cage::WaitForThreads() const noexcept {
-    /*WaitForSingleObject(m_animalHealthThread.get(), INFINITE);
-    WaitForSingleObject(m_animalInteractivityThread.get(), INFINITE);*/
+    WaitForSingleObject(m_animalHealthThread.get(), INFINITE);
+    WaitForSingleObject(m_animalInteractivityThread.get(), INFINITE);
 }
 
 LPCTSTR Cage::GetCageName(const int number) {
@@ -228,104 +222,6 @@ DWORD WINAPI Cage::AnimalInteractivity(LPVOID) {
         };
 
         LeaveCriticalSection(&AnimalListCrit);
-    } while (TRUE);*/
-
-    return 0;
-}
-
-DWORD WINAPI Cage::SignificantEventTimer(LPVOID) {
-    /*srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
-
-    HANDLE events[2];
-
-    events[0] = significantEventTimer;
-    events[1] = appClose;
-
-    do {
-        if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == 1) {
-            return 0;
-        }
-
-        BOOL action;
-        ZooAnimal* selectedAnimal = NULL;
-
-        if (IS_LIST_EMPTY(animalListHead)) { continue; }
-
-        EnterCriticalSection(&AnimalListCrit);
-
-        Cage* randomCage;
-
-        do {
-            randomCage = GetRandomCageNumber();
-        } while (randomCage == NULL);
-
-        NodeEntry* temp = animalListHead->Blink;
-
-        while (selectedAnimal == NULL) {
-            if (temp == animalListHead) { temp = temp->Blink; }
-
-            ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-            if (_tcscmp(tempAnimal->CageName, randomCage->Name) == 0) {
-                action = rand() % 2;
-
-                if (action) {
-                    selectedAnimal = tempAnimal;
-                    break;
-                }
-            }
-
-            temp = temp->Blink;
-        };
-
-        action = rand() % 2;
-
-        if (selectedAnimal != NULL) {
-            if (action) {
-                cwl::WriteLine(
-                    _T("\n%c%s the %s has escaped!\n\n"),
-                    YELLOW,
-                    selectedAnimal->UniqueName,
-                    AnimalTypeToString(selectedAnimal->AnimalType)
-                );
-                cwl::WriteLine(
-                    _T("You have %clost%r %d points because all visitors left the zoo...\n"),
-                    PINK,
-                    GetVisitorCount(visitorListHead)
-                );
-                g_Score -= GetVisitorCount(visitorListHead);
-
-                RemoveAnimal(selectedAnimal);
-            } else {
-                cwl::WriteLine(
-                    _T("\n%c%s the %s has given birth to a baby %s!\n\n"),
-                    LIME,
-                    selectedAnimal->UniqueName,
-                    AnimalTypeToString(selectedAnimal->AnimalType),
-                    AnimalTypeToString(selectedAnimal->AnimalType)
-                );
-                cwl::WriteLine(
-                    _T("All visitors have left for the day and you %cearned%r %d points...\n"),
-                    LIME,
-                    3 * GetVisitorCount(visitorListHead)
-                );
-                g_Score += 3 * (int)GetVisitorCount(visitorListHead);
-
-                NewAnimal(
-                    selectedAnimal->AnimalType,
-                    GetRandomName(),
-                    selectedAnimal->CageName
-                );
-            }
-        }
-
-        LeaveCriticalSection(&AnimalListCrit);
-
-        if (!SetWaitableTimer(significantEventTimer, &seDueTime, 0, NULL, NULL, FALSE)) {
-            cwl::WriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
-        }
-
-        EndTurnActions();
     } while (TRUE);*/
 
     return 0;

@@ -11,3 +11,5 @@ int GameManager::HungerLevel = 1;
 int GameManager::MaxCages = 6;
 
 int GameManager::Score = 0;
+
+wil::unique_event_failfast GameManager::AppClose(wil::EventOptions::ManualReset);

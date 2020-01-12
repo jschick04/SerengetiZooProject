@@ -37,7 +37,7 @@ int _tmain() {
 
                 zoo->GetAllAnimalsHealth();
 
-                // TODO: Need to add logic again when NO animals in Zoo
+                if (zoo->IsZooEmpty()) { break; }
 
                 cwl::WriteLine(_T("\nWhich cage number would you like to feed?\n"));
                 _fgetts(buffer, _countof(buffer), stdin);
@@ -85,7 +85,8 @@ int _tmain() {
             case 0 :
                 cwl::WriteLine(_T("\n%cYou selected - Quit\n\n"), SKYBLUE);
                 zoo->EndTurn();
-                //appClose.SetEvent();
+
+                GameManager::AppClose.SetEvent();
 
                 for (auto& thread : zoo->Cages) {
                     thread->WaitForThreads();

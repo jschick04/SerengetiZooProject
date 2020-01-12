@@ -24,6 +24,7 @@ Zoo::Zoo(const int numberOfCages) {
 void Zoo::EndTurn() {
     cwl::WriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
 
+    // TODO: Reimplement
     /*ExitZoo();
     int ThreadHandleCount = VisitorTID;
     DWORD ret = WaitForMultipleObjects(ThreadHandleCount, hThreadHandles, TRUE, INFINITE);
@@ -33,11 +34,26 @@ void Zoo::EndTurn() {
     }*/
     IsOpen = false;
 
-    //ResetZooClosedTimer();
+    // TODO: ResetZooClosedTimer();
 
     Menu::PrintScore();
     Menu::PrintCurrentZooStatus();
     Menu::PrintOptions();
+}
+
+// Checks all cages and returns if all cages are empty
+bool Zoo::IsZooEmpty() {
+    int count = 0;
+
+    auto guard = m_cs.lock();
+
+    for (auto const& cage : Cages) {
+        if (cage->IsCageEmpty()) {
+            count++;
+        }
+    }
+
+    return count > 0;
 }
 
 // Prints all animals
@@ -69,7 +85,7 @@ void Zoo::GetAllAnimalsHealth() {
 
         for (auto const& animal : cage->Animals) {
             cwl::WriteLine(
-                _T("[%c%s%r] %s the %s\n"),
+                _T("[%c%s%r] %s the %s "),
                 SKYBLUE,
                 animal->CageName,
                 animal->UniqueName,
@@ -117,8 +133,8 @@ void Zoo::GetAllAnimalsInteractivity() {
     }
 }
 
-// Returns a random cage object
-Cage* Zoo::GetRandomCageNumber() {
+// Returns a random cage pointer
+Cage* Zoo::GetRandomCage() {
     std::vector<Cage*> availableCages;
 
     auto guard = m_cs.lock();

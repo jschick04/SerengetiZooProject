@@ -17,5 +17,5 @@ public:
 
     static int Score;
 
-    static wil::unique_event appClose;
+    static wil::unique_event_failfast AppClose;
 };
