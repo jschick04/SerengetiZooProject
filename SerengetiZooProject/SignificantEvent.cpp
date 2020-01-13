@@ -1,17 +1,27 @@
 #include "SignificantEvent.h"
+#include <ctime>
+#include <cwl.h>
+#include <memory>
+#include <tchar.h>
+#include <wil/resource.h>
 #include "GameManager.h"
 
-SignificantEvent::SignificantEvent() {
-    m_significantEventTimer.reset(CreateWaitableTimer(nullptr, false, nullptr));
-    THROW_LAST_ERROR_IF(!m_significantEventTimer.is_valid());
+SignificantEvent::SignificantEvent(std::vector<Cage*> cages) {
+    m_timer.reset(CreateWaitableTimer(nullptr, false, nullptr));
+    THROW_LAST_ERROR_IF(!m_timer.is_valid());
+    
+    auto params = wil::make_unique_failfast<EventParams>();
 
-    m_significantEventThread.reset(CreateThread(nullptr, 0, SignificantEventTimer, nullptr, 0, nullptr));
+    params->Cages = move(cages);
+    params->Timer = m_timer.get();
+    
+    m_significantEventThread.reset(CreateThread(nullptr, 0, SignificantEventTimer, params.release(), 0, nullptr));
 
     m_dueTime.QuadPart = -((GameManager::SignificantEventMinutes * 60) * TIMER_SECONDS);
     m_feedDueTime.QuadPart = -((GameManager::FeedEventMinutes * 60) * TIMER_SECONDS);
 
     THROW_LAST_ERROR_IF(
-        !SetWaitableTimer(m_significantEventTimer.get(), &m_dueTime, 0, nullptr, nullptr, false)
+        !SetWaitableTimer(m_timer.get(), &m_dueTime, 0, nullptr, nullptr, false)
     );
 }
 
@@ -19,25 +29,26 @@ void SignificantEvent::WaitForThread() const noexcept {
     WaitForSingleObject(m_significantEventThread.get(), INFINITE);
 }
 
-DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID) {
-    /*srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
+DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
+    const auto params = static_cast<EventParams*>(lpParam);
+    const auto param = wil::make_unique_failfast<EventParams>(*params);
+
+    srand(unsigned(time(nullptr)) * GetProcessId(GetCurrentProcess()));
 
     HANDLE events[2];
 
-    events[0] = significantEventTimer;
-    events[1] = appClose;
+    events[0] = params->Timer;
+    events[1] = GameManager::AppClose.get();
 
     do {
-        if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == 1) {
+        if (WaitForMultipleObjects(2, events, false, INFINITE) == 1) {
             return 0;
         }
 
         BOOL action;
-        ZooAnimal* selectedAnimal = NULL;
+        //Animal* selectedAnimal = nullptr;
 
-        if (IS_LIST_EMPTY(animalListHead)) { continue; }
-
-        EnterCriticalSection(&AnimalListCrit);
+        /*EnterCriticalSection(&AnimalListCrit);
 
         Cage* randomCage;
 
@@ -111,8 +122,6 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID) {
             cwl::WriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
         }
 
-        EndTurnActions();
-    } while (TRUE);*/
-
-    return 0;
+        EndTurnActions();*/
+    } while (TRUE);
 }

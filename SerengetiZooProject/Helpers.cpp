@@ -1,6 +1,7 @@
 #include "Helpers.h"
 #include <tchar.h>
 
+// Adds a name back into the unique name list
 void Helpers::AddRandomName(LPCTSTR name) {
     auto guard = m_cs.lock();
 
@@ -12,6 +13,7 @@ void Helpers::AddRandomName(LPCTSTR name) {
     }
 }
 
+// Get a random name from the unique name list
 LPCTSTR Helpers::GetRandomName() {
     auto lock = m_cs.lock();
 
@@ -52,6 +54,23 @@ LPCTSTR Helpers::AnimalTypeToString(const AnimalType type) {
             return _T("Zebra");
         default :
             return _T("Invalid Animal");
+    }
+}
+
+LPCTSTR Helpers::VisitorStatusToString(const VisitorStatus type) {
+    switch (type) {
+        case VisitorStatus::Disappointed :
+            return _T("Disappointed");
+        case VisitorStatus::Happy :
+            return _T("Happy");
+        case VisitorStatus::LeavingAngry :
+            return _T("Leaving Angry");
+        case VisitorStatus::LeavingHappy :
+            return _T("Leaving Happy");
+        case VisitorStatus::RefundDemanded :
+            return _T("Refund Demanded");
+        default :
+            return _T("Invalid Status");
     }
 }
 

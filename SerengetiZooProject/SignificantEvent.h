@@ -1,11 +1,16 @@
 #pragma once
 
-#include <wil/resource.h>
 #include <Windows.h>
+#include "Cage.h"
+
+typedef struct EventParams {
+    std::vector<Cage*> Cages;
+    HANDLE Timer = nullptr;
+} EventParams;
 
 class SignificantEvent {
 public:
-    explicit SignificantEvent();
+    explicit SignificantEvent(std::vector<Cage*> cages);
 
     void WaitForThread() const noexcept;
 private:
@@ -13,7 +18,7 @@ private:
     LARGE_INTEGER m_feedDueTime;
 
     wil::unique_handle m_significantEventThread;
-    wil::unique_handle m_significantEventTimer;
+    wil::unique_handle m_timer;
 
-    static DWORD WINAPI SignificantEventTimer(LPVOID);
+    static DWORD WINAPI SignificantEventTimer(LPVOID lpParam);
 };

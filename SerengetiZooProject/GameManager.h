@@ -18,4 +18,6 @@ public:
     static int Score;
 
     static wil::unique_event_failfast AppClose;
+    static wil::unique_event_failfast OpenZoo;
+    static wil::unique_event_failfast CloseZoo;
 };

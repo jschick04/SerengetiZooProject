@@ -9,7 +9,7 @@
 #ifdef UNICODE
 typedef std::wostringstream _tstringstream;
 #else
-typedef std::ostringstream -tstringstream;
+typedef std::ostringstream _tstringstream;
 #endif
 
 class Cage {
@@ -19,20 +19,21 @@ public:
     wil::unique_event FeedEvent;
     wil::unique_event HealthEvent;
 
+    static wil::critical_section CriticalSection;
+
     explicit Cage(int number);
 
-    bool IsCageEmpty() noexcept;
+    bool IsCageEmpty() const noexcept;
 
-    DWORD GetAverageInteractiveLevel() noexcept;
-    DWORD GetTotalInteractiveLevel() noexcept;
+    DWORD GetAverageInteractiveLevel() const noexcept;
+    DWORD GetTotalInteractiveLevel() const noexcept;
 
     void AddAnimal(wistd::unique_ptr<Animal> animal);
     void RemoveAnimal(wistd::unique_ptr<Animal> animal);
 
     void WaitForThreads() const noexcept;
-private:
-    wil::critical_section m_cs;
 
+private:
     wil::unique_handle m_feedEventTimer;
     wil::unique_handle m_animalHealthThread;
     wil::unique_handle m_animalInteractivityThread;

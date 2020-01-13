@@ -6,6 +6,8 @@
 #include <tchar.h>
 #include "Helpers.h"
 
+wil::critical_section Cage::CriticalSection;
+
 Cage::Cage(const int number) {
     Name = GetCageName(number);
 
@@ -26,17 +28,17 @@ Cage::Cage(const int number) {
     //}
 }
 
-bool Cage::IsCageEmpty() noexcept {
-    auto guard = m_cs.lock();
+bool Cage::IsCageEmpty() const noexcept {
+    auto guard = CriticalSection.lock();
 
     return Animals.empty();
 }
 
-DWORD Cage::GetAverageInteractiveLevel() noexcept {
+DWORD Cage::GetAverageInteractiveLevel() const noexcept {
     DWORD total = 0;
     DWORD count = 0;
 
-    auto guard = m_cs.lock();
+    auto guard = CriticalSection.lock();
 
     if (IsCageEmpty()) {
         cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
@@ -51,10 +53,10 @@ DWORD Cage::GetAverageInteractiveLevel() noexcept {
     return total / count;
 }
 
-DWORD Cage::GetTotalInteractiveLevel() noexcept {
+DWORD Cage::GetTotalInteractiveLevel() const noexcept {
     DWORD total = 0;
 
-    auto guard = m_cs.lock();
+    auto guard = CriticalSection.lock();
 
     if (IsCageEmpty()) {
         cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
@@ -70,24 +72,25 @@ DWORD Cage::GetTotalInteractiveLevel() noexcept {
 
 // Adds an animal to the cage list
 void Cage::AddAnimal(wistd::unique_ptr<Animal> animal) {
-    auto guard = m_cs.lock();
+    auto guard = CriticalSection.lock();
 
     Animals.push_back(move(animal));
 }
 
 // Completely removes an animal from the cage and zoo
 void Cage::RemoveAnimal(wistd::unique_ptr<Animal> animal) {
-    // TODO: Implement RemoveAnimal
-    /*auto guard = m_cs.lock();
+    auto guard = CriticalSection.lock();
+
+    Helpers::AddRandomName(animal->UniqueName);
 
     Animals.erase(
         std::remove_if(
             Animals.begin(),
             Animals.end(),
-            [&](wistd::unique_ptr<Animal> cagedAnimal) { return cagedAnimal->UniqueName == animal->UniqueName; }
+            [&](wistd::unique_ptr<Animal>& cagedAnimal) { return cagedAnimal->UniqueName == animal->UniqueName; }
         ),
         Animals.end()
-    );*/
+    );
 }
 
 // Waits for Animal Health and Interactivity threads to close
@@ -96,6 +99,7 @@ void Cage::WaitForThreads() const noexcept {
     WaitForSingleObject(m_animalInteractivityThread.get(), INFINITE);
 }
 
+// Converts a number to "Cage#" string
 LPCTSTR Cage::GetCageName(const int number) {
     /*_tstringstream cageName;
     cageName << _T("Cage") << number;

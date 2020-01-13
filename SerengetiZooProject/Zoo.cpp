@@ -7,24 +7,37 @@
 #include "Menu.h"
 
 bool Zoo::IsOpen = false;
+LARGE_INTEGER Zoo::m_closedEventTime = {0};
 
 Zoo::Zoo(const int numberOfCages) {
     GameManager::Score = 0;
 
     for (int i = 1; i <= numberOfCages; i++) {
         auto cage = wil::make_unique_failfast<Cage>(i);
+        THROW_LAST_ERROR_IF_NULL(cage);
+
         auto animal = wil::make_unique_failfast<Animal>(AnimalType(i), Helpers::GetRandomName(), cage->Name);
+        THROW_LAST_ERROR_IF_NULL(animal);
 
         cage->AddAnimal(move(animal));
         Cages.push_back(move(cage));
     }
 
-    Event = wil::make_unique_failfast<SignificantEvent>();
+    auto cages = std::vector<Cage*>();
+    for (auto const& cage : Cages) {
+        cages.push_back(cage.get());
+    }
+
+    Event = wil::make_unique_failfast<SignificantEvent>(move(cages));
+    THROW_LAST_ERROR_IF_NULL(Event);
 }
 
 // Closes the zoo for the day and tells visitors to leave
 void Zoo::EndTurn() {
     cwl::WriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
+
+    GameManager::OpenZoo.ResetEvent();
+    GameManager::CloseZoo.SetEvent();
 
     // TODO: Reimplement
     /*ExitZoo();
@@ -34,13 +47,12 @@ void Zoo::EndTurn() {
         DWORD returnstring = GetLastError();
         cwl::WriteLine(_T("Visitor Wait failed with %d"), returnstring);
     }*/
+
     IsOpen = false;
 
-    // TODO: ResetZooClosedTimer();
-
     Menu::PrintScore();
-    Menu::PrintCurrentZooStatus();
-    Menu::PrintOptions();
+
+    //ResetClosedTimer();
 }
 
 // Checks all cages and returns if all cages are empty
@@ -150,35 +162,134 @@ Cage* Zoo::GetRandomCage() {
     return availableCages.empty() ? nullptr : availableCages.at(rand() % availableCages.size());
 }
 
-//
-//
-////// Move into Zoo
-//DWORD ResetZooClosedTimer() {
-//    liDueTime.QuadPart = -(30 * TIMER_SECONDS);
-//
-//    if (!SetWaitableTimer(zooOpenEventTimer, &liDueTime, 0, NULL, NULL, 0)) {
-//        cwl::WriteLine(_T("SetWaitableTimer failed (%d)\n"), GetLastError());
-//        return 2;
-//    }
-//
-//    return 0;
-//}
-//
-////void InitializeTimers() {
-//    zooOpenEventTimer = CreateWaitableTimer(NULL, FALSE, NULL);
-//
-//    if (NULL == zooOpenEventTimer) {
-//        cwl::WriteLine(_T("CreateWaitableTimer failed (%d)\n"), GetLastError());
-//        ExitProcess(1);
-//    }
-//
-//    zooOpenEventThread = CreateThread(NULL, 0, mTimer, NULL, 0, NULL);
-//
-//    if (zooOpenEventThread == NULL) {
-//        cwl::WriteLine(_T("%cError creating timer thread: %d\n"), RED, GetLastError());
-//        ExitProcess(1);
-//    }
-//
-//    liDueTime.QuadPart = -(30 * TIMER_SECONDS);
-//
-//}
+void Zoo::GetAllVisitors() {
+    //DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
+    //{
+    //
+    //    WaitForSingleObject(hVisitorEvent, INFINITE);
+    //    EnterCriticalSection(&VisitorListCrit);
+    //
+    //    NodeEntry* EnumNode = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
+    //    if (EnumNode == NULL) {
+    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+    //        //return NULL;
+    //    }
+    //    EnumNode = VisitorListHead->Flink;
+    //    Visitor* eVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
+    //
+    //    if (PrintToConsole == TRUE) { cwl::WriteLine(_T("[ Visitor ] [ Cage ] [ Happiness ] [ Status ]\n")); }
+    //
+    //    while (EnumNode->Flink != VisitorListHead->Flink)
+    //    {
+    //        LPCTSTR status = 0;
+    //        eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
+    //
+    //        if (eVisitor->Status == 0)
+    //        {
+    //            status = _T("Happy");
+    //        }
+    //
+    //        else if (eVisitor->Status == 1)
+    //        {
+    //            status = _T("Disappointed");
+    //        }
+    //
+    //        else if (eVisitor->Status == 2)
+    //        {
+    //            status = _T("RefundDemanded");
+    //        }
+    //
+    //        //perform the console print.
+    //        if (PrintToConsole == TRUE && eVisitor->HappinessLevel <= 5) 
+    //        { 
+    //            cwl::WriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),RED, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status); 
+    //        }
+    //        else if (PrintToConsole == TRUE && eVisitor->HappinessLevel >= 8)
+    //        {
+    //            cwl::WriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),GREEN, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status);
+    //        }
+    //        else
+    //        {
+    //            cwl::WriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),YELLOW, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status);
+    //        }
+    //
+    //        EnumNode = EnumNode->Flink;
+    //    }
+    //
+    //    LeaveCriticalSection(&VisitorListCrit);
+    //    SetEvent(hVisitorEvent);
+    //
+    //
+    //    return 0;
+    //}
+}
+
+void Zoo::OpenZoo() {
+    m_newVisitorEvent.reset(CreateEvent(nullptr, true, false, nullptr));
+    THROW_LAST_ERROR_IF(!m_newVisitorEvent.is_valid());
+
+    m_enterEvent.reset(CreateEvent(nullptr, true, false, nullptr));
+    THROW_LAST_ERROR_IF(!m_enterEvent.is_valid());
+
+    GameManager::CloseZoo.ResetEvent();
+    GameManager::OpenZoo.SetEvent();
+
+    IsOpen = true;
+}
+
+void Zoo::ShowCaseAnimals(int cageNumber) {
+    //auto cageName = static_cast<LPTSTR>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10));
+    //const LPCTSTR prepend = _T("Cage");
+    //if (cageName != 0) {
+    //    StringCchPrintf(cageName, 10, _T("%s%d"), prepend, cagenum);
+    //}
+
+    //WaitForSingleObject(hVisitorEvent, INFINITE);
+    //EnterCriticalSection(&VisitorListCrit);
+
+    //NodeEntry* EnumNode = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
+    //if (EnumNode == NULL) {
+    //    cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
+    //    //return NULL;
+    //}
+    //EnumNode = VisitorListHead->Flink;
+    //Visitor* eVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
+
+    //while (EnumNode->Flink != VisitorListHead->Flink) {
+    //    eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
+    //    if (eVisitor->CageLocation == cageName) {
+    //        eVisitor->HappinessLevel = eVisitor->HappinessLevel + 1;
+    //    }
+
+    //    EnumNode = EnumNode->Flink;
+    //}
+
+    //LeaveCriticalSection(&VisitorListCrit);
+    //SetEvent(hVisitorEvent);
+
+    //return 0;
+}
+
+void Zoo::ResetClosedTimer() {
+    m_closedEventTime.QuadPart = -(30 * TIMER_SECONDS);
+    THROW_LAST_ERROR_IF(!SetWaitableTimer(GameManager::OpenZoo.get(), &m_closedEventTime, 0, nullptr, nullptr, 0));
+}
+
+DWORD WINAPI Zoo::ClosedTimerThread(LPVOID) {
+    do {
+        HANDLE events[2];
+        events[0] = GameManager::OpenZoo.get();
+        events[1] = GameManager::AppClose.get();
+
+        if (WaitForMultipleObjects(_countof(events), events, false, INFINITE) == 0) {
+            cwl::WriteLine(_T("\n%c------------------------------------\n"), RED);
+            cwl::WriteLine(_T("%cThe Zoo is now open.\n"), RED);
+            cwl::WriteLine(_T("%c------------------------------------\n"), RED);
+
+            Menu::PrintCurrentZooStatus();
+            Menu::PrintOptions();
+        } else {
+            return 0;
+        }
+    } while (TRUE);
+}

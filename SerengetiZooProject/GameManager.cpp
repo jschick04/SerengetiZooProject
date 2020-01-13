@@ -13,3 +13,5 @@ int GameManager::MaxCages = 6;
 int GameManager::Score = 0;
 
 wil::unique_event_failfast GameManager::AppClose(wil::EventOptions::ManualReset);
+wil::unique_event_failfast GameManager::OpenZoo(wil::EventOptions::ManualReset);
+wil::unique_event_failfast GameManager::CloseZoo(wil::EventOptions::ManualReset);

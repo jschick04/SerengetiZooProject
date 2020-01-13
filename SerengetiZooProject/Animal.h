@@ -15,6 +15,8 @@ public:
     DWORD InteractiveLevel;
     BOOL InteractivityPrompted = false;
 
+    static wil::critical_section CriticalSection;
+
     Animal(const ::AnimalType animalType, const TCHAR* uniqueName, const TCHAR* cageName);
 
 private:

@@ -65,10 +65,10 @@ int _tmain() {
                 cwl::WriteLine(_T("Which cage number would you like to showcase?\n"));
                 _fgetts(buffer, _countof(buffer), stdin);
                 if (_stscanf_s(buffer, _T("%d"), &selectedCageNumber) == 1) {
-                    if (selectedCageNumber < 1 || selectedCageNumber > zoo->Cages.size()) {
+                    if (selectedCageNumber < 1 || selectedCageNumber > static_cast<int>(zoo->Cages.size())) {
                         cwl::WriteLine(_T("Invalid Selection...\n"));
                     } else {
-                        //ShowCaseAnimal(visitorListHead, selectedCageNumber);
+                        zoo->ShowCaseAnimals(selectedCageNumber);
                     }
                 } else {
                     cwl::WriteLine(_T("Invalid Selection...\n"));
@@ -77,7 +77,7 @@ int _tmain() {
                 break;
             case 4 : // Check Visitors Happiness Level
                 cwl::WriteLine(_T("\n%cYou selected - Check Visitors Happiness Level\n\n"), SKYBLUE);
-                //EnumVisitors(visitorListHead, TRUE);
+                zoo->GetAllVisitors();
 
                 break;
             case 5 : // Close the zoo for the day
@@ -104,54 +104,3 @@ int _tmain() {
         Sleep(100);
     } while (true);
 }
-
-//
-//// Move into Zoo
-//HANDLE zooOpenEventThread;
-//HANDLE zooOpenEventTimer = NULL;
-//LARGE_INTEGER liDueTime;
-//
-//DWORD WINAPI mTimer(LPVOID) {
-//    do {
-//        HANDLE events[2];
-//        events[0] = zooOpenEventTimer;
-//        events[1] = appClose;
-//
-//        if (WaitForMultipleObjects(_countof(events), events, FALSE, INFINITE) == 0) {
-//            cwl::WriteLine(_T("\n%c------------------------------------\n"), RED);
-//            cwl::WriteLine(_T("%cThe Zoo has been re-opened after the significant event.\n"), RED);
-//            cwl::WriteLine(_T("%c------------------------------------\n"), RED);
-//
-//            IsOpen = TRUE;
-//
-//            EnterZoo();
-//
-//            PrintCurrentZooStatus();
-//            PrintMenu();
-//        } else {
-//            return 0;
-//        }
-//    } while (TRUE);
-//
-//}
-//
-//// Move into Zoo constructor
-//void InitializeZoo() {
-//    
-
-//
-//    //BareBones Entry to test the random visitor entering simulation test.
-//    HANDLE hvisitorcreationthread = NULL;
-//    hvisitorcreationthread = CreateThread(
-//        NULL,
-//        0,
-//        AddVisitorsThread,
-//        NULL,
-//        0,
-//        NULL
-//    );
-//    if (hvisitorcreationthread == NULL) {
-//        cwl::WriteLine(_T("Failed to create visitor creation thread"), GetLastError());
-//        ExitProcess(1);
-//    }
-//}
