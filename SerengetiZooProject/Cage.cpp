@@ -78,16 +78,16 @@ void Cage::AddAnimal(wistd::unique_ptr<Animal> animal) {
 }
 
 // Completely removes an animal from the cage and zoo
-void Cage::RemoveAnimal(wistd::unique_ptr<Animal> animal) {
+void Cage::RemoveAnimal(LPCTSTR uniqueName) {
     auto guard = CriticalSection.lock();
 
-    Helpers::AddRandomName(animal->UniqueName);
+    Helpers::AddRandomName(uniqueName);
 
     Animals.erase(
         std::remove_if(
             Animals.begin(),
             Animals.end(),
-            [&](wistd::unique_ptr<Animal>& cagedAnimal) { return cagedAnimal->UniqueName == animal->UniqueName; }
+            [&](wistd::unique_ptr<Animal>& cagedAnimal) { return cagedAnimal->UniqueName == uniqueName; }
         ),
         Animals.end()
     );

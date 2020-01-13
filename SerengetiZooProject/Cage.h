@@ -29,7 +29,7 @@ public:
     DWORD GetTotalInteractiveLevel() const noexcept;
 
     void AddAnimal(wistd::unique_ptr<Animal> animal);
-    void RemoveAnimal(wistd::unique_ptr<Animal> animal);
+    void RemoveAnimal(LPCTSTR uniqueName);
 
     void WaitForThreads() const noexcept;
 

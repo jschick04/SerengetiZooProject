@@ -1,27 +1,32 @@
 #include "SignificantEvent.h"
+#include <ConsoleColors.h>
 #include <ctime>
 #include <cwl.h>
 #include <memory>
 #include <tchar.h>
 #include <wil/resource.h>
 #include "GameManager.h"
+#include "Helpers.h"
+#include "Zoo.h"
+
+LARGE_INTEGER SignificantEvent::DueTime{DueTime.QuadPart = 0};
 
 SignificantEvent::SignificantEvent(std::vector<Cage*> cages) {
     m_timer.reset(CreateWaitableTimer(nullptr, false, nullptr));
     THROW_LAST_ERROR_IF(!m_timer.is_valid());
-    
+
     auto params = wil::make_unique_failfast<EventParams>();
 
     params->Cages = move(cages);
     params->Timer = m_timer.get();
-    
+
     m_significantEventThread.reset(CreateThread(nullptr, 0, SignificantEventTimer, params.release(), 0, nullptr));
 
-    m_dueTime.QuadPart = -((GameManager::SignificantEventMinutes * 60) * TIMER_SECONDS);
+    DueTime.QuadPart = -((GameManager::SignificantEventMinutes * 60) * TIMER_SECONDS);
     m_feedDueTime.QuadPart = -((GameManager::FeedEventMinutes * 60) * TIMER_SECONDS);
 
     THROW_LAST_ERROR_IF(
-        !SetWaitableTimer(m_timer.get(), &m_dueTime, 0, nullptr, nullptr, false)
+        !SetWaitableTimer(m_timer.get(), &DueTime, 0, nullptr, nullptr, false)
     );
 }
 
@@ -46,82 +51,83 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
         }
 
         BOOL action;
-        //Animal* selectedAnimal = nullptr;
+        Animal* selectedAnimal = nullptr;
 
-        /*EnterCriticalSection(&AnimalListCrit);
+        auto guard = Cage::CriticalSection.lock();
+
+        int cageCount = 0;
+
+        for (auto cage : params->Cages) {
+            if (!cage->IsCageEmpty()) {
+                cageCount++;
+            }
+        }
+
+        if (cageCount <= 0) { continue; }
 
         Cage* randomCage;
 
         do {
-            randomCage = GetRandomCage();
-        } while (randomCage == NULL);
+            randomCage = params->Cages.at(rand() % params->Cages.size());
+        } while (randomCage->IsCageEmpty());
 
-        NodeEntry* temp = animalListHead->Blink;
+        while (selectedAnimal == nullptr) {
 
-        while (selectedAnimal == NULL) {
-            if (temp == animalListHead) { temp = temp->Blink; }
-
-            ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-            if (_tcscmp(tempAnimal->CageName, randomCage->Name) == 0) {
+            for (auto const& animal : randomCage->Animals) {
                 action = rand() % 2;
 
                 if (action) {
-                    selectedAnimal = tempAnimal;
+                    selectedAnimal = animal.get();
                     break;
                 }
             }
-
-            temp = temp->Blink;
         };
 
         action = rand() % 2;
 
-        if (selectedAnimal != NULL) {
-            if (action) {
-                cwl::WriteLine(
-                    _T("\n%c%s the %s has escaped!\n\n"),
-                    YELLOW,
-                    selectedAnimal->UniqueName,
-                    AnimalTypeToString(selectedAnimal->AnimalType)
-                );
-                cwl::WriteLine(
-                    _T("You have %clost%r %d points because all visitors left the zoo...\n"),
-                    PINK,
-                    GetVisitorCount(visitorListHead)
-                );
-                g_Score -= GetVisitorCount(visitorListHead);
+        if (action) {
+            cwl::WriteLine(
+                _T("\n%c%s the %s has escaped!\n\n"),
+                YELLOW,
+                selectedAnimal->UniqueName,
+                Helpers::AnimalTypeToString(selectedAnimal->AnimalType)
+            );
+            cwl::WriteLine(
+                _T("You have %clost%r %d points because all visitors left the zoo...\n"),
+                PINK,
+                Visitor::GetVisitorCount()
+            );
+            GameManager::Score -= Visitor::GetVisitorCount();
 
-                RemoveAnimal(selectedAnimal);
-            } else {
-                cwl::WriteLine(
-                    _T("\n%c%s the %s has given birth to a baby %s!\n\n"),
-                    LIME,
-                    selectedAnimal->UniqueName,
-                    AnimalTypeToString(selectedAnimal->AnimalType),
-                    AnimalTypeToString(selectedAnimal->AnimalType)
-                );
-                cwl::WriteLine(
-                    _T("All visitors have left for the day and you %cearned%r %d points...\n"),
-                    LIME,
-                    3 * GetVisitorCount(visitorListHead)
-                );
-                g_Score += 3 * (int)GetVisitorCount(visitorListHead);
+            randomCage->RemoveAnimal(selectedAnimal->UniqueName);
+        } else {
+            cwl::WriteLine(
+                _T("\n%c%s the %s has given birth to a baby %s!\n\n"),
+                LIME,
+                selectedAnimal->UniqueName,
+                Helpers::AnimalTypeToString(selectedAnimal->AnimalType),
+                Helpers::AnimalTypeToString(selectedAnimal->AnimalType)
+            );
+            cwl::WriteLine(
+                _T("All visitors have left for the day and you %cearned%r %d points...\n"),
+                LIME,
+                3 * Visitor::GetVisitorCount()
+            );
+            GameManager::Score += 3 * Visitor::GetVisitorCount();
 
-                NewAnimal(
-                    selectedAnimal->AnimalType,
-                    GetRandomName(),
-                    selectedAnimal->CageName
-                );
-            }
+            auto newAnimal = wil::make_unique_failfast<Animal>(
+                selectedAnimal->AnimalType,
+                Helpers::GetRandomName(),
+                randomCage->Name
+            );
+
+            randomCage->AddAnimal(move(newAnimal));
         }
 
-        LeaveCriticalSection(&AnimalListCrit);
+        THROW_LAST_ERROR_IF(
+            !SetWaitableTimer(params->Timer, &DueTime, 0, nullptr, nullptr, false)
+        );
 
-        if (!SetWaitableTimer(significantEventTimer, &seDueTime, 0, NULL, NULL, FALSE)) {
-            cwl::WriteLine(_T("Failed to set Significant Event Timer: %d\n"), GetLastError());
-        }
-
-        EndTurnActions();*/
+        Zoo::EndTurn();
     } while (TRUE);
 }

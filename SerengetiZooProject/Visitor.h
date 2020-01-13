@@ -16,7 +16,7 @@ public:
 
     explicit Visitor();
 
-    void GetVisitorCount();
+    static int GetVisitorCount();
     void RemoveVisitor(LPCTSTR name);
 
 private:

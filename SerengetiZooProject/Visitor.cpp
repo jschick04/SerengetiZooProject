@@ -15,6 +15,10 @@ Visitor::Visitor() {
     // Call Visitor Loop thread
 }
 
+int Visitor::GetVisitorCount() {
+    return 0;
+}
+
 void Visitor::RemoveVisitor(LPCTSTR name) {
     auto guard = CriticalSection.lock();
 
