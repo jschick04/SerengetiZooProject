@@ -30,21 +30,22 @@ public:
     void GetAllVisitors();
     static int GetVisitorCount();
 
-    void OpenZoo();
-
     void ShowCaseAnimals(int cageNumber);
 
 private:
     static std::vector<wistd::unique_ptr<Visitor>> m_visitors;
 
+    wil::unique_handle m_addVisitorsThread;
     static LARGE_INTEGER m_closedEventTime;
-    wil::unique_event m_enterEvent;
-    wil::unique_event m_newVisitorEvent;
+    static wil::unique_event_failfast m_canAddNewVisitorsEvent;
+    static LARGE_INTEGER m_addVisitorsEventTime;
+    static wil::unique_handle m_newVisitorsTimer;
 
     void RemoveVisitor(LPCTSTR name);
 
-    static void ResetClosedTimer();
+    static void ResetAddVisitorsEvent();
+    static void ResetOpenZooTimer();
 
-    static DWORD WINAPI ClosedTimerThread(LPVOID);
+    static DWORD WINAPI OpenZooTimerThread(LPVOID);
     static DWORD WINAPI AddVisitorsThread(LPVOID lpParam);
 };

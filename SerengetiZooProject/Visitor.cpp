@@ -26,7 +26,7 @@ Visitor::Visitor(std::vector<Cage*> cages) : m_movementTime() {
 
     ResetMovementTimer();
 
-    cwl::WriteLine(_T("%s has entered the Zoo\n"));
+    cwl::WriteLine(_T("%s has entered the Zoo\n"), UniqueName);
 }
 
 void Visitor::WaitForThreads() const noexcept {

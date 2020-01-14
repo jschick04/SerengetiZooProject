@@ -16,8 +16,6 @@ int _tmain() {
         int selectedMenuNumber;
         int selectedCageNumber;
 
-        zoo->OpenZoo();
-
         Menu::PrintCurrentZooStatus();
         Menu::PrintOptions();
 
