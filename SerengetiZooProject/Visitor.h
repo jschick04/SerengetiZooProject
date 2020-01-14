@@ -2,6 +2,9 @@
 
 #include <wil/resource.h>
 #include <Windows.h>
+#include <vector>
+
+class Cage;
 
 enum class VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
 
@@ -14,13 +17,21 @@ public:
 
     static wil::critical_section CriticalSection;
 
-    explicit Visitor();
+    explicit Visitor(std::vector<Cage*> cages);
+
+    void WaitForThreads() const noexcept;
 
 private:
+    LARGE_INTEGER m_movementTime;
     wil::unique_handle m_movementTimer;
     wil::unique_handle m_visitorLoopThread;
 
+    std::vector<Cage*> m_cages;
+    int m_currentCageNumber;
+
+    static void CalculateScore(Visitor* visitor) noexcept;
     void ResetMovementTimer();
+    static void UpdateStatus(Visitor* visitor) noexcept;
 
     static DWORD WINAPI VisitorLoop(LPVOID lpParam);
 };

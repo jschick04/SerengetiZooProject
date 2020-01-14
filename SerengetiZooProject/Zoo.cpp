@@ -39,14 +39,9 @@ void Zoo::EndTurn() {
     GameManager::OpenZoo.ResetEvent();
     GameManager::CloseZoo.SetEvent();
 
-    // TODO: Reimplement
-    /*ExitZoo();
-    int ThreadHandleCount = VisitorTID;
-    DWORD ret = WaitForMultipleObjects(ThreadHandleCount, hThreadHandles, TRUE, INFINITE);
-    if (ret == 0xFFFFFFFF) {
-        DWORD returnstring = GetLastError();
-        cwl::WriteLine(_T("Visitor Wait failed with %d"), returnstring);
-    }*/
+    for (auto const& visitor : m_visitors) {
+        visitor->WaitForThreads();
+    }
 
     IsOpen = false;
 
@@ -231,14 +226,11 @@ void Zoo::GetAllVisitors() {
 }
 
 int Zoo::GetVisitorCount() {
-    return m_visitors.size();
+    return static_cast<int>(m_visitors.size());
 }
 
 // Opens Zoo and resets visitor timers
 void Zoo::OpenZoo() {
-    m_newVisitorEvent.reset(CreateEvent(nullptr, true, false, nullptr));
-    THROW_LAST_ERROR_IF(!m_newVisitorEvent.is_valid());
-
     m_enterEvent.reset(CreateEvent(nullptr, true, false, nullptr));
     THROW_LAST_ERROR_IF(!m_enterEvent.is_valid());
 

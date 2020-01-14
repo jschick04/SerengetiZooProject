@@ -183,7 +183,7 @@ DWORD WINAPI Cage::AnimalHealth(LPVOID lpParam) {
         }
 
         ResetFeedTimer(cage->m_feedEventTimer.get());
-    } while (TRUE);
+    } while (true);
 }
 
 DWORD WINAPI Cage::AnimalInteractivity(LPVOID lpParam) {
@@ -215,5 +215,5 @@ DWORD WINAPI Cage::AnimalInteractivity(LPVOID lpParam) {
                 animal->HealthLevelChange = false;
             }
         }
-    } while (TRUE);
+    } while (true);
 }

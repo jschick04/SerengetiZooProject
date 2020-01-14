@@ -129,5 +129,5 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
         );
 
         Zoo::EndTurn();
-    } while (TRUE);
+    } while (true);
 }

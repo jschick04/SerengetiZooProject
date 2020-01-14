@@ -1,146 +1,144 @@
 #include "Visitor.h"
 
+#include <ConsoleColors.h>
+#include <cwl.h>
+#include <random>
 #include <tchar.h>
+#include "Cage.h"
+#include "GameManager.h"
 #include "Helpers.h"
 
 wil::critical_section Visitor::CriticalSection;
 
-Visitor::Visitor() {
+Visitor::Visitor(std::vector<Cage*> cages) : m_movementTime() {
     UniqueName = Helpers::GetRandomName();
     CageLocation = _T("Entry");
     HappinessLevel = 8;
     Status = VisitorStatus::Happy;
 
+    m_cages = move(cages);
+    m_currentCageNumber = -1;
+
     m_movementTimer.reset(CreateWaitableTimer(nullptr, false, nullptr));
     THROW_LAST_ERROR_IF(!m_movementTimer.is_valid());
 
     m_visitorLoopThread.reset(CreateThread(nullptr, 0, VisitorLoop, this, 0, nullptr));
+
+    ResetMovementTimer();
 }
 
+void Visitor::WaitForThreads() const noexcept {
+    WaitForSingleObject(m_visitorLoopThread.get(), INFINITE);
+}
+
+// Updates global score based on happiness level
+void Visitor::CalculateScore(Visitor* visitor) noexcept {
+    if (visitor->HappinessLevel < 5) {
+        visitor->Status = VisitorStatus::RefundDemanded;
+        cwl::WriteLine(_T("%s %c%s\n"), visitor->UniqueName, PINK, Helpers::VisitorStatusToString(visitor->Status));
+        GameManager::Score -= 15;
+    } else if (visitor->HappinessLevel <= 7) {
+        visitor->Status = VisitorStatus::LeavingAngry;
+        cwl::WriteLine(_T("%s %c%s\n"), visitor->UniqueName, PINK, Helpers::VisitorStatusToString(visitor->Status));
+        GameManager::Score -= 10;
+    } else {
+        visitor->Status = VisitorStatus::LeavingHappy;
+        cwl::WriteLine(_T("%s %c%s\n"), visitor->UniqueName, PINK, Helpers::VisitorStatusToString(visitor->Status));
+        GameManager::Score += 10;
+    }
+}
+
+// Resets the movement timer to a random time
 void Visitor::ResetMovementTimer() {
-    //DueTime.QuadPart = -((GameManager::SignificantEventMinutes * 60) * TIMER_SECONDS);
-    //
-    //THROW_LAST_ERROR_IF(
-    //    !SetWaitableTimer(m_timer.get(), &DueTime, 0, nullptr, nullptr, false)
-    //);
+    std::random_device generator;
+    const std::uniform_int_distribution<int> range(1, 4);
+
+    m_movementTime.QuadPart = -((range(generator) * 30) * TIMER_SECONDS);
+
+    THROW_LAST_ERROR_IF(
+        !SetWaitableTimer(m_movementTimer.get(), &m_movementTime, 0, nullptr, nullptr, false)
+    );
 }
 
+// Updates status based on the happiness level
+void Visitor::UpdateStatus(Visitor* visitor) noexcept {
+    if (visitor->HappinessLevel < 5) {
+        visitor->Status = VisitorStatus::RefundDemanded;
+    } else if (visitor->HappinessLevel <= 7) {
+        visitor->Status = VisitorStatus::Disappointed;
+
+    } else {
+        visitor->Status = VisitorStatus::Happy;
+    }
+}
 
 DWORD WINAPI Visitor::VisitorLoop(LPVOID lpParam) {
-    // TODO: Finish VisitorLoopThread
-
     const auto visitor = static_cast<Visitor*>(lpParam);
 
-    //auto Params = static_cast<VisitorLoopParams*>(Param);
-    //int SleepTimeRand = 0;
-    //for (int i = 0; i != _countof(cages); ++i) {
-    //    //sleep between 1 and 3 minutes to simulate walk/watch times. 
-    //    int sleeparray[5];
-    //    for (int s = 0; s != 5; ++s) {
-    //        sleeparray[s] = SleepTimeRand = (rand() % (1800 - 600)) + 600;
-    //    }
-    //    int selector = (rand() % 5);
+    HANDLE events[3];
 
-    //    //sleep while waking to check if exit zoo is true.
-    //    for (int t = 0; t != 10; ++t) {
-    //        if (bExitZoo == TRUE) {
-    //            //LeaveCriticalSection(&VisitorListCrit);
-    //            break;
-    //        } else {
-    //            Sleep(sleeparray[selector]);
-    //        }
+    events[0] = visitor->m_movementTimer.get();
+    events[1] = GameManager::CloseZoo.get();
+    events[2] = GameManager::AppClose.get();
 
-    //    }
+    do {
+        const auto wait = WaitForMultipleObjects(_countof(events), events, false, INFINITE);
 
-    //    //handle error if the cage name is NULL. Something is very wrong, there are no animals.
-    //    if (IsCageEmpty(cages[i]->Name)) {
-    //        //WriteConsoleOutput(_T("There are no animals in the zoo left!"),RED);
-    //         //cwl::WriteLine(_T("There are no animals left in the Zoo!\n"));
-    //    } else {
-    //        WaitForSingleObject(hVisitorEvent, INFINITE);
-    //        EnterCriticalSection(&VisitorListCrit);
+        if (wait == 1 || wait == 2) {
+            auto guard = CriticalSection.lock();
 
-    //        Params->Visitor->CageLocation = cages[i]->Name;
-    //        cwl::WriteLine(_T("%s entered cage: %s\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
+            CalculateScore(visitor);
 
-    //        if (IsCageEmpty(Params->Visitor->CageLocation) == TRUE) {
-    //            Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel - 2;
-    //            cwl::WriteLine(_T("%s lost 2 happiness points after visiting %s due to being empty!\n"), Params->Visitor->UniqueName, Params->Visitor->CageLocation);
-    //        } else {
-    //            //Get the interactivity level and increase or decrease happiness of visitors
-    //            DWORD AverageInterActivityLevel = 0;
-    //            AverageInterActivityLevel = GetCageTotalInteractiveLevel(cages[i]->Name);
+            return 0;
+        }
 
-    //            //increase or decrease happiness point based on interctivity level
-    //            if (AverageInterActivityLevel <= 4) {
-    //                if (Params->Visitor->HappinessLevel != 0) {
-    //                    Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel - 1;
-    //                    cwl::WriteLine(_T("%s %clost%r a happiness point after visiting %s!\n"), Params->Visitor->UniqueName, RED, Params->Visitor->CageLocation);
-    //                }
+        auto guard = CriticalSection.lock();
 
-    //            } else if (AverageInterActivityLevel == 5) {
-    //                Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel;
-    //            } else {
-    //                if (Params->Visitor->HappinessLevel != 10) {
-    //                    Params->Visitor->HappinessLevel = Params->Visitor->HappinessLevel + 1;
-    //                    cwl::WriteLine(_T("%s %cgained%r a happiness point after visiting %s!\n"), Params->Visitor->UniqueName, GREEN, Params->Visitor->CageLocation);
-    //                }
-    //            }
-    //        }
+        visitor->m_currentCageNumber++;
 
-    //        //after the increase or decrease update status of visitor.
-    //        if (Params->Visitor->HappinessLevel < 5) {
-    //            Params->Visitor->Status = RefundDemanded;
-    //            LeaveCriticalSection(&VisitorListCrit);
-    //            SetEvent(hVisitorEvent);
-    //            break;
+        if (visitor->m_currentCageNumber >= static_cast<int>(visitor->m_cages.size()) ||
+            visitor->Status == VisitorStatus::RefundDemanded) {
+            CalculateScore(visitor);
 
-    //        }
-    //        if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7) {
-    //            Params->Visitor->Status = Disappointed;
+            return 0;
+        }
 
-    //        }
-    //        if (Params->Visitor->HappinessLevel >= 8) {
-    //            Params->Visitor->Status = Happy;
-    //        }
+        auto currentCage = visitor->m_cages.at(visitor->m_currentCageNumber);
 
-    //        if (bExitZoo == TRUE) {
-    //            LeaveCriticalSection(&VisitorListCrit);
-    //            SetEvent(hVisitorEvent);
-    //            break;
-    //        }
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //    }
-    //}
+        visitor->CageLocation = currentCage->Name;
 
-    //Sleep(SleepTimeRand);
-    ////visitor should have visited all locations at this point so we need to calculate if leaving happy leaving angry or demanding a refund.
-    //LPCTSTR ExitStatus;
-    //WaitForSingleObject(hVisitorEvent, INFINITE);
-    //EnterCriticalSection(&VisitorListCrit);
+        cwl::WriteLine(_T("%s entered %s\n"), visitor->UniqueName, visitor->CageLocation);
 
-    //if (Params->Visitor->HappinessLevel < 5) {
-    //    Params->Visitor->HappinessLevel = RefundDemanded;
-    //    ExitStatus = _T("Demanded a Refund");
-    //    cwl::WriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, RED, ExitStatus);
-    //} else if (Params->Visitor->HappinessLevel > 5 && Params->Visitor->HappinessLevel <= 7) {
-    //    Params->Visitor->HappinessLevel = LeavingAngry;
-    //    ExitStatus = _T("Left Angry");
-    //    cwl::WriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, RED, ExitStatus);
-    //    g_Score = g_Score - 10;
-    //} else {
-    //    Params->Visitor->HappinessLevel = LeavingHappy;
-    //    ExitStatus = _T("Left Happy");
-    //    cwl::WriteLine(_T("%s %c%s\n"), Params->Visitor->UniqueName, GREEN, ExitStatus);
-    //    g_Score = g_Score + 10;
+        if (currentCage->IsCageEmpty()) {
+            cwl::WriteLine(_T("%c%s lost 2 happiness points due to an empty cage\n"));
+            visitor->HappinessLevel -= 2;
+            continue;
+        }
 
-    //}
+        int averageInteractivityLevel = currentCage->GetAverageInteractiveLevel();
 
-    //LeaveCriticalSection(&VisitorListCrit);
-    //SetEvent(hVisitorEvent);
-    //Sleep(1000);
-    //RemoveVisitor(visitorListHead, Params->Visitor->UniqueName);
+        if (averageInteractivityLevel <= 4) {
+            if (visitor->HappinessLevel > 0) {
+                visitor->HappinessLevel -= 1;
+                cwl::WriteLine(
+                    _T("%s %clost%r a happiness point after visiting %s!\n"),
+                    visitor->UniqueName,
+                    RED,
+                    visitor->CageLocation
+                );
+            }
+        } else {
+            if (visitor->HappinessLevel > 5 && visitor->HappinessLevel < 10) {
+                visitor->HappinessLevel += 1;
+                cwl::WriteLine(
+                    _T("%s %cgained%r a happiness point after visiting %s!\n"),
+                    visitor->UniqueName,
+                    GREEN,
+                    visitor->CageLocation
+                );
+            }
+        }
 
-    return 0;
+        UpdateStatus(visitor);
+    } while (true);
 }
