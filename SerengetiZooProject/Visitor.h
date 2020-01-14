@@ -16,11 +16,11 @@ public:
 
     explicit Visitor();
 
-    static int GetVisitorCount();
-    void RemoveVisitor(LPCTSTR name);
-
 private:
+    wil::unique_handle m_movementTimer;
     wil::unique_handle m_visitorLoopThread;
 
-    static DWORD WINAPI VisitorLoopThread(LPVOID lpParam);
+    void ResetMovementTimer();
+
+    static DWORD WINAPI VisitorLoop(LPVOID lpParam);
 };

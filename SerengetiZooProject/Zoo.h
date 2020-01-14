@@ -13,7 +13,6 @@ public:
     static wil::critical_section CriticalSection;
 
     std::vector<wistd::unique_ptr<Cage>> Cages;
-    std::vector<wistd::unique_ptr<Visitor>> Visitors;
     wistd::unique_ptr<SignificantEvent> Event;
 
     explicit Zoo(int numberOfCages);
@@ -29,15 +28,20 @@ public:
     Cage* GetRandomCage();
 
     void GetAllVisitors();
+    static int GetVisitorCount();
 
     void OpenZoo();
 
     void ShowCaseAnimals(int cageNumber);
 
 private:
+    static std::vector<wistd::unique_ptr<Visitor>> m_visitors;
+
     static LARGE_INTEGER m_closedEventTime;
     wil::unique_event m_enterEvent;
     wil::unique_event m_newVisitorEvent;
+
+    void RemoveVisitor(LPCTSTR name);
 
     static void ResetClosedTimer();
 

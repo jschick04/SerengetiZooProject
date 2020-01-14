@@ -11,92 +11,26 @@ Visitor::Visitor() {
     HappinessLevel = 8;
     Status = VisitorStatus::Happy;
 
-    // TODO: Call Visitor Loop thread
+    m_movementTimer.reset(CreateWaitableTimer(nullptr, false, nullptr));
+    THROW_LAST_ERROR_IF(!m_movementTimer.is_valid());
+
+    m_visitorLoopThread.reset(CreateThread(nullptr, 0, VisitorLoop, this, 0, nullptr));
 }
 
-int Visitor::GetVisitorCount() {
-    // TODO: Finish GetVisitorCount
-    return 0;
+void Visitor::ResetMovementTimer() {
+    //DueTime.QuadPart = -((GameManager::SignificantEventMinutes * 60) * TIMER_SECONDS);
+    //
+    //THROW_LAST_ERROR_IF(
+    //    !SetWaitableTimer(m_timer.get(), &DueTime, 0, nullptr, nullptr, false)
+    //);
 }
 
-void Visitor::RemoveVisitor(LPCTSTR name) {
-    auto guard = CriticalSection.lock();
 
-    // TODO: Finish RemoveVisitor
-    //{
-    //    WaitForSingleObject(hVisitorEvent, INFINITE);
-    //    EnterCriticalSection(&VisitorListCrit);
-    //
-    //    NodeEntry* RemovedNode = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
-    //    if (RemovedNode == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //    NodeEntry* TempNodePrev = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
-    //    if (TempNodePrev == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //    NodeEntry* TempNodeNext = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));;
-    //    if (TempNodeNext == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //    RemovedNode = VisitorListHead->Flink;
-    //    Visitor* RemovedVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
-    //    if (RemovedVisitor == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //    Visitor* PreviousVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
-    //    if (PreviousVisitor == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //    Visitor* NextVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
-    //    if (NextVisitor == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //
-    //    //loop through all to find a matching uniquename.
-    //    while (RemovedVisitor->UniqueName != Name)
-    //    {
-    //        RemovedVisitor = CONTAINING_RECORD(RemovedNode, Visitor, Links);
-    //        RemovedNode = RemovedNode->Flink;
-    //    }
-    //    //when a unique name is found we need to update the flink of the previous node and the blink of the next node.
-    //    TempNodePrev = RemovedVisitor->Links.Blink;
-    //    PreviousVisitor = CONTAINING_RECORD(TempNodePrev, Visitor, Links);
-    //    TempNodeNext = RemovedVisitor->Links.Flink;
-    //    NextVisitor = CONTAINING_RECORD(TempNodeNext, Visitor, Links);
-    //    PreviousVisitor->Links.Flink = TempNodeNext;
-    //    NextVisitor->Links.Blink = TempNodePrev;
-    //
-    //    //cleanup
-    //    HeapFree(GetProcessHeap(), 0, RemovedVisitor);
-    //
-    //    LeaveCriticalSection(&VisitorListCrit);
-    //    SetEvent(hVisitorEvent);
-    //
-    //    return 0;
-    //}
-}
-
-DWORD WINAPI Visitor::VisitorLoopThread(LPVOID lpParam) {
+DWORD WINAPI Visitor::VisitorLoop(LPVOID lpParam) {
     // TODO: Finish VisitorLoopThread
+
+    const auto visitor = static_cast<Visitor*>(lpParam);
+
     //auto Params = static_cast<VisitorLoopParams*>(Param);
     //int SleepTimeRand = 0;
     //for (int i = 0; i != _countof(cages); ++i) {

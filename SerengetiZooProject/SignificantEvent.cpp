@@ -8,10 +8,9 @@
 #include "Cage.h"
 #include "GameManager.h"
 #include "Helpers.h"
-#include "Visitor.h"
 #include "Zoo.h"
 
-LARGE_INTEGER SignificantEvent::DueTime{0};
+LARGE_INTEGER SignificantEvent::DueTime;
 
 SignificantEvent::SignificantEvent(std::vector<Cage*> cages) {
     m_timer.reset(CreateWaitableTimer(nullptr, false, nullptr));
@@ -98,9 +97,9 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
             cwl::WriteLine(
                 _T("You have %clost%r %d points because all visitors left the zoo...\n"),
                 PINK,
-                Visitor::GetVisitorCount()
+                Zoo::GetVisitorCount()
             );
-            GameManager::Score -= Visitor::GetVisitorCount();
+            GameManager::Score -= Zoo::GetVisitorCount();
 
             randomCage->RemoveAnimal(selectedAnimal->UniqueName);
         } else {
@@ -114,9 +113,9 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
             cwl::WriteLine(
                 _T("All visitors have left for the day and you %cearned%r %d points...\n"),
                 LIME,
-                3 * Visitor::GetVisitorCount()
+                3 * Zoo::GetVisitorCount()
             );
-            GameManager::Score += 3 * Visitor::GetVisitorCount();
+            GameManager::Score += 3 * Zoo::GetVisitorCount();
 
             auto newAnimal = wil::make_unique_failfast<Animal>(
                 randomCage

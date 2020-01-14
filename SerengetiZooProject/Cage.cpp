@@ -8,7 +8,7 @@
 
 wil::critical_section Cage::CriticalSection;
 
-LARGE_INTEGER Cage::m_feedDueTime{0};
+LARGE_INTEGER Cage::m_feedDueTime;
 
 Cage::Cage(const int number) {
     Name = GetCageName(number);
