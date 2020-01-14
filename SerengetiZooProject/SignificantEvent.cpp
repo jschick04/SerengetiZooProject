@@ -119,8 +119,6 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
             GameManager::Score += 3 * Visitor::GetVisitorCount();
 
             auto newAnimal = wil::make_unique_failfast<Animal>(
-                selectedAnimal->AnimalType,
-                Helpers::GetRandomName(),
                 randomCage
             );
 

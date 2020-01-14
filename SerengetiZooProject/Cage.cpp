@@ -13,6 +13,11 @@ LARGE_INTEGER Cage::m_feedDueTime{0};
 Cage::Cage(const int number) {
     Name = GetCageName(number);
 
+    auto animal = wil::make_unique_failfast<Animal>(this);
+    THROW_LAST_ERROR_IF_NULL(animal);
+
+    Animals.push_back(move(animal));
+
     FeedEvent.create(wil::EventOptions::None);
     THROW_LAST_ERROR_IF(!FeedEvent.is_valid());
 

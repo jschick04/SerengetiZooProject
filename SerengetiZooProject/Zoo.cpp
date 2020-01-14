@@ -19,10 +19,6 @@ Zoo::Zoo(const int numberOfCages) {
         auto cage = wil::make_unique_failfast<Cage>(i);
         THROW_LAST_ERROR_IF_NULL(cage);
 
-        auto animal = wil::make_unique_failfast<Animal>(AnimalType(i), Helpers::GetRandomName(), cage.get());
-        THROW_LAST_ERROR_IF_NULL(animal);
-
-        cage->AddAnimal(move(animal));
         Cages.push_back(move(cage));
     }
 

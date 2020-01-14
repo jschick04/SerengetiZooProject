@@ -19,9 +19,9 @@ public:
 
     static wil::critical_section CriticalSection;
 
-    Animal(::AnimalType animalType, const TCHAR* uniqueName, Cage* cage);
+    explicit Animal(Cage* cage);
 
-    void SetHealthEvent();
+    void SetHealthEvent() const;
 
     void AddHealthLevel();
     void RemoveHealthLevel();
@@ -30,6 +30,7 @@ public:
     void RemoveInteractiveLevel();
 
 private:
+    static ::AnimalType GetRandomAnimalType();
     static int GetRandomHealthLevel();
     static int GetRandomInteractiveLevel();
 };

@@ -10,27 +10,13 @@
 
 wil::critical_section Animal::CriticalSection;
 
-Animal::Animal(const ::AnimalType animalType, const TCHAR* uniqueName, Cage* cage) {
-    AnimalType = animalType;
-    UniqueName = uniqueName;
+Animal::Animal(Cage* cage) {
+    AnimalType = GetRandomAnimalType();
+    UniqueName = Helpers::GetRandomName();
     CurrentCage = cage;
 
     HealthLevel = GetRandomHealthLevel();
     InteractiveLevel = GetRandomInteractiveLevel();
-}
-
-int Animal::GetRandomHealthLevel() {
-    std::random_device generator;
-    const std::uniform_int_distribution<int> range(5, 8);
-
-    return range(generator);
-}
-
-int Animal::GetRandomInteractiveLevel() {
-    std::random_device generator;
-    const std::uniform_int_distribution<int> range(5, 8);
-
-    return range(generator);
 }
 
 void Animal::AddHealthLevel() {
@@ -80,8 +66,14 @@ void Animal::RemoveHealthLevel() {
     }
 }
 
-void Animal::SetHealthEvent() {
+void Animal::SetHealthEvent() const {
     auto guard = CriticalSection.lock();
+
+    if (HealthLevel < 5) {
+        cwl::WriteLine(_T("%s the %s is %csick\n"), UniqueName, Helpers::AnimalTypeToString(AnimalType), PINK);
+
+        CurrentCage->HealthEvent.SetEvent();
+    }
 
     if (HealthLevel < 1) {
         cwl::WriteLine(
@@ -91,14 +83,10 @@ void Animal::SetHealthEvent() {
             Helpers::AnimalTypeToString(AnimalType)
         );
 
-        CurrentCage->RemoveAnimal(UniqueName);
-
         GameManager::Score -= 3;
-    } else if (HealthLevel < 5) {
-        cwl::WriteLine(_T("%s the %s is %csick\n"), UniqueName, Helpers::AnimalTypeToString(AnimalType), PINK);
-    }
 
-    CurrentCage->HealthEvent.SetEvent();
+        CurrentCage->RemoveAnimal(UniqueName);
+    }
 }
 
 void Animal::AddInteractiveLevel() {
@@ -128,4 +116,25 @@ void Animal::RemoveInteractiveLevel() {
     } else {
         InteractiveLevel = newValue;
     }
+}
+
+::AnimalType Animal::GetRandomAnimalType() {
+    std::random_device generator;
+    const std::uniform_int_distribution<int> range(0, 9);
+
+    return ::AnimalType(range(generator));
+}
+
+int Animal::GetRandomHealthLevel() {
+    std::random_device generator;
+    const std::uniform_int_distribution<int> range(5, 8);
+
+    return range(generator);
+}
+
+int Animal::GetRandomInteractiveLevel() {
+    std::random_device generator;
+    const std::uniform_int_distribution<int> range(5, 8);
+
+    return range(generator);
 }
