@@ -3,6 +3,7 @@
 #include <tchar.h>
 #include "Animal.h"
 #include "Visitor.h"
+#include <random>
 
 wil::critical_section Helpers::m_cs;
 
@@ -22,14 +23,11 @@ void Helpers::AddRandomName(LPCTSTR name) {
 LPCTSTR Helpers::GetRandomName() {
     auto guard = m_cs.lock();
 
-    unsigned int index;
-    LPCTSTR selectedName;
+    std::random_device generator;
+    const std::uniform_int_distribution<int> range(0, int(m_uniqueNames.size()) - 1);
 
-    do {
-        index = rand() % m_uniqueNames.size();
-        selectedName = m_uniqueNames[index];
-    } while (selectedName == nullptr);
-
+    int index = range(generator);
+    const LPCTSTR selectedName = m_uniqueNames[index];
     m_uniqueNames[index] = nullptr;
 
     return selectedName;
