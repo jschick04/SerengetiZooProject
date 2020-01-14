@@ -73,11 +73,11 @@ LPCTSTR Helpers::VisitorStatusToString(const VisitorStatus type) {
         case VisitorStatus::Happy :
             return _T("Happy");
         case VisitorStatus::LeavingAngry :
-            return _T("Leaving Angry");
+            return _T("leaving angry");
         case VisitorStatus::LeavingHappy :
-            return _T("Leaving Happy");
+            return _T("happily leaving the zoo");
         case VisitorStatus::RefundDemanded :
-            return _T("Refund Demanded");
+            return _T("demanding a refund");
         default :
             return _T("Invalid Status");
     }

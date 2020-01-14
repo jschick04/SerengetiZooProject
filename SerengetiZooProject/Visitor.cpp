@@ -25,6 +25,8 @@ Visitor::Visitor(std::vector<Cage*> cages) : m_movementTime() {
     m_visitorLoopThread.reset(CreateThread(nullptr, 0, VisitorLoop, this, 0, nullptr));
 
     ResetMovementTimer();
+
+    cwl::WriteLine(_T("%s has entered the Zoo\n"));
 }
 
 void Visitor::WaitForThreads() const noexcept {
@@ -35,15 +37,20 @@ void Visitor::WaitForThreads() const noexcept {
 void Visitor::CalculateScore(Visitor* visitor) noexcept {
     if (visitor->HappinessLevel < 5) {
         visitor->Status = VisitorStatus::RefundDemanded;
-        cwl::WriteLine(_T("%s %c%s\n"), visitor->UniqueName, PINK, Helpers::VisitorStatusToString(visitor->Status));
+        cwl::WriteLine(_T("%c%s is %s\n"), PINK, visitor->UniqueName, Helpers::VisitorStatusToString(visitor->Status));
         GameManager::Score -= 15;
     } else if (visitor->HappinessLevel <= 7) {
         visitor->Status = VisitorStatus::LeavingAngry;
-        cwl::WriteLine(_T("%s %c%s\n"), visitor->UniqueName, PINK, Helpers::VisitorStatusToString(visitor->Status));
+        cwl::WriteLine(
+            _T("%c%s is %s\n"),
+            YELLOW,
+            visitor->UniqueName,
+            Helpers::VisitorStatusToString(visitor->Status)
+        );
         GameManager::Score -= 10;
     } else {
         visitor->Status = VisitorStatus::LeavingHappy;
-        cwl::WriteLine(_T("%s %c%s\n"), visitor->UniqueName, PINK, Helpers::VisitorStatusToString(visitor->Status));
+        cwl::WriteLine(_T("%c%s is %s\n"), LIME, visitor->UniqueName, Helpers::VisitorStatusToString(visitor->Status));
         GameManager::Score += 10;
     }
 }
@@ -107,10 +114,14 @@ DWORD WINAPI Visitor::VisitorLoop(LPVOID lpParam) {
 
         visitor->CageLocation = currentCage->Name;
 
-        cwl::WriteLine(_T("%s entered %s\n"), visitor->UniqueName, visitor->CageLocation);
+        cwl::WriteLine(
+            _T("%s is interacting with the %s cage\n"),
+            visitor->UniqueName,
+            Helpers::AnimalTypeToString(currentCage->Animals.at(0)->AnimalType)
+        );
 
         if (currentCage->IsCageEmpty()) {
-            cwl::WriteLine(_T("%c%s lost 2 happiness points due to an empty cage\n"));
+            cwl::WriteLine(_T("%c%s lost 2 happiness points due to an empty cage\n"), PINK, visitor->UniqueName);
             visitor->HappinessLevel -= 2;
             continue;
         }
@@ -121,21 +132,15 @@ DWORD WINAPI Visitor::VisitorLoop(LPVOID lpParam) {
             if (visitor->HappinessLevel > 0) {
                 visitor->HappinessLevel -= 1;
                 cwl::WriteLine(
-                    _T("%s %clost%r a happiness point after visiting %s!\n"),
+                    _T("%s is %cDisappointed%r with the %s cage!\n"),
                     visitor->UniqueName,
                     RED,
-                    visitor->CageLocation
+                    Helpers::AnimalTypeToString(currentCage->Animals.at(0)->AnimalType)
                 );
             }
         } else {
             if (visitor->HappinessLevel > 5 && visitor->HappinessLevel < 10) {
                 visitor->HappinessLevel += 1;
-                cwl::WriteLine(
-                    _T("%s %cgained%r a happiness point after visiting %s!\n"),
-                    visitor->UniqueName,
-                    GREEN,
-                    visitor->CageLocation
-                );
             }
         }
 
