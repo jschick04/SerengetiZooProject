@@ -41,7 +41,7 @@ int _tmain() {
                     if (selectedCageNumber < 1 || selectedCageNumber > static_cast<int>(zoo->Cages.size())) {
                         cwl::WriteLine(_T("Invalid Selection...\n"));
                     } else {
-                        zoo->Cages.at(selectedCageNumber--)->FeedEvent.SetEvent();
+                        zoo->Cages.at(--selectedCageNumber)->FeedEvent.SetEvent();
                     }
                 } else {
                     cwl::WriteLine(_T("Invalid Selection...\n"));

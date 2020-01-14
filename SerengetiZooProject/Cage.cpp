@@ -8,16 +8,18 @@
 
 wil::critical_section Cage::CriticalSection;
 
+LARGE_INTEGER Cage::m_feedDueTime{0};
+
 Cage::Cage(const int number) {
     Name = GetCageName(number);
 
-    FeedEvent.create(wil::EventOptions::Signaled);
+    FeedEvent.create(wil::EventOptions::None);
     THROW_LAST_ERROR_IF(!FeedEvent.is_valid());
 
     m_feedEventTimer.reset(CreateWaitableTimer(nullptr, false, nullptr));
     THROW_LAST_ERROR_IF_NULL(m_feedEventTimer);
 
-    m_animalHealthThread.reset(CreateThread(nullptr, 0, AnimalHealth, nullptr, 0, nullptr));
+    m_animalHealthThread.reset(CreateThread(nullptr, 0, AnimalHealth, this, 0, nullptr));
     m_animalInteractivityThread.reset(CreateThread(nullptr, 0, AnimalInteractivity, nullptr, 0, nullptr));
 
     HealthEvent.create(wil::EventOptions::Signaled);
@@ -25,7 +27,7 @@ Cage::Cage(const int number) {
 
     m_feedDueTime.QuadPart = -((GameManager::FeedEventMinutes * 60) * TIMER_SECONDS);
 
-    ResetFeedTimer();
+    ResetFeedTimer(m_feedEventTimer.get());
 }
 
 bool Cage::IsCageEmpty() const noexcept {
@@ -139,63 +141,44 @@ LPCTSTR Cage::GetCageName(const int number) {
     }
 }
 
-void Cage::ResetFeedTimer() const {
+void Cage::ResetFeedTimer(HANDLE feedEventTimer) {
     THROW_LAST_ERROR_IF(
-        !SetWaitableTimer(m_feedEventTimer.get(), &m_feedDueTime, 0, NULL, NULL, FALSE)
+        !SetWaitableTimer(feedEventTimer, &m_feedDueTime, 0, NULL, NULL, FALSE)
     );
 }
 
-DWORD WINAPI Cage::AnimalHealth(LPVOID) {
-    // TODO: Implement AnimalHealth
-    /*Cage* cage = static_cast<Cage*>(lpParam);
+DWORD WINAPI Cage::AnimalHealth(LPVOID lpParam) {
+    const auto cage = static_cast<Cage*>(lpParam);
+
     HANDLE events[3];
 
-    srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
-
-    if (cage->FeedEvent == NULL) {
-        cwl::WriteLine(_T("%cFeed Event is NULL\n"), RED);
-        return 1;
-    }
-
-    events[0] = cage->FeedEvent;
-    events[1] = cage->FeedEventTimer;
-    events[2] = appClose;
+    events[0] = cage->FeedEvent.get();
+    events[1] = cage->m_feedEventTimer.get();
+    events[2] = GameManager::AppClose.get();
 
     do {
-        const DWORD waitResult = WaitForMultipleObjects(3, events, FALSE, INFINITE);
+        const auto waitResult = WaitForMultipleObjects(_countof(events), events, false, INFINITE);
 
         if (waitResult == 2) {
             return 0;
         }
 
-        if (IS_LIST_EMPTY(animalListHead)) { continue; }
+        if (cage->IsCageEmpty()) { continue; }
 
-        EnterCriticalSection(&AnimalListCrit);
+        auto guard = CriticalSection.lock();
 
-        NodeEntry* temp = animalListHead->Blink;
-
-        while (temp != animalListHead) {
-            ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-            if (_tcscmp(tempAnimal->CageName, cage->Name) == 0) {
-                if (waitResult == 0) {
-                    AddHealthLevel(tempAnimal);
-                } else if (waitResult == 1) {
-                    RemoveHealthLevel(tempAnimal);
-                }
-
-                ResetFeedTimer(cage->FeedEventTimer);
-
-                SetHealthEvent(tempAnimal);
+        for (auto const& animal : cage->Animals) {
+            if (waitResult == 0) {
+                animal->AddHealthLevel();
+            } else if (waitResult == 1) {
+                animal->RemoveHealthLevel();
             }
 
-            temp = temp->Blink;
-        };
+            animal->SetHealthEvent();
+        }
 
-        LeaveCriticalSection(&AnimalListCrit);
-    } while (TRUE);*/
-
-    return 0;
+        ResetFeedTimer(cage->m_feedEventTimer.get());
+    } while (TRUE);
 }
 
 DWORD WINAPI Cage::AnimalInteractivity(LPVOID) {

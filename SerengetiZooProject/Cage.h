@@ -34,15 +34,15 @@ public:
     void WaitForThreads() const noexcept;
 
 private:
-    LARGE_INTEGER m_feedDueTime;
+    static LARGE_INTEGER m_feedDueTime;
     wil::unique_handle m_feedEventTimer;
     wil::unique_handle m_animalHealthThread;
     wil::unique_handle m_animalInteractivityThread;
 
     static LPCTSTR GetCageName(int number);
 
-    void ResetFeedTimer() const;
+    static void ResetFeedTimer(HANDLE feedEventTimer);
 
-    static DWORD WINAPI AnimalHealth(LPVOID);
+    static DWORD WINAPI AnimalHealth(LPVOID lpParam);
     static DWORD WINAPI AnimalInteractivity(LPVOID);
 };

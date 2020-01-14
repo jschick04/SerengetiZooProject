@@ -40,7 +40,12 @@ void Animal::AddHealthLevel() {
     const auto newValue = HealthLevel + healthChange;
 
     if (HealthLevel >= 10) {
-        cwl::WriteLine(_T("%c%s the %s is already full...\n"), LIME, UniqueName, AnimalType);
+        cwl::WriteLine(
+            _T("%c%s the %s is already full...\n"),
+            LIME,
+            UniqueName,
+            Helpers::AnimalTypeToString(AnimalType)
+        );
         return;
     }
 
@@ -53,7 +58,7 @@ void Animal::AddHealthLevel() {
     HealthLevelChange = TRUE;
     InteractivityPrompted = TRUE;
 
-    cwl::WriteLine(_T("%c%s the %s has been fed\n"), LIME, UniqueName, AnimalType);
+    cwl::WriteLine(_T("%c%s the %s has been fed\n"), LIME, UniqueName, Helpers::AnimalTypeToString(AnimalType));
 }
 
 void Animal::RemoveHealthLevel() {
@@ -71,7 +76,7 @@ void Animal::RemoveHealthLevel() {
     InteractivityPrompted = FALSE;
 
     if (HealthLevel < 5) {
-        cwl::WriteLine(_T("%c%s the %s is hungry\n"), YELLOW, UniqueName, AnimalType);
+        cwl::WriteLine(_T("%c%s the %s is hungry\n"), YELLOW, UniqueName, Helpers::AnimalTypeToString(AnimalType));
     }
 }
 
@@ -90,7 +95,7 @@ void Animal::SetHealthEvent() {
 
         GameManager::Score -= 3;
     } else if (HealthLevel < 5) {
-        cwl::WriteLine(_T("%s the %s is %csick\n"), UniqueName, AnimalType, PINK);
+        cwl::WriteLine(_T("%s the %s is %csick\n"), UniqueName, Helpers::AnimalTypeToString(AnimalType), PINK);
     }
 
     CurrentCage->HealthEvent.SetEvent();

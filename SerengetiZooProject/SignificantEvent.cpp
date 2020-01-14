@@ -49,7 +49,7 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
     events[1] = GameManager::AppClose.get();
 
     do {
-        if (WaitForMultipleObjects(2, events, false, INFINITE) == 1) {
+        if (WaitForMultipleObjects(_countof(events), events, false, INFINITE) == 1) {
             return 0;
         }
 

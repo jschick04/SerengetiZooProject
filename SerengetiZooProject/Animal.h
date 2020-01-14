@@ -21,14 +21,15 @@ public:
 
     Animal(::AnimalType animalType, const TCHAR* uniqueName, Cage* cage);
 
-private:
-    static int GetRandomHealthLevel();
-    static int GetRandomInteractiveLevel();
+    void SetHealthEvent();
 
     void AddHealthLevel();
     void RemoveHealthLevel();
-    void SetHealthEvent();
 
     void AddInteractiveLevel();
     void RemoveInteractiveLevel();
+
+private:
+    static int GetRandomHealthLevel();
+    static int GetRandomInteractiveLevel();
 };
