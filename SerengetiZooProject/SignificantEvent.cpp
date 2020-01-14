@@ -25,7 +25,6 @@ SignificantEvent::SignificantEvent(std::vector<Cage*> cages) {
     m_significantEventThread.reset(CreateThread(nullptr, 0, SignificantEventTimer, params.release(), 0, nullptr));
 
     DueTime.QuadPart = -((GameManager::SignificantEventMinutes * 60) * TIMER_SECONDS);
-    m_feedDueTime.QuadPart = -((GameManager::FeedEventMinutes * 60) * TIMER_SECONDS);
 
     THROW_LAST_ERROR_IF(
         !SetWaitableTimer(m_timer.get(), &DueTime, 0, nullptr, nullptr, false)
@@ -41,7 +40,7 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
     const auto param = wil::make_unique_failfast<EventParams>(*params);
 
     std::random_device generator;
-    const std::uniform_int_distribution<int> cageDist(0, params->Cages.size() - 1);
+    const std::uniform_int_distribution<int> cageDist(0, int(params->Cages.size()) - 1);
     const std::bernoulli_distribution boolDist;
 
     HANDLE events[2];

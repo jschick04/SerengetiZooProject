@@ -3,6 +3,7 @@
 #include <ConsoleColors.h>
 #include <cwl.h>
 #include <tchar.h>
+#include "GameManager.h"
 #include "Helpers.h"
 
 wil::critical_section Cage::CriticalSection;
@@ -22,10 +23,9 @@ Cage::Cage(const int number) {
     HealthEvent.create(wil::EventOptions::Signaled);
     THROW_LAST_ERROR_IF(!HealthEvent.is_valid());
 
-    // TODO: Reimplement
-    //if (!ResetFeedTimer(feedEventTimer)) {
-    //    return NULL;
-    //}
+    m_feedDueTime.QuadPart = -((GameManager::FeedEventMinutes * 60) * TIMER_SECONDS);
+
+    ResetFeedTimer();
 }
 
 bool Cage::IsCageEmpty() const noexcept {
@@ -139,15 +139,10 @@ LPCTSTR Cage::GetCageName(const int number) {
     }
 }
 
-void Cage::ResetFeedTime() {
-    // TODO: Implement ResetFeedTimer
-    /*if (SetWaitableTimer(eventTimer, &feedDueTime, 0, NULL, NULL, FALSE)) {
-        return TRUE;
-    }
-
-    cwl::WriteLine(_T("Failed to set Feed Event Timer: %d\n"), GetLastError());
-
-    return FALSE;*/
+void Cage::ResetFeedTimer() const {
+    THROW_LAST_ERROR_IF(
+        !SetWaitableTimer(m_feedEventTimer.get(), &m_feedDueTime, 0, NULL, NULL, FALSE)
+    );
 }
 
 DWORD WINAPI Cage::AnimalHealth(LPVOID) {

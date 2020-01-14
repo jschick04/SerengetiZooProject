@@ -31,6 +31,4 @@ private:
 
     void AddInteractiveLevel();
     void RemoveInteractiveLevel();
-
-    void ResetFeedTime();
 };

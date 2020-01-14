@@ -20,8 +20,6 @@ public:
     void WaitForThread() const noexcept;
 
 private:
-    LARGE_INTEGER m_feedDueTime;
-
     wil::unique_handle m_significantEventThread;
     wil::unique_handle m_timer;
 
