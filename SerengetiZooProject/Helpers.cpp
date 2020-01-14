@@ -1,9 +1,9 @@
 #include "Helpers.h"
 
+#include <random>
 #include <tchar.h>
 #include "Animal.h"
 #include "Visitor.h"
-#include <random>
 
 wil::critical_section Helpers::m_cs;
 
@@ -26,9 +26,15 @@ LPCTSTR Helpers::GetRandomName() {
     std::random_device generator;
     const std::uniform_int_distribution<int> range(0, int(m_uniqueNames.size()) - 1);
 
-    int index = range(generator);
-    const LPCTSTR selectedName = m_uniqueNames[index];
-    m_uniqueNames[index] = nullptr;
+    int index;
+    LPCTSTR selectedName;
+
+    do {
+        index = range(generator);
+        selectedName = m_uniqueNames[index];
+    } while (selectedName == nullptr);
+
+    m_uniqueNames.at(index) = nullptr;
 
     return selectedName;
 }

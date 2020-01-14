@@ -20,7 +20,7 @@ Cage::Cage(const int number) {
     THROW_LAST_ERROR_IF_NULL(m_feedEventTimer);
 
     m_animalHealthThread.reset(CreateThread(nullptr, 0, AnimalHealth, this, 0, nullptr));
-    m_animalInteractivityThread.reset(CreateThread(nullptr, 0, AnimalInteractivity, nullptr, 0, nullptr));
+    m_animalInteractivityThread.reset(CreateThread(nullptr, 0, AnimalInteractivity, this, 0, nullptr));
 
     HealthEvent.create(wil::EventOptions::Signaled);
     THROW_LAST_ERROR_IF(!HealthEvent.is_valid());
@@ -181,47 +181,34 @@ DWORD WINAPI Cage::AnimalHealth(LPVOID lpParam) {
     } while (TRUE);
 }
 
-DWORD WINAPI Cage::AnimalInteractivity(LPVOID) {
-    // TODO: Implement AnimalInteractivity
-    /*lpParam = NULL;
+DWORD WINAPI Cage::AnimalInteractivity(LPVOID lpParam) {
+    const auto cage = static_cast<Cage*>(lpParam);
 
     HANDLE events[2];
 
-    srand((unsigned)time(NULL) * GetProcessId(GetCurrentProcess()));
-
-    events[0] = healthEvent;
-    events[1] = appClose;
+    events[0] = cage->HealthEvent.get();
+    events[1] = GameManager::AppClose.get();
 
     do {
-        if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == 1) {
+        if (WaitForMultipleObjects(_countof(events), events, false, INFINITE) == 1) {
             return 0;
         }
 
-        if (IS_LIST_EMPTY(animalListHead)) { continue; }
+        if (cage->IsCageEmpty()) { continue; }
 
-        EnterCriticalSection(&AnimalListCrit);
+        auto guard = CriticalSection.lock();
 
-        NodeEntry* temp = animalListHead->Blink;
+        for (auto const& animal : cage->Animals) {
+            if (animal->HealthLevelChange) {
 
-        while (temp != animalListHead) {
-            ZooAnimal* tempAnimal = &CONTAINING_RECORD(temp, AnimalList, LinkedList)->ZooAnimal;
-
-            if (tempAnimal->HealthLevelChange) {
-
-                if (tempAnimal->InteractivityPrompted) {
-                    AddInteractiveLevel(tempAnimal);
+                if (animal->InteractivityPrompted) {
+                    animal->AddInteractiveLevel();
                 } else {
-                    RemoveInteractiveLevel(tempAnimal);
+                    animal->RemoveInteractiveLevel();
                 }
 
-                tempAnimal->HealthLevelChange = FALSE;
+                animal->HealthLevelChange = false;
             }
-
-            temp = temp->Blink;
-        };
-
-        LeaveCriticalSection(&AnimalListCrit);
-    } while (TRUE);*/
-
-    return 0;
+        }
+    } while (TRUE);
 }
