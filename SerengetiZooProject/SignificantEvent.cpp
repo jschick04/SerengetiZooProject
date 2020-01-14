@@ -3,6 +3,7 @@
 #include <ctime>
 #include <cwl.h>
 #include <memory>
+#include <random>
 #include <tchar.h>
 #include <wil/resource.h>
 #include "GameManager.h"
@@ -38,7 +39,9 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
     const auto params = static_cast<EventParams*>(lpParam);
     const auto param = wil::make_unique_failfast<EventParams>(*params);
 
-    srand(unsigned(time(nullptr)) * GetProcessId(GetCurrentProcess()));
+    std::random_device generator;
+    const std::uniform_int_distribution<int> cageDist(0, params->Cages.size() - 1);
+    const std::bernoulli_distribution boolDist;
 
     HANDLE events[2];
 
@@ -68,13 +71,13 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
         Cage* randomCage;
 
         do {
-            randomCage = params->Cages.at(rand() % params->Cages.size());
+            randomCage = params->Cages.at(cageDist(generator));
         } while (randomCage->IsCageEmpty());
 
         while (selectedAnimal == nullptr) {
 
             for (auto const& animal : randomCage->Animals) {
-                action = rand() % 2;
+                action = boolDist(generator);
 
                 if (action) {
                     selectedAnimal = animal.get();
@@ -83,7 +86,7 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
             }
         };
 
-        action = rand() % 2;
+        action = boolDist(generator);
 
         if (action) {
             cwl::WriteLine(

@@ -11,8 +11,6 @@
 #include "Zoo.h"
 
 int _tmain() {
-    srand(unsigned(time(nullptr)) * GetProcessId(GetCurrentProcess()));
-
     const auto zoo = wil::make_unique_nothrow<Zoo>(GameManager::MaxCages);
     THROW_LAST_ERROR_IF_NULL(zoo);
 
