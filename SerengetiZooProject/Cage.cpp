@@ -1,8 +1,7 @@
 #include "Cage.h"
-#include <algorithm>
+
 #include <ConsoleColors.h>
 #include <cwl.h>
-#include <string>
 #include <tchar.h>
 #include "Helpers.h"
 
@@ -23,6 +22,7 @@ Cage::Cage(const int number) {
     HealthEvent.create(wil::EventOptions::Signaled);
     THROW_LAST_ERROR_IF(!HealthEvent.is_valid());
 
+    // TODO: Reimplement
     //if (!ResetFeedTimer(feedEventTimer)) {
     //    return NULL;
     //}
@@ -45,6 +45,8 @@ DWORD Cage::GetAverageInteractiveLevel() const noexcept {
         return total;
     }
 
+    auto animalGuard = Animal::CriticalSection.lock();
+
     for (const auto& animal : Animals) {
         count++;
         total += animal->InteractiveLevel;
@@ -62,6 +64,8 @@ DWORD Cage::GetTotalInteractiveLevel() const noexcept {
         cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
         return total;
     }
+
+    auto animalGuard = Animal::CriticalSection.lock();
 
     for (const auto& animal : Animals) {
         total += animal->InteractiveLevel;
@@ -106,36 +110,48 @@ LPCTSTR Cage::GetCageName(const int number) {
 
     return cageName.str().c_str();*/
     switch (number) {
-        case 1:
+        case 1 :
             return _T("Cage1");
-        case 2:
+        case 2 :
             return _T("Cage2");
-        case 3:
+        case 3 :
             return _T("Cage3");
-        case 4:
+        case 4 :
             return _T("Cage4");
-        case 5:
+        case 5 :
             return _T("Cage5");
-        case 6:
+        case 6 :
             return _T("Cage6");
-        case 7:
+        case 7 :
             return _T("Cage7");
-        case 8:
+        case 8 :
             return _T("Cage8");
-        case 9:
+        case 9 :
             return _T("Cage9");
-        case 10:
+        case 10 :
             return _T("Cage10");
-        case 11:
+        case 11 :
             return _T("Cage11");
-        case 12:
+        case 12 :
             return _T("Cage12");
         default :
             return _T("Invalid Cage");
     }
 }
 
+void Cage::ResetFeedTime() {
+    // TODO: Implement ResetFeedTimer
+    /*if (SetWaitableTimer(eventTimer, &feedDueTime, 0, NULL, NULL, FALSE)) {
+        return TRUE;
+    }
+
+    cwl::WriteLine(_T("Failed to set Feed Event Timer: %d\n"), GetLastError());
+
+    return FALSE;*/
+}
+
 DWORD WINAPI Cage::AnimalHealth(LPVOID) {
+    // TODO: Implement AnimalHealth
     /*Cage* cage = static_cast<Cage*>(lpParam);
     HANDLE events[3];
 
@@ -188,6 +204,7 @@ DWORD WINAPI Cage::AnimalHealth(LPVOID) {
 }
 
 DWORD WINAPI Cage::AnimalInteractivity(LPVOID) {
+    // TODO: Implement AnimalInteractivity
     /*lpParam = NULL;
 
     HANDLE events[2];

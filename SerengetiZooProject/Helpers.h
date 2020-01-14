@@ -3,8 +3,9 @@
 #include <array>
 #include <wil/resource.h>
 #include <Windows.h>
-#include "Animal.h"
-#include "Visitor.h"
+
+enum class VisitorStatus;
+enum class AnimalType;
 
 class Helpers {
 public:

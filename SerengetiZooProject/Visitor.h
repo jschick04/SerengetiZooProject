@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Windows.h>
 #include <wil/resource.h>
+#include <Windows.h>
 
 enum class VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
 
@@ -22,6 +22,5 @@ public:
 private:
     wil::unique_handle m_visitorLoopThread;
 
-    static DWORD WINAPI AddVisitorsThread(LPVOID lpParam); // Move to Zoo
     static DWORD WINAPI VisitorLoopThread(LPVOID lpParam);
 };

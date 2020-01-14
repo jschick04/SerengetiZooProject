@@ -1,4 +1,5 @@
 #include "Zoo.h"
+
 #include <ConsoleColors.h>
 #include <cwl.h>
 #include <tchar.h>
@@ -7,7 +8,9 @@
 #include "Menu.h"
 
 bool Zoo::IsOpen = false;
-LARGE_INTEGER Zoo::m_closedEventTime = {0};
+wil::critical_section Zoo::CriticalSection;
+
+LARGE_INTEGER Zoo::m_closedEventTime{0};
 
 Zoo::Zoo(const int numberOfCages) {
     GameManager::Score = 0;
@@ -16,7 +19,7 @@ Zoo::Zoo(const int numberOfCages) {
         auto cage = wil::make_unique_failfast<Cage>(i);
         THROW_LAST_ERROR_IF_NULL(cage);
 
-        auto animal = wil::make_unique_failfast<Animal>(AnimalType(i), Helpers::GetRandomName(), cage->Name);
+        auto animal = wil::make_unique_failfast<Animal>(AnimalType(i), Helpers::GetRandomName(), cage.get());
         THROW_LAST_ERROR_IF_NULL(animal);
 
         cage->AddAnimal(move(animal));
@@ -52,6 +55,7 @@ void Zoo::EndTurn() {
 
     Menu::PrintScore();
 
+    // TODO: Reimplement
     //ResetClosedTimer();
 }
 
@@ -59,7 +63,7 @@ void Zoo::EndTurn() {
 bool Zoo::IsZooEmpty() {
     int count = 0;
 
-    auto guard = m_cs.lock();
+    auto guard = Cage::CriticalSection.lock();
 
     for (auto const& cage : Cages) {
         if (cage->IsCageEmpty()) {
@@ -72,14 +76,14 @@ bool Zoo::IsZooEmpty() {
 
 // Prints all animals
 void Zoo::GetAllAnimals() {
-    auto lock = m_cs.lock();
+    auto guard = Cage::CriticalSection.lock();
 
     for (auto const& cage : Cages) {
         for (auto const& animal : cage->Animals) {
             cwl::WriteLine(
                 _T("[%c%s%r] %s the %s\n"),
                 SKYBLUE,
-                animal->CageName,
+                animal->CurrentCage->Name,
                 animal->UniqueName,
                 Helpers::AnimalTypeToString(animal->AnimalType)
             );
@@ -89,7 +93,7 @@ void Zoo::GetAllAnimals() {
 
 // Prints all animals health values
 void Zoo::GetAllAnimalsHealth() {
-    auto lock = m_cs.lock();
+    auto cageGuard = Cage::CriticalSection.lock();
 
     for (auto const& cage : Cages) {
         if (cage->IsCageEmpty()) {
@@ -97,11 +101,13 @@ void Zoo::GetAllAnimalsHealth() {
             continue;
         }
 
+        auto animalGuard = Animal::CriticalSection.lock();
+
         for (auto const& animal : cage->Animals) {
             cwl::WriteLine(
                 _T("[%c%s%r] %s the %s "),
                 SKYBLUE,
-                animal->CageName,
+                animal->CurrentCage->Name,
                 animal->UniqueName,
                 Helpers::AnimalTypeToString(animal->AnimalType)
             );
@@ -119,7 +125,7 @@ void Zoo::GetAllAnimalsHealth() {
 
 // Prints all animals interactivity values
 void Zoo::GetAllAnimalsInteractivity() {
-    auto lock = m_cs.lock();
+    auto cageGuard = Cage::CriticalSection.lock();
 
     for (auto const& cage : Cages) {
         if (cage->IsCageEmpty()) {
@@ -127,11 +133,13 @@ void Zoo::GetAllAnimalsInteractivity() {
             continue;
         }
 
+        auto animalGuard = Animal::CriticalSection.lock();
+
         for (auto const& animal : cage->Animals) {
             cwl::WriteLine(
                 _T("[%c%s%r] %s the %s "),
                 SKYBLUE,
-                animal->CageName,
+                animal->CurrentCage->Name,
                 animal->UniqueName,
                 Helpers::AnimalTypeToString(animal->AnimalType)
             );
@@ -151,7 +159,7 @@ void Zoo::GetAllAnimalsInteractivity() {
 Cage* Zoo::GetRandomCage() {
     std::vector<Cage*> availableCages;
 
-    auto guard = m_cs.lock();
+    auto guard = Cage::CriticalSection.lock();
 
     for (auto const& cage : Cages) {
         if (!cage->IsCageEmpty()) {
@@ -163,6 +171,7 @@ Cage* Zoo::GetRandomCage() {
 }
 
 void Zoo::GetAllVisitors() {
+    // TODO: Implement GetAllVisitors
     //DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
     //{
     //
@@ -224,6 +233,7 @@ void Zoo::GetAllVisitors() {
     //}
 }
 
+// Opens Zoo and resets visitor timers
 void Zoo::OpenZoo() {
     m_newVisitorEvent.reset(CreateEvent(nullptr, true, false, nullptr));
     THROW_LAST_ERROR_IF(!m_newVisitorEvent.is_valid());
@@ -238,6 +248,7 @@ void Zoo::OpenZoo() {
 }
 
 void Zoo::ShowCaseAnimals(int cageNumber) {
+    // TODO: Implement ShowCaseAnimals
     //auto cageName = static_cast<LPTSTR>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10));
     //const LPCTSTR prepend = _T("Cage");
     //if (cageName != 0) {
@@ -270,6 +281,7 @@ void Zoo::ShowCaseAnimals(int cageNumber) {
     //return 0;
 }
 
+// Resets the timer that triggers the Zoo opening
 void Zoo::ResetClosedTimer() {
     m_closedEventTime.QuadPart = -(30 * TIMER_SECONDS);
     THROW_LAST_ERROR_IF(!SetWaitableTimer(GameManager::OpenZoo.get(), &m_closedEventTime, 0, nullptr, nullptr, 0));
@@ -292,4 +304,47 @@ DWORD WINAPI Zoo::ClosedTimerThread(LPVOID) {
             return 0;
         }
     } while (TRUE);
+}
+
+DWORD WINAPI Zoo::AddVisitorsThread(LPVOID lpParam) {
+    // TODO: Implement AddVisitorsThread
+    //    int SleepRand = 0;
+    //    int i = 0;
+    //    int num = 0;
+    //    int numVisitorsRand = 0;
+
+    //    //Sleep at the begginning to delay after initial seed.
+    //    SleepRand = (rand() % (300000 - 80000 + 1)) + 80000;
+    //    if (i != 0)
+    //    { 
+    //    Sleep(SleepRand);
+    //    }
+
+    //    //Determine number of visitors to add
+    //    while(1)
+    //    {
+    //        if (bExitZoo != TRUE)
+    //        { 
+    //        WaitForSingleObject(VisitorEnterEvent, INFINITE);
+    //        numVisitorsRand = (rand() % 3);
+    //        for (num = 0; num != numVisitorsRand; ++num)
+    //        {
+    //            AddVisitor(visitorListHead, VisitorName[i]);
+    //            ++i;
+    //        }
+    //        if (i == _countof(VisitorName))
+    //        {
+    //            // go back to the beginning of the name list.
+    //            i = 0;
+    //        }
+    //        SleepRand = (rand() % (30000 - 8000 + 1)) + 8000;
+    //        Sleep(SleepRand);
+    //        }
+    //        else
+    //        {
+    //            Sleep(1000);
+    //        }
+    //    }
+
+    return 0;
 }

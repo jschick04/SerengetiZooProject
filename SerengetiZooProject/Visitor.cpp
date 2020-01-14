@@ -1,7 +1,6 @@
 #include "Visitor.h"
+
 #include <tchar.h>
-#include <windows.h>
-#include "Animal.h"
 #include "Helpers.h"
 
 wil::critical_section Visitor::CriticalSection;
@@ -12,16 +11,18 @@ Visitor::Visitor() {
     HappinessLevel = 8;
     Status = VisitorStatus::Happy;
 
-    // Call Visitor Loop thread
+    // TODO: Call Visitor Loop thread
 }
 
 int Visitor::GetVisitorCount() {
+    // TODO: Finish GetVisitorCount
     return 0;
 }
 
 void Visitor::RemoveVisitor(LPCTSTR name) {
     auto guard = CriticalSection.lock();
 
+    // TODO: Finish RemoveVisitor
     //{
     //    WaitForSingleObject(hVisitorEvent, INFINITE);
     //    EnterCriticalSection(&VisitorListCrit);
@@ -94,49 +95,8 @@ void Visitor::RemoveVisitor(LPCTSTR name) {
     //}
 }
 
-DWORD WINAPI Visitor::AddVisitorsThread(LPVOID lpParam) {
-    //    int SleepRand = 0;
-    //    int i = 0;
-    //    int num = 0;
-    //    int numVisitorsRand = 0;
-
-    //    //Sleep at the begginning to delay after initial seed.
-    //    SleepRand = (rand() % (300000 - 80000 + 1)) + 80000;
-    //    if (i != 0)
-    //    { 
-    //    Sleep(SleepRand);
-    //    }
-
-    //    //Determine number of visitors to add
-    //    while(1)
-    //    {
-    //        if (bExitZoo != TRUE)
-    //        { 
-    //        WaitForSingleObject(VisitorEnterEvent, INFINITE);
-    //        numVisitorsRand = (rand() % 3);
-    //        for (num = 0; num != numVisitorsRand; ++num)
-    //        {
-    //            AddVisitor(visitorListHead, VisitorName[i]);
-    //            ++i;
-    //        }
-    //        if (i == _countof(VisitorName))
-    //        {
-    //            // go back to the beginning of the name list.
-    //            i = 0;
-    //        }
-    //        SleepRand = (rand() % (30000 - 8000 + 1)) + 8000;
-    //        Sleep(SleepRand);
-    //        }
-    //        else
-    //        {
-    //            Sleep(1000);
-    //        }
-    //    }
-
-    return 0;
-}
-
 DWORD WINAPI Visitor::VisitorLoopThread(LPVOID lpParam) {
+    // TODO: Finish VisitorLoopThread
     //auto Params = static_cast<VisitorLoopParams*>(Param);
     //int SleepTimeRand = 0;
     //for (int i = 0; i != _countof(cages); ++i) {

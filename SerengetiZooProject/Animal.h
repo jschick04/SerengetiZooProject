@@ -3,13 +3,15 @@
 #include <wil/resource.h>
 #include <Windows.h>
 
+class Cage;
+
 enum class AnimalType { Antelope, Cheetah, Giraffe, Hyaena, Hippo, Monkey, Mongoose, Tiger, WildeBeast, Zebra };
 
 class Animal {
 public:
     AnimalType AnimalType;
     LPCTSTR UniqueName;
-    LPCTSTR CageName;
+    Cage* CurrentCage;
     DWORD HealthLevel;
     BOOL HealthLevelChange = false;
     DWORD InteractiveLevel;
@@ -17,7 +19,7 @@ public:
 
     static wil::critical_section CriticalSection;
 
-    Animal(const ::AnimalType animalType, const TCHAR* uniqueName, const TCHAR* cageName);
+    Animal(::AnimalType animalType, const TCHAR* uniqueName, Cage* cage);
 
 private:
     static int GetRandomHealthLevel();

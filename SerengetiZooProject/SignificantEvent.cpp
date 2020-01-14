@@ -1,16 +1,17 @@
 #include "SignificantEvent.h"
+
 #include <ConsoleColors.h>
-#include <ctime>
 #include <cwl.h>
-#include <memory>
 #include <random>
 #include <tchar.h>
-#include <wil/resource.h>
+#include "Animal.h"
+#include "Cage.h"
 #include "GameManager.h"
 #include "Helpers.h"
+#include "Visitor.h"
 #include "Zoo.h"
 
-LARGE_INTEGER SignificantEvent::DueTime{DueTime.QuadPart = 0};
+LARGE_INTEGER SignificantEvent::DueTime{0};
 
 SignificantEvent::SignificantEvent(std::vector<Cage*> cages) {
     m_timer.reset(CreateWaitableTimer(nullptr, false, nullptr));
@@ -121,7 +122,7 @@ DWORD WINAPI SignificantEvent::SignificantEventTimer(LPVOID lpParam) {
             auto newAnimal = wil::make_unique_failfast<Animal>(
                 selectedAnimal->AnimalType,
                 Helpers::GetRandomName(),
-                randomCage->Name
+                randomCage
             );
 
             randomCage->AddAnimal(move(newAnimal));

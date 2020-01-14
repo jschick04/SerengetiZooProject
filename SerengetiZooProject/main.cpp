@@ -1,11 +1,7 @@
 #include <ConsoleColors.h>
-#include <cstdio>
-#include <ctime>
 #include <cwl.h>
-#include <strsafe.h>
 #include <tchar.h>
 #include <wil/resource.h>
-#include <Windows.h>
 #include "GameManager.h"
 #include "Menu.h"
 #include "Zoo.h"
@@ -20,7 +16,7 @@ int _tmain() {
         int selectedMenuNumber;
         int selectedCageNumber;
 
-        zoo->IsOpen = true;
+        zoo->OpenZoo();
 
         Menu::PrintCurrentZooStatus();
         Menu::PrintOptions();

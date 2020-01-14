@@ -1,4 +1,5 @@
 #include "Menu.h"
+
 #include <ConsoleColors.h>
 #include <cwl.h>
 #include <tchar.h>

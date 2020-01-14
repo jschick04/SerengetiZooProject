@@ -1,5 +1,10 @@
 #include "Helpers.h"
+
 #include <tchar.h>
+#include "Animal.h"
+#include "Visitor.h"
+
+wil::critical_section Helpers::m_cs;
 
 // Adds a name back into the unique name list
 void Helpers::AddRandomName(LPCTSTR name) {
@@ -15,7 +20,7 @@ void Helpers::AddRandomName(LPCTSTR name) {
 
 // Get a random name from the unique name list
 LPCTSTR Helpers::GetRandomName() {
-    auto lock = m_cs.lock();
+    auto guard = m_cs.lock();
 
     unsigned int index;
     LPCTSTR selectedName;
@@ -73,8 +78,6 @@ LPCTSTR Helpers::VisitorStatusToString(const VisitorStatus type) {
             return _T("Invalid Status");
     }
 }
-
-wil::critical_section Helpers::m_cs;
 
 std::array<LPCTSTR, 53> Helpers::m_uniqueNames{
     _T("Julien"),

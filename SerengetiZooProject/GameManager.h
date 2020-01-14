@@ -1,4 +1,5 @@
 #pragma once
+
 #include <wil/resource.h>
 
 constexpr auto TIMER_SECONDS = 10000000;

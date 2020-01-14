@@ -1,7 +1,10 @@
 #pragma once
 
+#include <vector>
+#include <wil/resource.h>
 #include <Windows.h>
-#include "Cage.h"
+
+class Cage;
 
 typedef struct EventParams {
     std::vector<Cage*> Cages;

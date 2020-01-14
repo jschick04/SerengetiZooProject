@@ -40,6 +40,8 @@ private:
 
     static LPCTSTR GetCageName(int number);
 
+    void ResetFeedTime();
+
     static DWORD WINAPI AnimalHealth(LPVOID);
     static DWORD WINAPI AnimalInteractivity(LPVOID);
 };
