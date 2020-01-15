@@ -45,6 +45,8 @@ void Animal::AddHealthLevel() {
     InteractivityPrompted = TRUE;
 
     cwl::WriteLine(_T("%c%s the %s has been fed\n"), LIME, UniqueName, Helpers::AnimalTypeToString(AnimalType));
+
+    SetHealthEvent();
 }
 
 void Animal::RemoveHealthLevel() {
@@ -64,12 +66,12 @@ void Animal::RemoveHealthLevel() {
     if (HealthLevel < 5) {
         cwl::WriteLine(_T("%c%s the %s is hungry\n"), YELLOW, UniqueName, Helpers::AnimalTypeToString(AnimalType));
     }
+
+    SetHealthEvent();
 }
 
 void Animal::SetHealthEvent() const {
-    auto guard = CriticalSection.lock();
-
-    if (HealthLevel < 5) {
+    if (HealthLevel >= 1 || HealthLevel < 5) {
         cwl::WriteLine(_T("%s the %s is %csick\n"), UniqueName, Helpers::AnimalTypeToString(AnimalType), PINK);
 
         CurrentCage->HealthEvent.SetEvent();

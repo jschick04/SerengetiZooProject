@@ -38,7 +38,7 @@ void Visitor::CalculateScore(Visitor* visitor) noexcept {
     if (visitor->HappinessLevel < 5) {
         visitor->Status = VisitorStatus::RefundDemanded;
         cwl::WriteLine(_T("%c%s is %s\n"), PINK, visitor->UniqueName, Helpers::VisitorStatusToString(visitor->Status));
-        GameManager::Score -= 15;
+        GameManager::Score -= 3;
     } else if (visitor->HappinessLevel <= 7) {
         visitor->Status = VisitorStatus::LeavingAngry;
         cwl::WriteLine(
@@ -47,20 +47,20 @@ void Visitor::CalculateScore(Visitor* visitor) noexcept {
             visitor->UniqueName,
             Helpers::VisitorStatusToString(visitor->Status)
         );
-        GameManager::Score -= 10;
+        GameManager::Score -= 1;
     } else {
         visitor->Status = VisitorStatus::LeavingHappy;
         cwl::WriteLine(_T("%c%s is %s\n"), LIME, visitor->UniqueName, Helpers::VisitorStatusToString(visitor->Status));
-        GameManager::Score += 10;
+        GameManager::Score += 1;
     }
 }
 
 // Resets the movement timer to a random time
 void Visitor::ResetMovementTimer() {
     std::random_device generator;
-    const std::uniform_int_distribution<int> range(1, 4);
+    const std::uniform_int_distribution<int> range(1, 3);
 
-    m_movementTime.QuadPart = -((range(generator) * 30) * TIMER_SECONDS);
+    m_movementTime.QuadPart = -((range(generator) * 10) * TIMER_SECONDS);
 
     THROW_LAST_ERROR_IF(
         !SetWaitableTimer(m_movementTimer.get(), &m_movementTime, 0, nullptr, nullptr, false)
@@ -145,5 +145,7 @@ DWORD WINAPI Visitor::VisitorLoop(LPVOID lpParam) {
         }
 
         UpdateStatus(visitor);
+
+        visitor->ResetMovementTimer();
     } while (true);
 }

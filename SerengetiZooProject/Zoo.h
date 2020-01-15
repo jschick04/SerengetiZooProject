@@ -32,10 +32,13 @@ public:
 
     void ShowCaseAnimals(int cageNumber);
 
+    void WaitForThreads() const;
+
 private:
     static std::vector<wistd::unique_ptr<Visitor>> m_visitors;
 
     wil::unique_handle m_addVisitorsThread;
+    wil::unique_handle m_zooTimerThread;
     static LARGE_INTEGER m_closedEventTime;
     static wil::unique_event_failfast m_canAddNewVisitorsEvent;
     static LARGE_INTEGER m_addVisitorsEventTime;

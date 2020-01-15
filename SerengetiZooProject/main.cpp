@@ -81,11 +81,7 @@ int _tmain() {
 
                 GameManager::AppClose.SetEvent();
 
-                zoo->Event->WaitForThread();
-
-                for (auto& thread : zoo->Cages) {
-                    thread->WaitForThreads();
-                }
+                zoo->WaitForThreads();
 
                 return 0;
             default :

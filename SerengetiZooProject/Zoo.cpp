@@ -50,6 +50,8 @@ Zoo::Zoo(const int numberOfCages) {
 
     m_canAddNewVisitorsEvent.SetEvent();
     ResetAddVisitorsEvent();
+
+    m_zooTimerThread.reset(CreateThread(nullptr, 0, OpenZooTimerThread, nullptr, 0, nullptr));
 }
 
 // Closes the zoo for the day and tells visitors to leave
@@ -245,6 +247,7 @@ void Zoo::GetAllVisitors() {
 }
 
 int Zoo::GetVisitorCount() {
+    // TODO: Need to check all visitors not size of array
     return static_cast<int>(m_visitors.size());
 }
 
@@ -280,6 +283,17 @@ void Zoo::ShowCaseAnimals(int cageNumber) {
     //SetEvent(hVisitorEvent);
 
     //return 0;
+}
+
+void Zoo::WaitForThreads() const {
+    WaitForSingleObject(m_addVisitorsThread.get(), INFINITE);
+    WaitForSingleObject(m_zooTimerThread.get(), INFINITE);
+
+    Event->WaitForThread();
+
+    for (auto& thread : Cages) {
+        thread->WaitForThreads();
+    }
 }
 
 void Zoo::RemoveVisitor(LPCTSTR uniqueName) {
