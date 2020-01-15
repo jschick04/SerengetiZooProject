@@ -44,7 +44,7 @@ private:
     static LARGE_INTEGER m_addVisitorsEventTime;
     static wil::unique_handle m_newVisitorsTimer;
 
-    static void RemoveVisitor(const wistd::unique_ptr<Visitor>& visitor);
+    static void RemoveVisitor(LPCTSTR name);
 
     static void ResetAddVisitorsEvent();
     static void ResetOpenZooTimer();

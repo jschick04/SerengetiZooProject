@@ -53,14 +53,18 @@ Zoo::Zoo(const int numberOfCages) {
 
 // Closes the zoo for the day and tells visitors to leave
 void Zoo::EndTurn() {
-    cwl::WriteLine(_T("\n%cZoo is closing for the rest of the day...\n"), PINK);
+    cwl::WriteLine(_T("\n%cZoo is closing for the rest of the day...\n\n"), PINK);
 
     m_canAddNewVisitorsEvent.ResetEvent();
     GameManager::CloseZoo.SetEvent();
 
-    /*for (auto const& visitor : m_visitors) {
-        RemoveVisitor(visitor);
-    }*/
+    auto end = m_visitors.end();
+
+    for (auto i = m_visitors.size(); i-- > 0;) {
+        
+        m_visitors[i]->WaitForThreads();
+        RemoveVisitor(m_visitors[i]->UniqueName);
+    }
 
     IsOpen = false;
 
@@ -254,18 +258,16 @@ void Zoo::WaitForThreads() const {
     }
 }
 
-void Zoo::RemoveVisitor(const wistd::unique_ptr<Visitor>& visitor) {
-    visitor->WaitForThreads();
-
+void Zoo::RemoveVisitor(LPCTSTR name) {
     auto guard = CriticalSection.lock();
 
-    Helpers::AddRandomName(visitor->UniqueName);
+    Helpers::AddRandomName(name);
 
     m_visitors.erase(
         std::remove_if(
             m_visitors.begin(),
             m_visitors.end(),
-            [&](wistd::unique_ptr<Visitor>& currentVisitor) { return currentVisitor == visitor; }
+            [&](wistd::unique_ptr<Visitor>& visitor) { return visitor->UniqueName == name; }
         ),
         m_visitors.end()
     );
@@ -299,9 +301,9 @@ DWORD WINAPI Zoo::OpenZooTimerThread(LPVOID) {
 
             IsOpen = true;
 
-            cwl::WriteLine(_T("\n%c------------------------------------\n"), RED);
-            cwl::WriteLine(_T("%cThe Zoo is now open.\n"), RED);
-            cwl::WriteLine(_T("%c------------------------------------\n\n"), RED);
+            cwl::WriteLine(_T("\n%c------------------------------------\n"), LIME);
+            cwl::WriteLine(_T("%cThe Zoo is now open.\n"), LIME);
+            cwl::WriteLine(_T("%c------------------------------------\n\n"), LIME);
 
             m_canAddNewVisitorsEvent.SetEvent();
             ResetAddVisitorsEvent();

@@ -114,16 +114,16 @@ DWORD WINAPI Visitor::VisitorLoop(LPVOID lpParam) {
 
         visitor->CageLocation = currentCage->Name;
 
-        cwl::WriteLine(
-            _T("%s is interacting with the %s cage\n"),
-            visitor->UniqueName,
-            Helpers::AnimalTypeToString(currentCage->Animals.at(0)->AnimalType)
-        );
-
         if (currentCage->IsCageEmpty()) {
             cwl::WriteLine(_T("%c%s lost 2 happiness points due to an empty cage\n"), PINK, visitor->UniqueName);
             visitor->HappinessLevel -= 2;
             continue;
+        } else {
+            cwl::WriteLine(
+                _T("%s is interacting with the %s cage\n"),
+                visitor->UniqueName,
+                Helpers::AnimalTypeToString(currentCage->Animals.at(0)->AnimalType)
+            );
         }
 
         int averageInteractivityLevel = currentCage->GetAverageInteractiveLevel();
