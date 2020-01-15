@@ -172,15 +172,15 @@ DWORD WINAPI Cage::AnimalHealth(LPVOID lpParam) {
 
         auto guard = CriticalSection.lock();
 
-        for (auto const& animal : cage->Animals) {
-            if (waitResult == 0) {
-                animal->AddHealthLevel();
-            } else if (waitResult == 1) {
-                animal->RemoveHealthLevel();
-            }
-
+        for (auto i = cage->Animals.size(); i-- > 0;) {
             try {
-                animal->SetHealthEvent();
+                if (waitResult == 0) {
+                    cage->Animals.at(i)->AddHealthLevel();
+                } else if (waitResult == 1) {
+                    cage->Animals.at(i)->RemoveHealthLevel();
+                }
+
+                cage->Animals.at(i)->SetHealthEvent();
             } catch (...) {
                 cwl::WriteLine(_T("Unable to set HealthEvent: %d"), GetLastError());
             }

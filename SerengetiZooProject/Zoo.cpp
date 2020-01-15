@@ -214,6 +214,7 @@ int Zoo::GetVisitorCount() {
     return static_cast<int>(m_visitors.size());
 }
 
+// Increase happiness level for anyone in the specified cage
 void Zoo::ShowCaseAnimals(int cageNumber) {
     auto guard = CriticalSection.lock();
 
