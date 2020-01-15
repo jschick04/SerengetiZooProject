@@ -13,7 +13,7 @@ wil::critical_section Zoo::CriticalSection;
 
 LARGE_INTEGER Zoo::m_closedEventTime;
 wil::unique_handle Zoo::m_newVisitorsTimer;
-wil::unique_event_failfast Zoo::m_canAddNewVisitorsEvent;
+wil::unique_event_failfast Zoo::m_canAddNewVisitorsEvent(wil::EventOptions::ManualReset);
 LARGE_INTEGER Zoo::m_addVisitorsEventTime;
 std::vector<wistd::unique_ptr<Visitor>> Zoo::m_visitors;
 
@@ -41,9 +41,6 @@ Zoo::Zoo(const int numberOfCages) {
     m_newVisitorsTimer.reset(CreateWaitableTimer(nullptr, true, nullptr));
     THROW_LAST_ERROR_IF(!m_newVisitorsTimer.is_valid());
 
-    m_canAddNewVisitorsEvent.reset(CreateEvent(nullptr, true, false, nullptr));
-    THROW_LAST_ERROR_IF(!m_canAddNewVisitorsEvent.is_valid());
-
     m_addVisitorsThread.reset(CreateThread(nullptr, 0, AddVisitorsThread, this, 0, nullptr));
 
     IsOpen = true;
@@ -61,9 +58,9 @@ void Zoo::EndTurn() {
     m_canAddNewVisitorsEvent.ResetEvent();
     GameManager::CloseZoo.SetEvent();
 
-    for (auto const& visitor : m_visitors) {
-        visitor->WaitForThreads();
-    }
+    /*for (auto const& visitor : m_visitors) {
+        RemoveVisitor(visitor);
+    }*/
 
     IsOpen = false;
 
@@ -183,71 +180,32 @@ Cage* Zoo::GetRandomCage() {
     return availableCages.empty() ? nullptr : availableCages.at(rand() % availableCages.size());
 }
 
-void Zoo::GetAllVisitors() {
-    // TODO: Implement GetAllVisitors
-    //DWORD WINAPI EnumVisitors(NodeEntry* VisitorListHead, BOOL PrintToConsole)
-    //{
-    //
-    //    WaitForSingleObject(hVisitorEvent, INFINITE);
-    //    EnterCriticalSection(&VisitorListCrit);
-    //
-    //    NodeEntry* EnumNode = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
-    //    if (EnumNode == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        //return NULL;
-    //    }
-    //    EnumNode = VisitorListHead->Flink;
-    //    Visitor* eVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
-    //
-    //    if (PrintToConsole == TRUE) { cwl::WriteLine(_T("[ Visitor ] [ Cage ] [ Happiness ] [ Status ]\n")); }
-    //
-    //    while (EnumNode->Flink != VisitorListHead->Flink)
-    //    {
-    //        LPCTSTR status = 0;
-    //        eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
-    //
-    //        if (eVisitor->Status == 0)
-    //        {
-    //            status = _T("Happy");
-    //        }
-    //
-    //        else if (eVisitor->Status == 1)
-    //        {
-    //            status = _T("Disappointed");
-    //        }
-    //
-    //        else if (eVisitor->Status == 2)
-    //        {
-    //            status = _T("RefundDemanded");
-    //        }
-    //
-    //        //perform the console print.
-    //        if (PrintToConsole == TRUE && eVisitor->HappinessLevel <= 5) 
-    //        { 
-    //            cwl::WriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),RED, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status); 
-    //        }
-    //        else if (PrintToConsole == TRUE && eVisitor->HappinessLevel >= 8)
-    //        {
-    //            cwl::WriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),GREEN, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status);
-    //        }
-    //        else
-    //        {
-    //            cwl::WriteLine(_T("[ %c%s   -  %s  -  %d  -  %s  ]\n"),YELLOW, eVisitor->UniqueName, eVisitor->CageLocation, eVisitor->HappinessLevel, status);
-    //        }
-    //
-    //        EnumNode = EnumNode->Flink;
-    //    }
-    //
-    //    LeaveCriticalSection(&VisitorListCrit);
-    //    SetEvent(hVisitorEvent);
-    //
-    //
-    //    return 0;
-    //}
+void Zoo::GetAllVisitors() const {
+    if (m_visitors.empty()) {
+        cwl::WriteLine(_T("%cCurrently no visitors...\n"), PINK);
+    }
+
+    for (auto const& visitor : m_visitors) {
+        cwl::WriteLine(
+            _T("[%c%s%r] %s is %s "),
+            SKYBLUE,
+            visitor->CageLocation,
+            visitor->UniqueName,
+            Helpers::VisitorStatusToString(visitor->Status)
+        );
+
+        if (visitor->HappinessLevel < 5) {
+            cwl::WriteLine(_T("(%c%d)\n"), PINK, visitor->HappinessLevel);
+        } else if (visitor->HappinessLevel <= 7) {
+            cwl::WriteLine(_T("(%c%d)\n"), YELLOW, visitor->HappinessLevel);
+        } else {
+            cwl::WriteLine(_T("(%c%d)\n"), LIME, visitor->HappinessLevel);
+
+        }
+    }
 }
 
 int Zoo::GetVisitorCount() {
-    // TODO: Need to check all visitors not size of array
     return static_cast<int>(m_visitors.size());
 }
 
@@ -296,80 +254,21 @@ void Zoo::WaitForThreads() const {
     }
 }
 
-void Zoo::RemoveVisitor(LPCTSTR uniqueName) {
-    auto guard = Visitor::CriticalSection.lock();
+void Zoo::RemoveVisitor(const wistd::unique_ptr<Visitor>& visitor) {
+    visitor->WaitForThreads();
 
-    // TODO: Finish RemoveVisitor
-    //{
-    //    WaitForSingleObject(hVisitorEvent, INFINITE);
-    //    EnterCriticalSection(&VisitorListCrit);
-    //
-    //    NodeEntry* RemovedNode = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
-    //    if (RemovedNode == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //    NodeEntry* TempNodePrev = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
-    //    if (TempNodePrev == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //    NodeEntry* TempNodeNext = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));;
-    //    if (TempNodeNext == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //    RemovedNode = VisitorListHead->Flink;
-    //    Visitor* RemovedVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
-    //    if (RemovedVisitor == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //    Visitor* PreviousVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
-    //    if (PreviousVisitor == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //    Visitor* NextVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
-    //    if (NextVisitor == NULL) {
-    //        cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //        LeaveCriticalSection(&VisitorListCrit);
-    //        SetEvent(hVisitorEvent);
-    //        return NULL;
-    //    }
-    //
-    //    //loop through all to find a matching uniquename.
-    //    while (RemovedVisitor->UniqueName != Name)
-    //    {
-    //        RemovedVisitor = CONTAINING_RECORD(RemovedNode, Visitor, Links);
-    //        RemovedNode = RemovedNode->Flink;
-    //    }
-    //    //when a unique name is found we need to update the flink of the previous node and the blink of the next node.
-    //    TempNodePrev = RemovedVisitor->Links.Blink;
-    //    PreviousVisitor = CONTAINING_RECORD(TempNodePrev, Visitor, Links);
-    //    TempNodeNext = RemovedVisitor->Links.Flink;
-    //    NextVisitor = CONTAINING_RECORD(TempNodeNext, Visitor, Links);
-    //    PreviousVisitor->Links.Flink = TempNodeNext;
-    //    NextVisitor->Links.Blink = TempNodePrev;
-    //
-    //    //cleanup
-    //    HeapFree(GetProcessHeap(), 0, RemovedVisitor);
-    //
-    //    LeaveCriticalSection(&VisitorListCrit);
-    //    SetEvent(hVisitorEvent);
-    //
-    //    return 0;
-    //}
+    auto guard = CriticalSection.lock();
+
+    Helpers::AddRandomName(visitor->UniqueName);
+
+    m_visitors.erase(
+        std::remove_if(
+            m_visitors.begin(),
+            m_visitors.end(),
+            [&](wistd::unique_ptr<Visitor>& currentVisitor) { return currentVisitor == visitor; }
+        ),
+        m_visitors.end()
+    );
 }
 
 void Zoo::ResetAddVisitorsEvent() {
@@ -386,7 +285,7 @@ void Zoo::ResetAddVisitorsEvent() {
 // Resets the timer that triggers the Zoo opening
 void Zoo::ResetOpenZooTimer() {
     m_closedEventTime.QuadPart = -(30 * TIMER_SECONDS);
-    THROW_LAST_ERROR_IF(!SetWaitableTimer(GameManager::OpenZoo.get(), &m_closedEventTime, 0, nullptr, nullptr, 0));
+    THROW_LAST_ERROR_IF(!SetWaitableTimer(GameManager::OpenZoo.get(), &m_closedEventTime, 0, nullptr, nullptr, false));
 }
 
 DWORD WINAPI Zoo::OpenZooTimerThread(LPVOID) {
@@ -404,8 +303,8 @@ DWORD WINAPI Zoo::OpenZooTimerThread(LPVOID) {
             cwl::WriteLine(_T("%cThe Zoo is now open.\n"), RED);
             cwl::WriteLine(_T("%c------------------------------------\n\n"), RED);
 
-            ResetAddVisitorsEvent();
             m_canAddNewVisitorsEvent.SetEvent();
+            ResetAddVisitorsEvent();
         } else {
             return 0;
         }
@@ -427,15 +326,19 @@ DWORD WINAPI Zoo::AddVisitorsThread(LPVOID lpParam) {
     events[2] = GameManager::AppClose.get();
 
     do {
-        const auto waitForZooOpen = WaitForMultipleObjects(_countof(exitEvents), events, false, INFINITE);
+        const auto waitForZooOpen = WaitForMultipleObjects(_countof(exitEvents), exitEvents, false, INFINITE);
 
         if (waitForZooOpen == 1) { return 0; }
 
         const auto wait = WaitForMultipleObjects(_countof(events), events, false, INFINITE);
 
-        if (wait == 1) { continue; }
+        if (wait == 1) {
+            continue;
+        }
 
-        if (wait == 2) { return 0; }
+        if (wait == 2) {
+            return 0;
+        }
 
         auto guard = Cage::CriticalSection.lock();
 

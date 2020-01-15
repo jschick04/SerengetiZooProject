@@ -27,7 +27,7 @@ public:
 
     Cage* GetRandomCage();
 
-    void GetAllVisitors();
+    void GetAllVisitors() const;
     static int GetVisitorCount();
 
     void ShowCaseAnimals(int cageNumber);
@@ -44,7 +44,7 @@ private:
     static LARGE_INTEGER m_addVisitorsEventTime;
     static wil::unique_handle m_newVisitorsTimer;
 
-    void RemoveVisitor(LPCTSTR name);
+    static void RemoveVisitor(const wistd::unique_ptr<Visitor>& visitor);
 
     static void ResetAddVisitorsEvent();
     static void ResetOpenZooTimer();

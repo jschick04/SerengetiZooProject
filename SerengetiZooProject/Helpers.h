@@ -16,5 +16,5 @@ public:
     static LPCTSTR VisitorStatusToString(VisitorStatus type);
 private:
     static wil::critical_section m_cs;
-    static std::array<LPCTSTR, 53> m_uniqueNames;
+    static std::array<LPCTSTR, 51> m_uniqueNames;
 };

@@ -204,6 +204,8 @@ DWORD WINAPI Cage::AnimalInteractivity(LPVOID lpParam) {
         auto guard = CriticalSection.lock();
 
         for (auto const& animal : cage->Animals) {
+            auto animalGuard = Animal::CriticalSection.lock();
+
             if (animal->HealthLevelChange) {
 
                 if (animal->InteractivityPrompted) {

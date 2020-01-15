@@ -83,9 +83,7 @@ LPCTSTR Helpers::VisitorStatusToString(const VisitorStatus type) {
     }
 }
 
-std::array<LPCTSTR, 53> Helpers::m_uniqueNames{
-    _T("Julien"),
-    _T("Melman"),
+std::array<LPCTSTR, 51> Helpers::m_uniqueNames{
     _T("Julien"),
     _T("Melman"),
     _T("Maurice"),
