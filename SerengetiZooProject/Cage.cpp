@@ -179,7 +179,11 @@ DWORD WINAPI Cage::AnimalHealth(LPVOID lpParam) {
                 animal->RemoveHealthLevel();
             }
 
-            animal->SetHealthEvent();
+            try {
+                animal->SetHealthEvent();
+            } catch (...) {
+                cwl::WriteLine(_T("Unable to set HealthEvent: %d"), GetLastError());
+            }
         }
 
         ResetFeedTimer(cage->m_feedEventTimer.get());

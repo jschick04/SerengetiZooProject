@@ -60,7 +60,7 @@ int _tmain() {
                     if (selectedCageNumber < 1 || selectedCageNumber > static_cast<int>(zoo->Cages.size())) {
                         cwl::WriteLine(_T("Invalid Selection...\n"));
                     } else {
-                        zoo->ShowCaseAnimals(selectedCageNumber);
+                        zoo->ShowCaseAnimals(--selectedCageNumber);
                     }
                 } else {
                     cwl::WriteLine(_T("Invalid Selection...\n"));

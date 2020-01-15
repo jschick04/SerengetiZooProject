@@ -61,7 +61,7 @@ void Zoo::EndTurn() {
     auto end = m_visitors.end();
 
     for (auto i = m_visitors.size(); i-- > 0;) {
-        
+
         m_visitors[i]->WaitForThreads();
         RemoveVisitor(m_visitors[i]->UniqueName);
     }
@@ -184,6 +184,7 @@ Cage* Zoo::GetRandomCage() {
     return availableCages.empty() ? nullptr : availableCages.at(rand() % availableCages.size());
 }
 
+// Prints the visitors currently in the zoo with their location and values
 void Zoo::GetAllVisitors() const {
     if (m_visitors.empty()) {
         cwl::WriteLine(_T("%cCurrently no visitors...\n"), PINK);
@@ -214,37 +215,17 @@ int Zoo::GetVisitorCount() {
 }
 
 void Zoo::ShowCaseAnimals(int cageNumber) {
-    // TODO: Implement ShowCaseAnimals
-    //auto cageName = static_cast<LPTSTR>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TCHAR) * 10));
-    //const LPCTSTR prepend = _T("Cage");
-    //if (cageName != 0) {
-    //    StringCchPrintf(cageName, 10, _T("%s%d"), prepend, cagenum);
-    //}
+    auto guard = CriticalSection.lock();
 
-    //WaitForSingleObject(hVisitorEvent, INFINITE);
-    //EnterCriticalSection(&VisitorListCrit);
+    for (auto const& visitor : m_visitors) {
+        if (visitor->CageLocation == Cages.at(cageNumber)->Name) {
+            if (Cages.at(cageNumber)->IsCageEmpty()) {
+                continue;
+            }
 
-    //NodeEntry* EnumNode = static_cast<NodeEntry*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(NodeEntry)));
-    //if (EnumNode == NULL) {
-    //    cwl::WriteLine(_T("%cFailed to allocate memory\n"), RED, GetLastError());
-    //    //return NULL;
-    //}
-    //EnumNode = VisitorListHead->Flink;
-    //Visitor* eVisitor = static_cast<Visitor*>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(Visitor)));
-
-    //while (EnumNode->Flink != VisitorListHead->Flink) {
-    //    eVisitor = CONTAINING_RECORD(EnumNode, Visitor, Links);
-    //    if (eVisitor->CageLocation == cageName) {
-    //        eVisitor->HappinessLevel = eVisitor->HappinessLevel + 1;
-    //    }
-
-    //    EnumNode = EnumNode->Flink;
-    //}
-
-    //LeaveCriticalSection(&VisitorListCrit);
-    //SetEvent(hVisitorEvent);
-
-    //return 0;
+            visitor->HappinessLevel++;
+        }
+    }
 }
 
 void Zoo::WaitForThreads() const {
@@ -258,6 +239,7 @@ void Zoo::WaitForThreads() const {
     }
 }
 
+// Removes a visitor from the visitor list and returns the unique name
 void Zoo::RemoveVisitor(LPCTSTR name) {
     auto guard = CriticalSection.lock();
 
@@ -273,6 +255,7 @@ void Zoo::RemoveVisitor(LPCTSTR name) {
     );
 }
 
+// Resets the timer that adds users in the add visitors thread
 void Zoo::ResetAddVisitorsEvent() {
     std::random_device generator;
     const std::uniform_int_distribution<int> range(5, 30);
