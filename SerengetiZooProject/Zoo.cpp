@@ -200,11 +200,11 @@ void Zoo::GetAllVisitors() const {
         );
 
         if (visitor->HappinessLevel < 5) {
-            cwl::WriteLine(_T("(%c%d)\n"), PINK, visitor->HappinessLevel);
+            cwl::WriteLine(_T("(%c%d%r)\n"), PINK, visitor->HappinessLevel);
         } else if (visitor->HappinessLevel <= 7) {
-            cwl::WriteLine(_T("(%c%d)\n"), YELLOW, visitor->HappinessLevel);
+            cwl::WriteLine(_T("(%c%d%r)\n"), YELLOW, visitor->HappinessLevel);
         } else {
-            cwl::WriteLine(_T("(%c%d)\n"), LIME, visitor->HappinessLevel);
+            cwl::WriteLine(_T("(%c%d%r)\n"), LIME, visitor->HappinessLevel);
 
         }
     }
