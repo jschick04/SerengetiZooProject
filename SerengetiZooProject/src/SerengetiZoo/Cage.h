@@ -1,10 +1,6 @@
 #pragma once
 
-#include <sstream>
-#include <vector>
-#include <wil/resource.h>
-#include <Windows.h>
-#include "Animal.h"
+class Animal;
 
 #ifdef UNICODE
 typedef std::wostringstream _tstringstream;

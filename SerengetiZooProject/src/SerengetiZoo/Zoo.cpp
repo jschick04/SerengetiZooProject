@@ -1,11 +1,7 @@
+#include "szpch.h"
+
 #include "Zoo.h"
 
-#include <ConsoleColors.h>
-#include <cwl.h>
-#include <random>
-#include <tchar.h>
-#include "GameManager.h"
-#include "Helpers.h"
 #include "Menu.h"
 
 bool Zoo::IsOpen = false;

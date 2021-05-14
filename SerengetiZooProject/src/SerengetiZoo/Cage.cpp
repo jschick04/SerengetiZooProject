@@ -1,10 +1,6 @@
-#include "Cage.h"
+#include "szpch.h"
 
-#include <ConsoleColors.h>
-#include <cwl.h>
-#include <tchar.h>
-#include "GameManager.h"
-#include "Helpers.h"
+#include "Cage.h"
 
 wil::critical_section Cage::CriticalSection;
 

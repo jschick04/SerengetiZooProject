@@ -1,10 +1,6 @@
 #pragma once
 
-#include <wil/resource.h>
-#include <Windows.h>
-#include <vector>
-
-class Cage;
+#include "Cage.h"
 
 enum class VisitorStatus { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
 

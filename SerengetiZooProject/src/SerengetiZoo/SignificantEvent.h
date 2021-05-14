@@ -1,9 +1,5 @@
 #pragma once
 
-#include <vector>
-#include <wil/resource.h>
-#include <Windows.h>
-
 class Cage;
 
 typedef struct EventParams {

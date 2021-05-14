@@ -1,9 +1,7 @@
+#include "szpch.h"
+
 #include "Menu.h"
 
-#include <ConsoleColors.h>
-#include <cwl.h>
-#include <tchar.h>
-#include "GameManager.h"
 #include "Zoo.h"
 
 void Menu::PrintCurrentZooStatus() {

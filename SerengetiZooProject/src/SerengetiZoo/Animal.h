@@ -1,8 +1,5 @@
 #pragma once
 
-#include <wil/resource.h>
-#include <Windows.h>
-
 class Cage;
 
 enum class AnimalType { Antelope, Cheetah, Giraffe, Hyaena, Hippo, Monkey, Mongoose, Tiger, WildeBeast, Zebra };

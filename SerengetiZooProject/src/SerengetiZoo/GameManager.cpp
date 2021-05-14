@@ -1,4 +1,4 @@
-#include "GameManager.h"
+#include "szpch.h"
 
 int GameManager::SignificantEventMinutes = 2;
 int GameManager::FeedEventMinutes = 1;

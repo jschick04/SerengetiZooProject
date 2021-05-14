@@ -1,10 +1,7 @@
-#include <ConsoleColors.h>
-#include <cwl.h>
-#include <tchar.h>
-#include <wil/resource.h>
-#include "GameManager.h"
-#include "Menu.h"
-#include "Zoo.h"
+#include "szpch.h"
+
+#include "SerengetiZoo/Menu.h"
+#include "SerengetiZoo/Zoo.h"
 
 int _tmain() {
     const auto zoo = wil::make_unique_nothrow<Zoo>(GameManager::MaxCages);

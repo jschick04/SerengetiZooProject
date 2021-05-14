@@ -1,8 +1,5 @@
 #pragma once
 
-#include <vector>
-#include <wil/resource.h>
-#include <Windows.h>
 #include "Cage.h"
 #include "SignificantEvent.h"
 #include "Visitor.h"

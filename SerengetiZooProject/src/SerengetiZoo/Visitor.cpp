@@ -1,12 +1,6 @@
-#include "Visitor.h"
+#include "szpch.h"
 
-#include <ConsoleColors.h>
-#include <cwl.h>
-#include <random>
-#include <tchar.h>
-#include "Cage.h"
-#include "GameManager.h"
-#include "Helpers.h"
+#include "Visitor.h"
 
 wil::critical_section Visitor::CriticalSection;
 

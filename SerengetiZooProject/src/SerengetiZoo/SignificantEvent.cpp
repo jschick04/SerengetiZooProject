@@ -1,13 +1,9 @@
+#include "szpch.h"
+
 #include "SignificantEvent.h"
 
-#include <ConsoleColors.h>
-#include <cwl.h>
-#include <random>
-#include <tchar.h>
 #include "Animal.h"
 #include "Cage.h"
-#include "GameManager.h"
-#include "Helpers.h"
 #include "Zoo.h"
 
 LARGE_INTEGER SignificantEvent::DueTime;

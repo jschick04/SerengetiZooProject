@@ -1,7 +1,7 @@
+#include "szpch.h"
+
 #include "Helpers.h"
 
-#include <random>
-#include <tchar.h>
 #include "Animal.h"
 #include "Visitor.h"
 
@@ -83,7 +83,7 @@ LPCTSTR Helpers::VisitorStatusToString(const VisitorStatus type) {
     }
 }
 
-std::array<LPCTSTR, 51> Helpers::m_uniqueNames{
+std::array<LPCTSTR, 51> Helpers::m_uniqueNames {
     _T("Julien"),
     _T("Melman"),
     _T("Maurice"),

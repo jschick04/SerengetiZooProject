@@ -1,9 +1,5 @@
 #pragma once
 
-#include <array>
-#include <wil/resource.h>
-#include <Windows.h>
-
 enum class VisitorStatus;
 enum class AnimalType;
 
