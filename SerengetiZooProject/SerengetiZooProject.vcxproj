@@ -20,13 +20,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -62,10 +62,10 @@
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <CompileAs>Default</CompileAs>
-      <AdditionalIncludeDirectories>src;lib\WriteLine;lib\wil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;src\Core;lib\WriteLine;lib\wil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>szpch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -73,6 +73,9 @@
       <AdditionalLibraryDirectories>lib\WriteLine;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /y "$(ProjectDir)\lib\WriteLine\WriteLine.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -99,16 +102,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\SerengetiZoo\Animal.cpp" />
-    <ClCompile Include="src\SerengetiZoo\Cage.cpp" />
-    <ClCompile Include="src\SerengetiZoo\GameManager.cpp" />
-    <ClCompile Include="src\SerengetiZoo\Helpers.cpp" />
+    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\Entities\Animal.cpp" />
+    <ClCompile Include="src\Entities\Cage.cpp" />
+    <ClCompile Include="src\Core\Helpers.cpp" />
+    <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\SerengetiZoo\Menu.cpp" />
-    <ClCompile Include="src\SerengetiZoo\SignificantEvent.cpp" />
-    <ClCompile Include="src\SerengetiZoo\Visitor.cpp" />
-    <ClCompile Include="src\SerengetiZoo\Zoo.cpp" />
-    <ClCompile Include="src\szpch.cpp" />
+    <ClCompile Include="src\Core\SignificantEvent.cpp" />
+    <ClCompile Include="src\Entities\Visitor.cpp" />
+    <ClCompile Include="src\Entities\Zoo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lib\wil\com.h" />
@@ -135,14 +137,16 @@
     <ClInclude Include="lib\wil\wrl.h" />
     <ClInclude Include="lib\WriteLine\ConsoleColors.h" />
     <ClInclude Include="lib\WriteLine\cwl.h" />
-    <ClInclude Include="src\SerengetiZoo\Animal.h" />
-    <ClInclude Include="src\SerengetiZoo\Cage.h" />
-    <ClInclude Include="src\SerengetiZoo\GameManager.h" />
-    <ClInclude Include="src\SerengetiZoo\Helpers.h" />
-    <ClInclude Include="src\SerengetiZoo\Menu.h" />
-    <ClInclude Include="src\SerengetiZoo\SignificantEvent.h" />
-    <ClInclude Include="src\SerengetiZoo\Visitor.h" />
-    <ClInclude Include="src\SerengetiZoo\Zoo.h" />
+    <ClInclude Include="src\Application.h" />
+    <ClInclude Include="src\Entities\Animal.h" />
+    <ClInclude Include="src\Entities\Cage.h" />
+    <ClInclude Include="src\Core\GameSettings.h" />
+    <ClInclude Include="src\Core\Helpers.h" />
+    <ClInclude Include="src\Core\Menu.h" />
+    <ClInclude Include="src\Core\SignificantEvent.h" />
+    <ClInclude Include="src\Entities\Visitor.h" />
+    <ClInclude Include="src\Entities\Zoo.h" />
+    <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\szpch.h" />
   </ItemGroup>
   <ItemGroup>
