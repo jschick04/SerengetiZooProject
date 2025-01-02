@@ -1,4 +1,4 @@
-#include "szpch.h"
+#include "zepch.h"
 
 #include "Visitor.h"
 
@@ -73,9 +73,7 @@ namespace SerengetiZoo
 
         m_movementTime.QuadPart = -((range(generator) * 10) * TimerSeconds);
 
-        THROW_LAST_ERROR_IF(
-            !SetWaitableTimer(m_movementTimer.get(), &m_movementTime, 0, nullptr, nullptr, false)
-        );
+        THROW_LAST_ERROR_IF(!SetWaitableTimer(m_movementTimer.get(), &m_movementTime, 0, nullptr, nullptr, false));
     }
 
     // Updates status based on the happiness level
@@ -154,7 +152,10 @@ namespace SerengetiZoo
                 {
                     visitor->m_happiness -= 1;
 
-                    cwl::WriteLine(_T("%s is %cDisappointed%r with the %s cage!\n"), visitor->m_name, RED,
+                    cwl::WriteLine(
+                        _T("%s is %cDisappointed%r with the %s cage!\n"),
+                        visitor->m_name,
+                        RED,
                         currentCage.GetType());
                 }
             }

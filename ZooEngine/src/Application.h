@@ -19,5 +19,6 @@ namespace SerengetiZoo
         ApplicationSpecification m_specification;
     };
 
-    inline Application* CreateApplication() { return new Application(); };
+    Application* CreateApplication(int argc, char** argv);
 }
+

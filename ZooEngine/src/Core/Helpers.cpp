@@ -1,11 +1,9 @@
-#include "szpch.h"
+#include "zepch.h"
 
 #include "Helpers.h"
 
 namespace SerengetiZoo
 {
-    wil::critical_section Helpers::s_cs;
-
     // Adds a name back into the unique name list
     void Helpers::AddRandomName(const LPCTSTR name)
     {

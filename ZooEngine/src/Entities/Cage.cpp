@@ -1,4 +1,4 @@
-#include "szpch.h"
+#include "zepch.h"
 
 #include "Cage.h"
 
@@ -125,8 +125,7 @@ namespace SerengetiZoo
                 SKYBLUE,
                 m_name,
                 animal.GetName(),
-                animal.GetType()
-            );
+                animal.GetType());
 
             if (animal.GetHealthLevel() >= 6)
             {
@@ -154,8 +153,7 @@ namespace SerengetiZoo
                 SKYBLUE,
                 m_name,
                 animal.GetName(),
-                animal.GetType()
-            );
+                animal.GetType());
 
             if (animal.GetInteractiveLevel() >= 6)
             {
@@ -232,9 +230,7 @@ namespace SerengetiZoo
 
     void Cage::ResetFeedTimer(const HANDLE feedEventTimer) const
     {
-        THROW_LAST_ERROR_IF(
-            !SetWaitableTimer(feedEventTimer, &m_feedDueTime, 0, NULL, NULL, FALSE)
-        );
+        THROW_LAST_ERROR_IF(!SetWaitableTimer(feedEventTimer, &m_feedDueTime, 0, NULL, NULL, FALSE));
     }
 
     DWORD WINAPI Cage::AnimalHealth(const LPVOID lpParam)
@@ -287,8 +283,7 @@ namespace SerengetiZoo
                             "\n%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n\n"),
                         PINK,
                         animal.GetName(),
-                        animal.GetType()
-                    );
+                        animal.GetType());
 
                     //GameManager::Score -= 3;
 

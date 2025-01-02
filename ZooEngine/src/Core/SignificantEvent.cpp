@@ -1,4 +1,4 @@
-#include "szpch.h"
+#include "zepch.h"
 
 #include "SignificantEvent.h"
 
@@ -15,9 +15,7 @@ namespace SerengetiZoo
 
         m_significantEventThread.reset(CreateThread(nullptr, 0, SignificantEventTimer, this, 0, nullptr));
 
-        THROW_LAST_ERROR_IF(
-            !SetWaitableTimer(m_timer.get(), &m_dueTime, 0, nullptr, nullptr, false)
-        );
+        THROW_LAST_ERROR_IF(!SetWaitableTimer(m_timer.get(), &m_dueTime, 0, nullptr, nullptr, false));
     }
 
     void SignificantEvent::AddListener(void* action)
@@ -26,7 +24,7 @@ namespace SerengetiZoo
 
         if (iterator != m_callbacks.end()) { return; }
 
-        m_callbacks.push_back(action);
+        m_callbacks.emplace_back(action);
     }
 
     void SignificantEvent::RemoveListener(void* action)
@@ -40,7 +38,7 @@ namespace SerengetiZoo
 
     void SignificantEvent::Invoke() const
     {
-        for (const auto callback : m_callbacks)
+        for (const auto& callback : m_callbacks)
         {
             reinterpret_cast<void(*)()>(callback)();
         }

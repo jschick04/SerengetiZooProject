@@ -1,12 +1,13 @@
-#include "szpch.h"
+#include "zepch.h"
 
 #include "Game.h"
 
-#include "Menu.h"
+#include "Core/Menu.h"
 
 namespace SerengetiZoo
 {
     wil::unique_event_failfast Game::EndGame(wil::EventOptions::ManualReset);
+    DWORD Game::s_score;
 
     wistd::unique_ptr<Game> Game::Initialize()
     {
@@ -113,6 +114,7 @@ namespace SerengetiZoo
 
     Game::Game()
     {
+        s_score = 0;
         m_zoo = Zoo::Initialize();
     }
 }

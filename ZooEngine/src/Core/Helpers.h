@@ -9,7 +9,7 @@ namespace SerengetiZoo
         static LPCTSTR GetRandomName();
 
     private:
-        static wil::critical_section s_cs;
+        static inline wil::critical_section s_cs;
         static std::array<LPCTSTR, 51> s_uniqueNames;
     };
 }

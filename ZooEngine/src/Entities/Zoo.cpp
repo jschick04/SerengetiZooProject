@@ -1,9 +1,9 @@
-#include "szpch.h"
+#include "zepch.h"
 
 #include "Zoo.h"
 
 #include "Game.h"
-#include "Menu.h"
+#include "Core/Menu.h"
 
 namespace SerengetiZoo
 {
@@ -138,7 +138,11 @@ namespace SerengetiZoo
 
         for (const auto& visitor : m_visitors)
         {
-            cwl::WriteLine(_T("[%c%d%r] %s is %s "), SKYBLUE, visitor->GetCurrentCage(), visitor->GetName(),
+            cwl::WriteLine(
+                _T("[%c%d%r] %s is %s "),
+                SKYBLUE,
+                visitor->GetCurrentCage(),
+                visitor->GetName(),
                 visitor->GetStatus());
 
             if (visitor->GetHappiness() < 5)

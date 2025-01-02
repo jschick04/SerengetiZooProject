@@ -1,4 +1,5 @@
 #pragma once
+#include <tchar.h>
 
 namespace SerengetiZoo
 {
@@ -40,7 +41,7 @@ namespace SerengetiZoo
 
         ~Visitor()
         {
-            cwl::WriteLine(_T("%c%s has left the Zoo\n"), PINK, m_name);
+            //cwl::WriteLine(_T("%c%s has left the Zoo\n"), PINK, m_name);
         }
 
     public:

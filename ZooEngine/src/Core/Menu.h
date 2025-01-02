@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Game.h"
 #include "Entities/Zoo.h"
 
 namespace SerengetiZoo::Menu
@@ -36,8 +37,8 @@ namespace SerengetiZoo::Menu
 
     inline void PrintScore()
     {
-        /*cwl::WriteLine(_T("\n%c-------------------------\n"), YELLOW);
-        cwl::WriteLine(_T("%c Score = %d\n"), YELLOW, GameManager::Score);
-        cwl::WriteLine(_T("%c-------------------------\n"), YELLOW);*/
+        cwl::WriteLine(_T("\n%c-------------------------\n"), YELLOW);
+        cwl::WriteLine(_T("%c Score = %d\n"), YELLOW, Game::GetScore());
+        cwl::WriteLine(_T("%c-------------------------\n"), YELLOW);
     };
 };
