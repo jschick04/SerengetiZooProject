@@ -49,6 +49,8 @@ namespace SerengetiZoo
 
         if (IsCageEmpty())
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
 
             return total;
@@ -71,6 +73,8 @@ namespace SerengetiZoo
 
         if (IsCageEmpty())
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(_T("%cNo Animals In The Cage!\n"), PINK);
 
             return total;
@@ -100,6 +104,8 @@ namespace SerengetiZoo
         {
             animal.AddHealthLevel();
         }
+        
+        auto lock = Renderer::GetConsoleLock().lock();
 
         cwl::WriteLine(_T("%cAnimals in %s have been fed\n"), LIME, m_name);
     }
@@ -110,6 +116,8 @@ namespace SerengetiZoo
 
         for (auto const& animal : m_animals)
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(_T("[%c%s%r] %s the %s\n"),SKYBLUE, m_name, animal.GetName(), animal.GetType());
         }
     }
@@ -120,6 +128,8 @@ namespace SerengetiZoo
 
         for (auto const& animal : m_animals)
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(
                 _T("[%c%s%r] %s the %s "),
                 SKYBLUE,
@@ -148,6 +158,8 @@ namespace SerengetiZoo
 
         for (auto const& animal : m_animals)
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(
                 _T("[%c%s%r] %s the %s "),
                 SKYBLUE,
@@ -271,6 +283,8 @@ namespace SerengetiZoo
 
                 if (animal.GetHealthLevel() >= 1 || animal.GetHealthLevel() < 5)
                 {
+                    auto lock = Renderer::GetConsoleLock().lock();
+
                     cwl::WriteLine(_T("%s the %s is %csick\n"), animal.GetName(), animal.GetType(), PINK);
 
                     cage->m_healthEvent.SetEvent();
@@ -278,6 +292,8 @@ namespace SerengetiZoo
 
                 if (animal.GetHealthLevel() < 1)
                 {
+                    auto lock = Renderer::GetConsoleLock().lock();
+
                     cwl::WriteLine(
                         _T(
                             "\n%c%s the %s is seriously ill and the Zoo Oversight Committee has relocated the animal\n\n"),

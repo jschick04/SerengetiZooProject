@@ -7,6 +7,8 @@ namespace SerengetiZoo::Menu
 {
     inline void PrintCurrentZooStatus()
     {
+        auto lock = Renderer::GetConsoleLock().lock();
+
         cwl::WriteLine(_T("\n%c-------------------------\n"), YELLOW);
         cwl::WriteLine(_T("%cZoo Status: "), YELLOW);
 
@@ -24,6 +26,8 @@ namespace SerengetiZoo::Menu
 
     inline void PrintOptions()
     {
+        auto lock = Renderer::GetConsoleLock().lock();
+
         cwl::WriteLine(_T("%cPlease select your action\n"), LIME);
         cwl::WriteLine(_T("%c-------------------------\n"), YELLOW);
         cwl::WriteLine(_T("%c1%r - Feed Animals\n"), LIME);
@@ -37,6 +41,8 @@ namespace SerengetiZoo::Menu
 
     inline void PrintScore()
     {
+        auto lock = Renderer::GetConsoleLock().lock();
+
         cwl::WriteLine(_T("\n%c-------------------------\n"), YELLOW);
         cwl::WriteLine(_T("%c Score = %d\n"), YELLOW, Game::GetScore());
         cwl::WriteLine(_T("%c-------------------------\n"), YELLOW);

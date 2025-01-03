@@ -29,26 +29,39 @@ namespace SerengetiZoo
             _fgetts(buffer, _countof(buffer), stdin);
             if (_stscanf_s(buffer, _T("%d"), &selectedMenuNumber) != 1)
             {
+                auto lock = Renderer::GetConsoleLock().lock();
+
                 cwl::WriteLine(_T("Invalid Selection...\n"));
+
                 continue;
             }
 
             switch (selectedMenuNumber)
             {
                 case 1: // Feed Animals
-                    cwl::WriteLine(_T("\n%cYou selected - Feed Animals\n\n"), SKYBLUE);
+                    {
+                        auto lock = Renderer::GetConsoleLock().lock();
+
+                        cwl::WriteLine(_T("\n%cYou selected - Feed Animals\n\n"), SKYBLUE);
+                    }
 
                     m_zoo->GetAllAnimalsHealth();
 
                     if (Zoo::IsZooEmpty()) { break; }
 
-                    cwl::WriteLine(_T("\nWhich cage number would you like to feed?\n"));
+                    {
+                        auto lock = Renderer::GetConsoleLock().lock();
+
+                        cwl::WriteLine(_T("\nWhich cage number would you like to feed?\n"));
+                    }
 
                     _fgetts(buffer, _countof(buffer), stdin);
                     if (_stscanf_s(buffer, _T("%d"), &selectedCageNumber) != 1 ||
                         selectedCageNumber < 1 ||
                         selectedCageNumber > GameSettings::MaxCages)
                     {
+                        auto lock = Renderer::GetConsoleLock().lock();
+
                         cwl::WriteLine(_T("Invalid Selection...\n"));
                     }
                     else
@@ -58,21 +71,31 @@ namespace SerengetiZoo
 
                     break;
                 case 2: // Check Animal Interactivity Levels
-                    cwl::WriteLine(_T("\n%cYou selected - Check Animal Interactivity Levels\n\n"), SKYBLUE);
+                    {
+                        auto lock = Renderer::GetConsoleLock().lock();
+
+                        cwl::WriteLine(_T("\n%cYou selected - Check Animal Interactivity Levels\n\n"), SKYBLUE);
+                    }
 
                     m_zoo->GetAllAnimalsInteractivity();
 
                     break;
                 case 3: // Show Case Animal
-                    cwl::WriteLine(_T("\n%cYou selected - Show Case Animal\n\n"), SKYBLUE);
+                    {
+                        auto lock = Renderer::GetConsoleLock().lock();
 
-                    cwl::WriteLine(_T("Which cage number would you like to showcase?\n"));
+                        cwl::WriteLine(_T("\n%cYou selected - Show Case Animal\n\n"), SKYBLUE);
+
+                        cwl::WriteLine(_T("Which cage number would you like to showcase?\n"));
+                    }
 
                     _fgetts(buffer, _countof(buffer), stdin);
                     if (_stscanf_s(buffer, _T("%d"), &selectedCageNumber) != 1 ||
                         selectedCageNumber < 1 ||
                         selectedCageNumber > GameSettings::MaxCages)
                     {
+                        auto lock = Renderer::GetConsoleLock().lock();
+
                         cwl::WriteLine(_T("Invalid Selection...\n"));
                     }
                     else
@@ -82,7 +105,11 @@ namespace SerengetiZoo
 
                     break;
                 case 4: // Check Visitors Happiness Level
-                    cwl::WriteLine(_T("\n%cYou selected - Check Visitors Happiness Level\n\n"), SKYBLUE);
+                    {
+                        auto lock = Renderer::GetConsoleLock().lock();
+                        
+                        cwl::WriteLine(_T("\n%cYou selected - Check Visitors Happiness Level\n\n"), SKYBLUE);
+                    }
 
                     m_zoo->GetAllVisitors();
 
@@ -92,7 +119,11 @@ namespace SerengetiZoo
 
                     break;
                 case 0:
-                    cwl::WriteLine(_T("\n%cYou selected - Quit\n\n"), SKYBLUE);
+                    {
+                        auto lock = Renderer::GetConsoleLock().lock();
+
+                        cwl::WriteLine(_T("\n%cYou selected - Quit\n\n"), SKYBLUE);
+                    }
 
                     m_zoo->EndTurn();
 
@@ -102,7 +133,11 @@ namespace SerengetiZoo
 
                     return;
                 default:
-                    cwl::WriteLine(_T("Invalid Selection...\n"));
+                    {
+                        auto lock = Renderer::GetConsoleLock().lock();
+
+                        cwl::WriteLine(_T("Invalid Selection...\n"));
+                    }
 
                     break;
             }

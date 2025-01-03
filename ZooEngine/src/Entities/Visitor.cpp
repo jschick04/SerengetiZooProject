@@ -23,6 +23,8 @@ namespace SerengetiZoo
 
         ResetMovementTimer();
 
+        auto lock = Renderer::GetConsoleLock().lock();
+
         cwl::WriteLine(_T("%c%s has entered the Zoo\n"), LIME, m_name);
     }
 
@@ -42,6 +44,8 @@ namespace SerengetiZoo
     // Updates global score based on happiness level
     void Visitor::CalculateScore() noexcept
     {
+        auto lock = Renderer::GetConsoleLock().lock();
+
         if (m_happiness < 5)
         {
             m_status = VisitorStatus::RefundDemanded;
@@ -132,7 +136,10 @@ namespace SerengetiZoo
 
             if (currentCage.IsCageEmpty())
             {
+                auto lock = Renderer::GetConsoleLock().lock();
+
                 cwl::WriteLine(_T("%c%s lost 2 happiness points due to an empty cage\n"), PINK, visitor->m_name);
+
                 visitor->m_happiness -= 2;
 
                 visitor->UpdateStatus();
@@ -142,7 +149,11 @@ namespace SerengetiZoo
                 continue;
             }
 
-            cwl::WriteLine(_T("%s is interacting with the %s cage\n"), visitor->m_name, currentCage.GetType());
+            {
+                auto lock = Renderer::GetConsoleLock().lock();
+
+                cwl::WriteLine(_T("%s is interacting with the %s cage\n"), visitor->m_name, currentCage.GetType());
+            }
 
             const DWORD averageInteractivityLevel = currentCage.GetAverageInteractiveLevel();
 
@@ -151,6 +162,8 @@ namespace SerengetiZoo
                 if (visitor->m_happiness > 0)
                 {
                     visitor->m_happiness -= 1;
+                    
+                    auto lock = Renderer::GetConsoleLock().lock();
 
                     cwl::WriteLine(
                         _T("%s is %cDisappointed%r with the %s cage!\n"),

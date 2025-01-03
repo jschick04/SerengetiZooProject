@@ -115,6 +115,7 @@ copy /B /Y lib\WriteLine\WriteLine.dll $(SolutionDir)\bin\Release-x86_64\ZooApp\
     <ClInclude Include="src\Core\GameSettings.h" />
     <ClInclude Include="src\Core\Helpers.h" />
     <ClInclude Include="src\Core\Menu.h" />
+    <ClInclude Include="src\Core\Renderer.h" />
     <ClInclude Include="src\Core\SignificantEvent.h" />
     <ClInclude Include="src\Entities\Animal.h" />
     <ClInclude Include="src\Entities\Cage.h" />

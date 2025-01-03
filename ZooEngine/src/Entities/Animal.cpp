@@ -16,6 +16,8 @@ namespace SerengetiZoo
     {
         if (m_health >= 10)
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(_T("%c%s the %s is already full...\n"), LIME, m_name, ToString(m_animalType));
 
             return;
@@ -30,6 +32,8 @@ namespace SerengetiZoo
 
         m_hasHealthChanged = TRUE;
         m_isInteractivityPrompted = TRUE;
+        
+        auto lock = Renderer::GetConsoleLock().lock();
 
         cwl::WriteLine(_T("%c%s the %s has been fed\n"), LIME, m_name, ToString(m_animalType));
     }
@@ -47,6 +51,8 @@ namespace SerengetiZoo
 
         if (m_health < 5)
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(_T("%c%s the %s is hungry\n"), YELLOW, m_name, ToString(m_animalType));
         }
     }

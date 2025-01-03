@@ -20,7 +20,11 @@ namespace SerengetiZoo
     // Closes the zoo for the day and tells visitors to leave
     void Zoo::EndTurn()
     {
-        cwl::WriteLine(_T("\n%cZoo is closing for the rest of the day...\n\n"), PINK);
+        {
+            auto lock = Renderer::GetConsoleLock().lock();
+
+            cwl::WriteLine(_T("\n%cZoo is closing for the rest of the day...\n\n"), PINK);
+        }
 
         m_canAddNewVisitorsEvent.ResetEvent();
         Close.SetEvent();
@@ -40,14 +44,16 @@ namespace SerengetiZoo
 
     void Zoo::FeedAnimals(const int cageNumber)
     {
-        if (s_cages[cageNumber - 1].IsCageEmpty())
+        if (s_cages[cageNumber].IsCageEmpty())
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, s_cages[cageNumber - 1].GetName());
 
             return;
         }
 
-        s_cages[cageNumber - 1].FeedAnimals();
+        s_cages[cageNumber].FeedAnimals();
     }
 
     // Checks all cages and returns if all cages are empty
@@ -82,6 +88,8 @@ namespace SerengetiZoo
         {
             if (cage.IsCageEmpty())
             {
+                auto lock = Renderer::GetConsoleLock().lock();
+
                 cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, cage.GetName());
 
                 continue;
@@ -98,6 +106,8 @@ namespace SerengetiZoo
         {
             if (cage.IsCageEmpty())
             {
+                auto lock = Renderer::GetConsoleLock().lock();
+
                 cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, cage.GetName());
                 continue;
             }
@@ -120,6 +130,8 @@ namespace SerengetiZoo
 
         if (availableCages.empty())
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(_T("%cNo available cages found.\n"), RED);
 
             return nullptr;
@@ -133,11 +145,15 @@ namespace SerengetiZoo
     {
         if (m_visitors.empty())
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(_T("%cCurrently no visitors...\n"), PINK);
         }
 
         for (const auto& visitor : m_visitors)
         {
+            auto lock = Renderer::GetConsoleLock().lock();
+
             cwl::WriteLine(
                 _T("[%c%d%r] %s is %s "),
                 SKYBLUE,
@@ -230,9 +246,7 @@ namespace SerengetiZoo
 
         m_addVisitorsEventTime.QuadPart = -(range(generator) * TimerSeconds);
 
-        THROW_LAST_ERROR_IF(
-            !SetWaitableTimer(m_newVisitorsTimer.get(), &m_addVisitorsEventTime, 0, nullptr, nullptr, false)
-        );
+        THROW_LAST_ERROR_IF(!SetWaitableTimer(m_newVisitorsTimer.get(), &m_addVisitorsEventTime, 0, nullptr, nullptr, false));
     }
 
     // Resets the timer that triggers the Zoo opening
@@ -257,6 +271,8 @@ namespace SerengetiZoo
                 Close.ResetEvent();
 
                 s_isOpen = TRUE;
+
+                auto lock = Renderer::GetConsoleLock().lock();
 
                 cwl::WriteLine(_T("\n%c------------------------------------\n"), LIME);
                 cwl::WriteLine(_T("%cThe Zoo is now open.\n"), LIME);
