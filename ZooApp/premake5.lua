@@ -2,7 +2,7 @@ project "ZooApp"
     kind "ConsoleApp"
     language "C++"
 	cppdialect "C++20"
-	staticruntime "Off"
+	staticruntime "on"
 
     targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -15,8 +15,8 @@ project "ZooApp"
 
     includedirs {
         "%{wks.location}/ZooEngine/src",
-        "%{wks.location}/ZooEngine/lib/wil",
-        "%{wks.location}/ZooEngine/lib/WriteLine"
+        "%{IncludeDir.wil}",
+        "%{IncludeDir.WriteLine}"
     }
 
     links { "ZooEngine" }
@@ -28,10 +28,10 @@ project "ZooApp"
     filter "configurations:Debug"
 		defines "DEBUG"
 		runtime "Debug"
-        symbols "On"
+        symbols "on"
 
     filter "configurations:Release"
 		defines "RELEASE"
 		runtime "Release"
-        optimize "On"
-		symbols "Off"
+        optimize "on"
+		symbols "off"

@@ -2,7 +2,7 @@ project "ZooEngine"
     kind "StaticLib"
     language "C++"
 	cppdialect "C++20"
-	staticruntime "Off"
+	staticruntime "on"
 
     targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
     objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -19,34 +19,29 @@ project "ZooEngine"
     includedirs
     {
 		"src",
-        "lib/wil",
-        "lib/WriteLine"
+        "%{IncludeDir.wil}",
+        "%{IncludeDir.WriteLine}"
     }
 
     links { "lib/WriteLine/WriteLine.lib" }
 
     filter "system:windows"
         systemversion "latest"
-
-        defines
-        {
-            "PLATFORM_WINDOWS",
-            "BUILD_DLL"
-        }
+        defines "PLATFORM_WINDOWS"
 
         postbuildcommands
         {
-            ("{COPYDIR} %{cfg.buildtarget.relpath} %{wks.location}/bin/" .. outputdir .. "/ZooApp/"),
-            ("{COPYFILE} lib/WriteLine/WriteLine.dll %{wks.location}/bin/" .. outputdir .. "/ZooApp/WriteLine.dll")
+            ("{COPYDIR} %{cfg.buildtarget.relpath} \"%{wks.location}/bin/" .. outputdir .. "/ZooApp/\""),
+            ("{COPYFILE} lib/WriteLine/WriteLine.dll \"%{wks.location}/bin/" .. outputdir .. "/ZooApp/\"")
         }
 
     filter "configurations:Debug"
 		defines "DEBUG"
 		runtime "Debug"
-        symbols "On"
+        symbols "on"
 
     filter "configurations:Release"
 		defines "RELEASE"
 		runtime "Release"
-        optimize "On"
-		symbols "Off"
+        optimize "on"
+		symbols "off"

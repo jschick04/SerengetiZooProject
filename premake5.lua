@@ -9,5 +9,9 @@ workspace "SerengetiZooProject"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.architecture}"
 
+IncludeDir = {}
+IncludeDir["wil"] = "%{wks.location}/ZooEngine/lib/wil"
+IncludeDir["WriteLine"] = "%{wks.location}/ZooEngine/lib/WriteLine"
+
 include "ZooApp"
 include "ZooEngine"
