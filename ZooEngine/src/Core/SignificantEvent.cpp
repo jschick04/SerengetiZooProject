@@ -8,6 +8,8 @@ namespace SerengetiZoo
 {
     SignificantEvent::SignificantEvent()
     {
+        m_callbacks.reserve(10);
+
         m_dueTime.QuadPart = -((GameSettings::SignificantEventMinutes * 60) * TimerSeconds);
 
         m_timer.reset(CreateWaitableTimer(nullptr, false, nullptr));
@@ -15,33 +17,44 @@ namespace SerengetiZoo
 
         m_significantEventThread.reset(CreateThread(nullptr, 0, SignificantEventTimer, this, 0, nullptr));
 
-        THROW_LAST_ERROR_IF(!SetWaitableTimer(m_timer.get(), &m_dueTime, 0, nullptr, nullptr, false));
+        ResetTimer();
     }
 
-    void SignificantEvent::AddListener(void* action)
+    void SignificantEvent::AddListener(Action action)
     {
-        const auto iterator = std::ranges::find(m_callbacks, action);
+        const auto iterator = std::ranges::find_if(m_callbacks, [&action](const Action& callback)
+        {
+            return callback.target<void()>() == action.target<void()>();
+        });
 
         if (iterator != m_callbacks.end()) { return; }
 
-        m_callbacks.emplace_back(action);
+        m_callbacks.push_back(action);
     }
 
-    void SignificantEvent::RemoveListener(void* action)
+    void SignificantEvent::RemoveListener(Action action)
     {
-        const auto iterator = std::ranges::find(m_callbacks, action);
+        const auto iterator = std::ranges::find_if(m_callbacks, [&action](const Action& callback)
+        {
+            return callback.target<void()>() == action.target<void()>();
+        });
 
         if (iterator == m_callbacks.end()) { return; }
 
-        m_callbacks.erase(iterator);
+        m_callbacks.erase(iterator, m_callbacks.end());
     }
 
     void SignificantEvent::Invoke() const
     {
         for (const auto& callback : m_callbacks)
         {
-            reinterpret_cast<void(*)()>(callback)();
+            callback();
         }
+    }
+
+    void SignificantEvent::ResetTimer() const noexcept
+    {
+        THROW_LAST_ERROR_IF(!SetWaitableTimer(m_timer.get(), &m_dueTime, 0, nullptr, nullptr, false));
     }
 
     void SignificantEvent::WaitForThread() const noexcept

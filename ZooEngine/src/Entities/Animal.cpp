@@ -61,9 +61,12 @@ namespace SerengetiZoo
     {
         if (m_interactiveLevel >= 10) { return; }
 
+        std::random_device generator;
+        std::uniform_int_distribution range(GameSettings::FeedLevelMin, GameSettings::FeedLevelMax);
+
         auto guard = m_cs.lock();
 
-        const DWORD interactiveChange = rand() % (GameSettings::FeedLevelMax - 1) + GameSettings::FeedLevelMin;
+        const DWORD interactiveChange = range(generator);
         const auto newValue = m_interactiveLevel + interactiveChange;
 
         m_interactiveLevel = newValue >= 10 ? 10 : newValue;

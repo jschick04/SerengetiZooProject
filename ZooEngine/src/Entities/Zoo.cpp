@@ -2,15 +2,14 @@
 
 #include "Zoo.h"
 
+#include <iostream>
+
 #include "Game.h"
 #include "Core/Menu.h"
 
 namespace SerengetiZoo
 {
-    std::vector<Cage> Zoo::s_cages(GameSettings::MaxCages);
     BOOL Zoo::s_isOpen = FALSE;
-    wil::unique_event_failfast Zoo::Close(wil::EventOptions::ManualReset);
-    wil::unique_handle Zoo::Open(CreateWaitableTimer(nullptr, false, nullptr));
 
     wistd::unique_ptr<Zoo> Zoo::Initialize()
     {
@@ -42,28 +41,30 @@ namespace SerengetiZoo
         ResetOpenZooTimer();
     }
 
-    void Zoo::FeedAnimals(const int cageNumber)
+    void Zoo::FeedAnimals(const int cageNumber) const
     {
-        if (s_cages[cageNumber].IsCageEmpty())
+        const auto& cage = m_cages[cageNumber];
+
+        if (cage->IsCageEmpty())
         {
             auto lock = Renderer::GetConsoleLock().lock();
 
-            cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, s_cages[cageNumber - 1].GetName());
+            cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, cage->GetName());
 
             return;
         }
 
-        s_cages[cageNumber].FeedAnimals();
+        cage->FeedAnimals();
     }
 
     // Checks all cages and returns if all cages are empty
-    bool Zoo::IsZooEmpty()
+    bool Zoo::IsZooEmpty() const
     {
         int count = 0;
 
-        for (auto& cage : s_cages)
+        for (const auto& cage : m_cages)
         {
-            if (cage.IsCageEmpty())
+            if (cage->IsCageEmpty())
             {
                 count++;
             }
@@ -73,58 +74,58 @@ namespace SerengetiZoo
     }
 
     // Prints all animals
-    void Zoo::GetAllAnimals()
+    void Zoo::GetAllAnimals() const
     {
-        for (auto& cage : s_cages)
+        for (const auto& cage : m_cages)
         {
-            cage.GetAnimals();
+            cage->GetAnimals();
         }
     }
 
     // Prints all animals health values
-    void Zoo::GetAllAnimalsHealth()
+    void Zoo::GetAllAnimalsHealth() const
     {
-        for (auto& cage : s_cages)
+        for (const auto& cage : m_cages)
         {
-            if (cage.IsCageEmpty())
+            if (cage->IsCageEmpty())
             {
                 auto lock = Renderer::GetConsoleLock().lock();
 
-                cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, cage.GetName());
+                cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, cage->GetName());
 
                 continue;
             }
 
-            cage.GetAnimalsHealth();
+            cage->GetAnimalsHealth();
         }
     }
 
     // Prints all animals interactivity values
-    void Zoo::GetAllAnimalsInteractivity()
+    void Zoo::GetAllAnimalsInteractivity() const
     {
-        for (auto& cage : s_cages)
+        for (const auto& cage : m_cages)
         {
-            if (cage.IsCageEmpty())
+            if (cage->IsCageEmpty())
             {
                 auto lock = Renderer::GetConsoleLock().lock();
 
-                cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, cage.GetName());
+                cwl::WriteLine(_T("%c[%s] No Animals In The Cage!\n"), PINK, cage->GetName());
                 continue;
             }
 
-            cage.GetAnimalsInteractiveLevel();
+            cage->GetAnimalsInteractiveLevel();
         }
     }
 
-    Cage* Zoo::GetRandomCage()
+    Cage* Zoo::GetRandomCage() const
     {
         std::vector<Cage*> availableCages;
 
-        for (auto& cage : s_cages)
+        for (const auto& cage : m_cages)
         {
-            if (!cage.IsCageEmpty())
+            if (!cage->IsCageEmpty())
             {
-                availableCages.push_back(&cage);
+                availableCages.push_back(cage.get());
             }
         }
 
@@ -185,7 +186,7 @@ namespace SerengetiZoo
         {
             if (visitor->GetCurrentCage() == cageNumber)
             {
-                if (s_cages.at(cageNumber).IsCageEmpty())
+                if (m_cages.at(cageNumber)->IsCageEmpty())
                 {
                     continue;
                 }
@@ -202,15 +203,20 @@ namespace SerengetiZoo
 
         m_significantEvent->WaitForThread();
 
-        for (auto& thread : s_cages)
+        for (const auto& cage : m_cages)
         {
-            thread.WaitForThreads();
+            cage->WaitForThreads();
         }
     }
 
     Zoo::Zoo() : m_canAddNewVisitorsEvent(wil::EventOptions::ManualReset)
     {
-        //GameManager::Score = 0;
+        m_cages.reserve(GameSettings::MaxCages);
+
+        for (int i = 0; i < GameSettings::MaxCages; ++i)
+        {
+            m_cages.emplace_back(wil::make_unique_failfast<Cage>(i + 1));
+        }
 
         m_newVisitorsTimer.reset(CreateWaitableTimer(nullptr, true, nullptr));
         THROW_LAST_ERROR_IF(!m_newVisitorsTimer.is_valid());
@@ -223,6 +229,59 @@ namespace SerengetiZoo
         ResetAddVisitorsEvent();
 
         m_zooTimerThread.reset(CreateThread(nullptr, 0, OpenZooTimerThread, this, 0, nullptr));
+
+        m_significantEvent = wil::make_unique_failfast<SignificantEvent>();
+        m_significantEvent->AddListener([this]() { OnSignificantEvent(); });
+    }
+
+    void Zoo::OnSignificantEvent()
+    {
+        std::random_device generator;
+        std::uniform_int_distribution<int> cageDist(0, m_cages.size() - 1);
+        std::bernoulli_distribution boolDist;
+
+        Cage* randomCage;
+
+        do
+        {
+            randomCage = m_cages.at(cageDist(generator)).get();
+        }
+        while (randomCage->IsCageEmpty());
+
+        Animal* selectedAnimal;
+
+        do
+        {
+            selectedAnimal = randomCage->GetRandomAnimal();
+        }
+        while (selectedAnimal == nullptr);
+
+        if (boolDist(generator)) {
+            {
+                auto lock = Renderer::GetConsoleLock().lock();
+
+                cwl::WriteLine(_T("\n%c%s the %s has escaped!\n\n"), YELLOW, selectedAnimal->GetName(), selectedAnimal->GetType());
+                cwl::WriteLine(_T("You have %clost%r %d points because all visitors left the zoo...\n"), PINK, (DWORD)m_visitors.size());
+            }
+            //GameManager::Score -= Zoo::GetVisitorCount();
+
+            randomCage->RemoveAnimal(*selectedAnimal);
+        }
+        else {
+            {
+                auto lock = Renderer::GetConsoleLock().lock();
+
+                cwl::WriteLine(_T("\n%c%s the %s has given birth to a baby %s!\n\n"), LIME, selectedAnimal->GetName(), selectedAnimal->GetType(), selectedAnimal->GetType());
+                cwl::WriteLine(_T("All visitors have left for the day and you %cearned%r %d points...\n"), LIME, 3 * (DWORD)m_visitors.size());
+            }
+            //GameManager::Score += 3 * Zoo::GetVisitorCount();
+
+            randomCage->AddAnimal();
+        }
+
+        m_significantEvent->ResetTimer();
+
+        EndTurn();
     }
 
     // Removes a visitor from the visitor list and returns the unique name
@@ -329,7 +388,7 @@ namespace SerengetiZoo
 
             for (int i = 0; i != visitorsToAdd; ++i)
             {
-                zoo->m_visitors.emplace_back(wil::make_unique_failfast<Visitor>());
+                zoo->m_visitors.emplace_back(wil::make_unique_failfast<Visitor>(zoo->m_cages));
             }
 
             zoo->ResetAddVisitorsEvent();

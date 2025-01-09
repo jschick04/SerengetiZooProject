@@ -7,7 +7,7 @@
 
 namespace SerengetiZoo
 {
-    Visitor::Visitor()
+    Visitor::Visitor(std::vector<wistd::unique_ptr<Cage>>& cages) : m_cages(cages)
     {
         m_name = Helpers::GetRandomName();
         m_location = _T("Entry");
@@ -132,9 +132,9 @@ namespace SerengetiZoo
                 return 0;
             }
 
-            auto& currentCage = Zoo::GetCages().at(visitor->m_currentCageNumber);
+            const auto& currentCage = visitor->m_cages.at(visitor->m_currentCageNumber);
 
-            if (currentCage.IsCageEmpty())
+            if (currentCage->IsCageEmpty())
             {
                 auto lock = Renderer::GetConsoleLock().lock();
 
@@ -152,10 +152,10 @@ namespace SerengetiZoo
             {
                 auto lock = Renderer::GetConsoleLock().lock();
 
-                cwl::WriteLine(_T("%s is interacting with the %s cage\n"), visitor->m_name, currentCage.GetType());
+                cwl::WriteLine(_T("%s is interacting with the %s cage\n"), visitor->m_name, currentCage->GetType());
             }
 
-            const DWORD averageInteractivityLevel = currentCage.GetAverageInteractiveLevel();
+            const DWORD averageInteractivityLevel = currentCage->GetAverageInteractiveLevel();
 
             if (averageInteractivityLevel <= 4)
             {
@@ -169,7 +169,7 @@ namespace SerengetiZoo
                         _T("%s is %cDisappointed%r with the %s cage!\n"),
                         visitor->m_name,
                         RED,
-                        currentCage.GetType());
+                        currentCage->GetType());
                 }
             }
             else

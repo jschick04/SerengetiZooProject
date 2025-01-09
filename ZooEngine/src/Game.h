@@ -9,18 +9,18 @@ namespace SerengetiZoo
     public:
         static wistd::unique_ptr<Game> Initialize();
 
-        static DWORD GetScore() { return s_score; };
+        static DWORD GetScore() { return s_score; }
 
         void OnRender() const;
 
     public:
-        static wil::unique_event_failfast EndGame;
+        static inline wil::unique_event_failfast EndGame = wil::unique_event_failfast(wil::EventOptions::ManualReset);
 
     private:
         explicit Game();
 
     private:
-        static DWORD s_score;
+        static inline DWORD s_score = 0;
         wistd::unique_ptr<Zoo> m_zoo;
     };
 }

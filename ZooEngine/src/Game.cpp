@@ -6,9 +6,6 @@
 
 namespace SerengetiZoo
 {
-    wil::unique_event_failfast Game::EndGame(wil::EventOptions::ManualReset);
-    DWORD Game::s_score;
-
     wistd::unique_ptr<Game> Game::Initialize()
     {
         return wistd::unique_ptr<Game>(new Game());
@@ -47,7 +44,7 @@ namespace SerengetiZoo
 
                     m_zoo->GetAllAnimalsHealth();
 
-                    if (Zoo::IsZooEmpty()) { break; }
+                    if (m_zoo->IsZooEmpty()) { break; }
 
                     {
                         auto lock = Renderer::GetConsoleLock().lock();
@@ -150,6 +147,7 @@ namespace SerengetiZoo
     Game::Game()
     {
         s_score = 0;
+        EndGame.ResetEvent();
         m_zoo = Zoo::Initialize();
     }
 }

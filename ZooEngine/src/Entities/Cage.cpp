@@ -8,11 +8,9 @@
 
 namespace SerengetiZoo
 {
-    int Cage::s_number = 0;
-
-    Cage::Cage()
+    Cage::Cage(const int number)
     {
-        m_name = GetCageName(++s_number);
+        m_name = GetCageName(number);
         m_cageType = Animal::GetRandomAnimalType();
         AddAnimal();
 
@@ -96,15 +94,10 @@ namespace SerengetiZoo
         m_animals.emplace_back(m_cageType);
     }
 
-    void Cage::FeedAnimals()
+    void Cage::FeedAnimals() const
     {
-        auto guard = m_cs.lock();
+        m_feedEvent.SetEvent();
 
-        for (auto& animal : m_animals)
-        {
-            animal.AddHealthLevel();
-        }
-        
         auto lock = Renderer::GetConsoleLock().lock();
 
         cwl::WriteLine(_T("%cAnimals in %s have been fed\n"), LIME, m_name);
@@ -180,6 +173,18 @@ namespace SerengetiZoo
                 cwl::WriteLine(_T("(%c%d%r)\n"), PINK, animal.GetInteractiveLevel());
             }
         }
+    }
+
+    Animal* Cage::GetRandomAnimal()
+    {
+        auto guard = m_cs.lock();
+
+        if (IsCageEmpty()) { return nullptr; }
+
+        std::random_device rd;
+        std::mt19937 generator(rd());
+
+        return &m_animals.at(generator() % m_animals.size());
     }
 
     // Completely removes an animal from the cage and zoo
@@ -281,7 +286,7 @@ namespace SerengetiZoo
                     animal.RemoveHealthLevel();
                 }
 
-                if (animal.GetHealthLevel() >= 1 || animal.GetHealthLevel() < 5)
+                if (animal.GetHealthLevel() >= 1 && animal.GetHealthLevel() < 5)
                 {
                     auto lock = Renderer::GetConsoleLock().lock();
 

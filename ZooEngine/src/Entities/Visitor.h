@@ -1,8 +1,10 @@
 #pragma once
-#include <tchar.h>
+
 
 namespace SerengetiZoo
 {
+    class Cage;
+
     enum class VisitorStatus : uint8_t { Happy, Disappointed, RefundDemanded, LeavingHappy, LeavingAngry };
 
     inline LPCTSTR ToString(const VisitorStatus status)
@@ -11,7 +13,7 @@ namespace SerengetiZoo
         {
             case VisitorStatus::Happy: return _T("Happy");
             case VisitorStatus::Disappointed: return _T("Disappointed");
-            case VisitorStatus::RefundDemanded: return _T("Refund Demanded"); 
+            case VisitorStatus::RefundDemanded: return _T("Refund Demanded");
             case VisitorStatus::LeavingHappy: return _T("Leaving Happy");
             case VisitorStatus::LeavingAngry: return _T("Leaving Angry");
         }
@@ -22,7 +24,7 @@ namespace SerengetiZoo
     class Visitor
     {
     public:
-        explicit Visitor();
+        explicit Visitor(std::vector<wistd::unique_ptr<Cage>>& cages);
 
         Visitor(const Visitor& other) = delete;
         Visitor(Visitor&& other) = delete;
@@ -41,13 +43,16 @@ namespace SerengetiZoo
 
         ~Visitor()
         {
-            //cwl::WriteLine(_T("%c%s has left the Zoo\n"), PINK, m_name);
+            auto lock = Renderer::GetConsoleLock().lock();
+
+            cwl::WriteLine(_T("%c%s has left the Zoo\n"), PINK, m_name);
         }
 
     public:
         void AddHappiness();
         void CalculateScore() noexcept;
         void UpdateStatus() noexcept;
+        void WaitForThreads() const noexcept;
 
         [[nodiscard]] LPCTSTR GetName() const noexcept { return m_name; }
 
@@ -56,8 +61,6 @@ namespace SerengetiZoo
         [[nodiscard]] DWORD GetHappiness() const noexcept { return m_happiness; }
 
         [[nodiscard]] LPCTSTR GetStatus() const noexcept { return ToString(m_status); }
-
-        void WaitForThreads() const noexcept;
 
     private:
         static DWORD WINAPI VisitorLoop(LPVOID lpParam);
@@ -69,6 +72,7 @@ namespace SerengetiZoo
         wil::critical_section m_cs;
 
         DWORD m_currentCageNumber;
+        std::vector<wistd::unique_ptr<Cage>>& m_cages;
 
         LPCTSTR m_name;
         LPCTSTR m_location;

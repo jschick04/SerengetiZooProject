@@ -13,14 +13,15 @@ namespace SerengetiZoo
     class Cage
     {
     public:
-        explicit Cage();
+        explicit Cage(int number);
 
     public:
         void AddAnimal();
-        void FeedAnimals();
+        void FeedAnimals() const;
         void GetAnimals();
         void GetAnimalsHealth();
         void GetAnimalsInteractiveLevel();
+        Animal* GetRandomAnimal();
         void RemoveAnimal(const Animal& animal);
 
         [[nodiscard]] DWORD GetAverageInteractiveLevel();
@@ -43,8 +44,6 @@ namespace SerengetiZoo
     private:
         void ResetFeedTimer(HANDLE feedEventTimer) const;
 
-    private:
-        static int s_number;
     private:
         wil::critical_section m_cs;
 
