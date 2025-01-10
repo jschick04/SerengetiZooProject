@@ -6,9 +6,25 @@
 
 namespace SerengetiZoo
 {
+    wil::critical_section Game::s_cs;
+
     wistd::unique_ptr<Game> Game::Initialize()
     {
         return wistd::unique_ptr<Game>(new Game());
+    }
+
+    DWORD Game::GetScore()
+    {
+        auto lock = s_cs.lock();
+
+        return s_score;
+    }
+
+    void Game::UpdateScore(const DWORD score)
+    {
+        auto lock = s_cs.lock();
+
+        s_score += score;
     }
 
     void Game::OnRender() const
@@ -104,7 +120,7 @@ namespace SerengetiZoo
                 case 4: // Check Visitors Happiness Level
                     {
                         auto lock = Renderer::GetConsoleLock().lock();
-                        
+
                         cwl::WriteLine(_T("\n%cYou selected - Check Visitors Happiness Level\n\n"), SKYBLUE);
                     }
 

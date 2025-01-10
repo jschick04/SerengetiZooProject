@@ -51,21 +51,24 @@ namespace SerengetiZoo
             m_status = VisitorStatus::RefundDemanded;
 
             cwl::WriteLine(_T("%c%s is %s\n"), PINK, m_name, ToString(m_status));
-            //GameManager::Score -= 3;
+
+            Game::UpdateScore(-3);
         }
         else if (m_happiness <= 7)
         {
             m_status = VisitorStatus::LeavingAngry;
 
             cwl::WriteLine(_T("%c%s is %s\n"), YELLOW, m_name, ToString(m_status));
-            //GameManager::Score -= 1;
+
+            Game::UpdateScore(-1);
         }
         else
         {
             m_status = VisitorStatus::LeavingHappy;
 
             cwl::WriteLine(_T("%c%s is %s\n"), LIME, m_name, ToString(m_status));
-            //GameManager::Score += 1;
+            
+            Game::UpdateScore(1);
         }
     }
 

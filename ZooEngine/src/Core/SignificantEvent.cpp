@@ -52,7 +52,7 @@ namespace SerengetiZoo
         }
     }
 
-    void SignificantEvent::ResetTimer() const noexcept
+    void SignificantEvent::ResetTimer() const
     {
         THROW_LAST_ERROR_IF(!SetWaitableTimer(m_timer.get(), &m_dueTime, 0, nullptr, nullptr, false));
     }

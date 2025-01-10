@@ -17,7 +17,7 @@ namespace SerengetiZoo
 
         void Invoke() const;
 
-        void ResetTimer() const noexcept;
+        void ResetTimer() const;
 
         void WaitForThread() const noexcept;
 

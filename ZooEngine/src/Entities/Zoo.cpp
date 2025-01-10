@@ -237,7 +237,7 @@ namespace SerengetiZoo
     void Zoo::OnSignificantEvent()
     {
         std::random_device generator;
-        std::uniform_int_distribution<int> cageDist(0, m_cages.size() - 1);
+        std::uniform_int_distribution cageDist(0, static_cast<int>(m_cages.size()) - 1);
         std::bernoulli_distribution boolDist;
 
         Cage* randomCage;
@@ -261,9 +261,10 @@ namespace SerengetiZoo
                 auto lock = Renderer::GetConsoleLock().lock();
 
                 cwl::WriteLine(_T("\n%c%s the %s has escaped!\n\n"), YELLOW, selectedAnimal->GetName(), selectedAnimal->GetType());
-                cwl::WriteLine(_T("You have %clost%r %d points because all visitors left the zoo...\n"), PINK, (DWORD)m_visitors.size());
+                cwl::WriteLine(_T("You have %clost%r %d points because all visitors left the zoo...\n"), PINK, static_cast<DWORD>(m_visitors.size()));
             }
-            //GameManager::Score -= Zoo::GetVisitorCount();
+
+            Game::UpdateScore(-(static_cast<int>(m_visitors.size())));
 
             randomCage->RemoveAnimal(*selectedAnimal);
         }
@@ -272,9 +273,10 @@ namespace SerengetiZoo
                 auto lock = Renderer::GetConsoleLock().lock();
 
                 cwl::WriteLine(_T("\n%c%s the %s has given birth to a baby %s!\n\n"), LIME, selectedAnimal->GetName(), selectedAnimal->GetType(), selectedAnimal->GetType());
-                cwl::WriteLine(_T("All visitors have left for the day and you %cearned%r %d points...\n"), LIME, 3 * (DWORD)m_visitors.size());
+                cwl::WriteLine(_T("All visitors have left for the day and you %cearned%r %d points...\n"), LIME, 3 * static_cast<DWORD>(m_visitors.size()));
             }
-            //GameManager::Score += 3 * Zoo::GetVisitorCount();
+
+            Game::UpdateScore(3 * static_cast<DWORD>(m_visitors.size()));
 
             randomCage->AddAnimal();
         }

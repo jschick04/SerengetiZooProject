@@ -306,7 +306,7 @@ namespace SerengetiZoo
                         animal.GetName(),
                         animal.GetType());
 
-                    //GameManager::Score -= 3;
+                    Game::UpdateScore(-3);
 
                     cage->RemoveAnimal(animal);
                 }

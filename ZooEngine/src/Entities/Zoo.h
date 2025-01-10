@@ -2,6 +2,7 @@
 
 #include "Cage.h"
 #include "Visitor.h"
+#include "Core/SignificantEvent.h"
 
 namespace SerengetiZoo
 {
@@ -47,7 +48,6 @@ namespace SerengetiZoo
 
         void ResetAddVisitorsEvent();
         void ResetOpenZooTimer();
-
 
     private:
         static BOOL s_isOpen;
